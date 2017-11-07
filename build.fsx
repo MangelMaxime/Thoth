@@ -102,15 +102,15 @@ Target "DotnetBuild" (fun _ ->
 ))
 
 
-let fableWebpack workingDir opts =
+let dotnet workingDir args =
     DotNetCli.RunCommand(fun c ->
         { c with WorkingDir = workingDir
                  ToolPath = dotnetExePath }
-        ) ("fable webpack --port free -- " + opts)
+        ) args
 
 let mocha args =
     Yarn(fun yarnParams ->
-        { yarnParams with Command = args |> sprintf "run mocha -- %s" |> YarnCommand.Custom }
+        { yarnParams with Command = args |> sprintf "run mocha %s" |> YarnCommand.Custom }
     )
 
 Target "MochaTest" (fun _ ->
@@ -118,33 +118,12 @@ Target "MochaTest" (fun _ ->
     |> Seq.iter(fun proj ->
         let projDir = proj |> DirectoryName
         //Compile to JS
-        fableWebpack projDir ""
+        dotnet projDir "fable webpack --port free"
 
         //Run mocha tests
         let projDirOutput = projDir </> "bin"
         mocha projDirOutput
     )
-
-)
-
-Target "WatchTests" (fun _ ->
-    !! testsGlob
-    |> Seq.iter(fun proj ->
-        let projDir = proj |> DirectoryName
-        //Compile to JS
-        async { fableWebpack projDir "--watch" } |> Async.Start
-
-        //Run mocha tests
-        let projDirOutput = projDir </> "bin"
-        async {
-            Yarn(fun yarnParams ->
-                { yarnParams with Command = "run watcher" |> YarnCommand.Custom }
-            )
-        } |> Async.Start
-    )
-
-    printfn "Press enter to exit..."
-    Console.ReadLine() |> ignore
 )
 
 Target "DotnetPack" (fun _ ->
@@ -161,6 +140,15 @@ Target "DotnetPack" (fun _ ->
                         sprintf "/p:PackageReleaseNotes=\"%s\"" (String.Join("\n",release.Notes))
                     ]
             })
+    )
+)
+
+Target "Watch" (fun _ ->
+    !! testsGlob
+    |> Seq.iter(fun proj ->
+        let projDir = proj |> DirectoryName
+        //Compile to JS
+        dotnet projDir "fable webpack --port free -- --watch"
     )
 )
 
@@ -220,13 +208,17 @@ Target "Release" (fun _ ->
 )
 
 "Clean"
-  ==> "InstallDotNetCore"
-  ==> "YarnInstall"
-  ==> "DotnetRestore"
-  ==> "DotnetBuild"
-  ==> "MochaTest"
-  ==> "DotnetPack"
-  ==> "Publish"
-  ==> "Release"
+    ==> "InstallDotNetCore"
+    ==> "YarnInstall"
+    ==> "DotnetRestore"
+    ==> "DotnetBuild"
+    ==> "MochaTest"
+    ==> "DotnetPack"
+    ==> "Publish"
+    ==> "Release"
+
+"Watch"
+    <== [ "DotnetBuild" ]
+
 
 RunTargetOrDefault "DotnetPack"
