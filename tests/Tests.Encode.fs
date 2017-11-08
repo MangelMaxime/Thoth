@@ -3,7 +3,6 @@ module Tests.Encode
 open Fable.Core
 open Fable.Json.Encode
 open Fable.Core.Testing
-open Fable.Json.Encode
 
 [<Global>]
 let it (msg: string) (f: unit->unit): unit = jsNative

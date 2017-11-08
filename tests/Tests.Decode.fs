@@ -2,7 +2,6 @@ module Tests.Decode
 
 open Fable.Core
 open Fable.Core.JsInterop
-open Fable.Json
 open Fable.Core.Testing
 
 [<Global>]
