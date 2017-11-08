@@ -3,11 +3,11 @@
     <TargetFramework>netstandard1.6</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../src/Fable.Json.fsproj" />
+    <ProjectReference Include="../src/Thot.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Tests.Decode.fs" />
-    <Compile Include="Tests.Encode.fs" />
+    <Compile Include="Tests.Json.Decode.fs" />
+    <Compile Include="Tests.Json.Encode.fs" />
     <Compile Include="Tests.fs" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />

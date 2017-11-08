@@ -1,4 +1,4 @@
-# Fable.Fable.Json
+# Fable.Thot
 
 
 ## How to use this templates ?
@@ -44,15 +44,15 @@ Ex:
 
 MacOS/Linux | Windows
 --- | ---
-[![Travis Badge](https://travis-ci.org/MyGithubUsername/Fable.Json.svg?branch=master)](https://travis-ci.org/MyGithubUsername/Fable.Json) | [![Build status](https://ci.appveyor.com/api/projects/status/github/MyGithubUsername/Fable.Json?svg=true)](https://ci.appveyor.com/project/MyGithubUsername/Fable.Json)
-[![Build History](https://buildstats.info/travisci/chart/MyGithubUsername/Fable.Json)](https://travis-ci.org/MyGithubUsername/Fable.Json/builds) | [![Build History](https://buildstats.info/appveyor/chart/MyGithubUsername/Fable.Json)](https://ci.appveyor.com/project/MyGithubUsername/Fable.Json)
+[![Travis Badge](https://travis-ci.org/MyGithubUsername/Thot.svg?branch=master)](https://travis-ci.org/MyGithubUsername/Thot) | [![Build status](https://ci.appveyor.com/api/projects/status/github/MyGithubUsername/Thot?svg=true)](https://ci.appveyor.com/project/MyGithubUsername/Thot)
+[![Build History](https://buildstats.info/travisci/chart/MyGithubUsername/Thot)](https://travis-ci.org/MyGithubUsername/Thot/builds) | [![Build History](https://buildstats.info/appveyor/chart/MyGithubUsername/Thot)](https://ci.appveyor.com/project/MyGithubUsername/Thot)
 
 
 ## Nuget
 
 Stable | Prerelease
 --- | ---
-[![NuGet Badge](https://buildstats.info/nuget/Fable.Json)](https://www.nuget.org/packages/Fable.Json/) | [![NuGet Badge](https://buildstats.info/nuget/Fable.Json?includePreReleases=true)](https://www.nuget.org/packages/Fable.Json/)
+[![NuGet Badge](https://buildstats.info/nuget/Thot)](https://www.nuget.org/packages/Thot/) | [![NuGet Badge](https://buildstats.info/nuget/Thot?includePreReleases=true)](https://www.nuget.org/packages/Thot/)
 
 
 

@@ -3,8 +3,8 @@
         <TargetFramework>netstandard1.6</TargetFramework>
     </PropertyGroup>
     <ItemGroup>
-        <Compile Include="Decode.fs" />
-        <Compile Include="Encode.fs" />
+        <Compile Include="Json\Decode.fs" />
+        <Compile Include="Json\Encode.fs" />
     </ItemGroup>
     <ItemGroup>
         <Content Include="*.fsproj; **\*.fs; **\*.js" PackagePath="fable\" />

@@ -1,4 +1,4 @@
-module Fable.Json.Decode
+module Thot.Json.Decode
 
 open Fable.Core
 open Fable.Core.JsInterop

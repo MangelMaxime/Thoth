@@ -1,7 +1,7 @@
 module Tests.Encode
 
 open Fable.Core
-open Fable.Json.Encode
+open Thot.Json.Encode
 open Fable.Core.Testing
 
 [<Global>]
