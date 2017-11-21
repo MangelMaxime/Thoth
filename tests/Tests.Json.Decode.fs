@@ -1,9 +1,9 @@
 module Tests.Decode
 
 open Fable.Core
-open Fable.Core.JsInterop
 open Fable.Core.Testing
 open Thot.Json.Decode
+open System
 
 [<Global>]
 let it (msg: string) (f: unit->unit): unit = jsNative
@@ -120,6 +120,16 @@ let jsonRecord =
          "g": 7,
          "h": 8 }"""
 
+let jsonRecordInvalid =
+    """{ "a": "invalid_a_field",
+         "b": "invalid_a_field",
+         "c": "invalid_a_field",
+         "d": "invalid_a_field",
+         "e": "invalid_a_field",
+         "f": "invalid_a_field",
+         "g": "invalid_a_field",
+         "h": "invalid_a_field" }"""
+
 describe "Decode" <| fun _ ->
 
     describe "Primitives: " <| fun _ ->
@@ -167,16 +177,114 @@ describe "Decode" <| fun _ ->
             Assert.AreEqual(expected, actual)
 
         it "an invalid int [invalid range] output an error" <| fun _ ->
-            let expected = Error("Expecting an int but instead got: 2147483648. Reason: Invalid range")
+            let expected = Error("Expecting an int but instead got: 2147483648\nReason: Invalid range")
             let actual =
                 decodeString int "2147483648"
 
             Assert.AreEqual(expected, actual)
 
         it "an invalid int [invalid range] output an error" <| fun _ ->
-            let expected = Error("Expecting an int but instead got: -2147483648. Reason: Invalid range")
+            let expected = Error("Expecting an int but instead got: -2147483648\nReason: Invalid range")
             let actual =
                 decodeString int "-2147483648"
+
+            Assert.AreEqual(expected, actual)
+
+    describe "Object primitives" <| fun _ ->
+
+        it "field works" <| fun _ ->
+            let json = """{ "name": "maxime", "age": 25 }"""
+            let expected = Ok("maxime")
+
+            let actual =
+                decodeString (field "name" string) json
+
+            Assert.AreEqual(expected, actual)
+
+        it "field output an error when field is missing" <| fun _ ->
+            let json = """{ "name": "maxime", "age": 25 }"""
+            let expected =
+                Error(
+                    """
+Expecting an object with a field named `height` but instead got:
+{
+    "name": "maxime",
+    "age": 25
+}
+                    """.Trim())
+
+            let actual =
+                decodeString (field "height" float) json
+
+            Assert.AreEqual(expected, actual)
+
+
+        it "at works" <| fun _ ->
+            let json = """{ "user": { "name": "maxime", "age": 25 } }"""
+            let expected = Ok "maxime"
+
+            let actual =
+                decodeString (at ["user"; "name"] string) json
+
+            Assert.AreEqual(expected, actual)
+
+        it "at output an error if the path failed" <| fun _ ->
+            let json = """{ "user": { "name": "maxime", "age": 25 } }"""
+            let expected =
+                Error(
+                    """
+Expecting an object with path `user.firstname` but instead got:
+{
+    "user": {
+        "name": "maxime",
+        "age": 25
+    }
+}
+Node `firstname` is unkown.
+                    """.Trim())
+
+            let actual =
+                decodeString (at ["user"; "firstname"] string) json
+
+            Assert.AreEqual(expected, actual)
+
+        it "index works" <| fun _ ->
+            let json = """["maxime", "alfonso", "steffen"]"""
+            let expected = Ok("alfonso")
+
+            let actual =
+                decodeString (index 1 string) json
+
+            Assert.AreEqual(expected, actual)
+
+        it "index output an error if array is to small" <| fun _ ->
+            let json = """["maxime", "alfonso", "steffen"]"""
+            let expected =
+                Error(
+                    """
+Expecting a longer array. Need index `5` but there are only `3` entries.
+[
+    "maxime",
+    "alfonso",
+    "steffen"
+]
+                    """.Trim())
+
+            let actual =
+                decodeString (index 5 string) json
+
+            Assert.AreEqual(expected, actual)
+
+        it "index output an error if value isn't an array" <| fun _ ->
+            let json = "1"
+            let expected =
+                Error(
+                    """
+Expecting an array but instead got: 1
+                    """.Trim())
+
+            let actual =
+                decodeString (index 5 string) json
 
             Assert.AreEqual(expected, actual)
 
@@ -217,12 +325,6 @@ describe "Decode" <| fun _ ->
                 decodeString (optional (field "height" int) ) json
 
             Assert.AreEqual(expectedMissingField, actualMissingField)
-
-            let expectedFieldAndThenOptional = Error("Expecting an object with a field named `height` but instead got: {\"name\":\"maxime\",\"age\":25}")
-            let actualFieldAndThenOptional =
-                decodeString (field "height" (optional float)) json
-
-            Assert.AreEqual(expectedFieldAndThenOptional, actualFieldAndThenOptional)
 
         it "optional works" <| fun _ ->
             let expected = Ok(Some "maxime")
@@ -380,5 +482,18 @@ describe "Decode" <| fun _ ->
 
             let actual =
                 decodeString decodePoint jsonRecord
+
+            Assert.AreEqual(expected, actual)
+
+        it "map2 generate an error if invalid" <| fun _ ->
+            let expected = Error("Expecting a float but instead got: \"invalid_a_field\"")
+
+            let decodePoint =
+                map2 Record2.Create
+                    (field "a" float)
+                    (field "b" float)
+
+            let actual =
+                decodeString decodePoint jsonRecordInvalid
 
             Assert.AreEqual(expected, actual)
