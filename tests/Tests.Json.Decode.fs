@@ -4,6 +4,8 @@ open Fable.Core
 open Fable.Core.Testing
 open Thot.Json.Decode
 open System
+open Thot.Json.Decode
+open Thot.Json.Decode
 
 [<Global>]
 let it (msg: string) (f: unit->unit): unit = jsNative
@@ -145,20 +147,6 @@ describe "Decode" <| fun _ ->
             let expected = Ok(1.2)
             let actual =
                 decodeString float "1.2"
-
-            Assert.AreEqual(expected, actual)
-
-        it "null works" <| fun _ ->
-            let expected = Ok(20 :> obj)
-            let actual =
-                decodeString (nil 20) "null"
-
-            Assert.AreEqual(expected, actual)
-
-        it "null works" <| fun _ ->
-            let expected = Ok(false :> obj)
-            let actual =
-                decodeString (nil false) "null"
 
             Assert.AreEqual(expected, actual)
 
@@ -356,6 +344,44 @@ Expecting an array but instead got: 1
 
             let actual =
                 decodeString (optional (field "name" string) ) json
+
+            Assert.AreEqual(expected, actual)
+
+    describe "Fancy decoding" <| fun _ ->
+
+        it "null works" <| fun _ ->
+            let expected = Ok(20)
+            let actual =
+                decodeString (nil 20) "null"
+
+            Assert.AreEqual(expected, actual)
+
+        it "null works" <| fun _ ->
+            let expected = Ok(false)
+            let actual =
+                decodeString (nil false) "null"
+
+            Assert.AreEqual(expected, actual)
+
+        it "succeed works" <| fun _ ->
+            let expected = Ok(7)
+            let actual =
+                decodeString (succeed 7) "true"
+
+            Assert.AreEqual(expected, actual)
+
+        it "succeed output an error if the JSON is invalid" <| fun _ ->
+            let expected = Error("Given an invalid JSON: Unexpected token m in JSON at position 0")
+            let actual =
+                decodeString (succeed 7) "maxime"
+
+            Assert.AreEqual(expected, actual)
+
+        it "fail works" <| fun _ ->
+            let msg = "Failing because it's fun"
+            let expected = Error(msg)
+            let actual =
+                decodeString (fail msg) "true"
 
             Assert.AreEqual(expected, actual)
 

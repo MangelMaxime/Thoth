@@ -3,6 +3,7 @@ module Thot.Json.Decode
 open Fable.Core
 open Fable.Core.JsInterop
 open Fable.Import
+open System.Text
 
 module Helpers =
 
@@ -43,6 +44,7 @@ type DecoderError =
     | BadField of string * obj
     | BadPath of string * obj * string
     | TooSmallArray of string * obj
+    | CustomMessage of string
 
 type Decoder<'T> = obj -> Result<'T, DecoderError>
 
@@ -65,6 +67,8 @@ let errorToString =
         genericMsg msg value true + ("\nNode `" + fieldName + "` is unkown.")
     | TooSmallArray (msg, value) ->
         "Expecting " + msg + ".\n" + (Helpers.anyToString value)
+    | CustomMessage msg ->
+        msg
 
 let unwrap (decoder : Decoder<'T>) (value : obj) : 'T =
     match decoder value with
@@ -113,12 +117,6 @@ let int (value: obj) : Result<int, DecoderError> =
             BadPrimitiveExtra("an int", value, "Invalid range") |> Error
         else
             Ok(unbox<int> value)
-
-let nil (output : obj) (value: obj) : Result<obj, DecoderError> =
-    if isNull value then
-        Ok output
-    else
-        BadPrimitive("null", value) |> Error
 
 let bool (value: obj) : Result<bool, DecoderError> =
     if Helpers.isBoolean value then
@@ -213,6 +211,25 @@ let optional (d1 : Decoder<'value>) (value: obj) :Result<'value option, DecoderE
     match decodeValue d1 value with
     | Ok v -> Ok (Some v)
     | Error _ -> Ok None
+
+//////////////////////
+// Fancy decoding ///
+////////////////////
+
+let nil (output : 'a) (value: obj) : Result<'a, DecoderError> =
+    if isNull value then
+        Ok output
+    else
+        BadPrimitive("null", value) |> Error
+
+let succeed (output : 'a) (_: obj) : Result<'a, DecoderError> =
+    Ok output
+
+let fail (msg: string) (_:obj) : Result<'a, DecoderError> =
+    CustomMessage msg |> Error
+
+// let andThen (f: 'a -> Decoder<'b>) (decoder : Decoder<'a>) (value: obj) : Result<'b, DecoderError> =
+
 
 /////////////////////
 // Map functions ///
