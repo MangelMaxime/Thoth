@@ -2,7 +2,7 @@
     "private": true,
     "scripts": {
         "watcher": "node tests-runner.js",
-        "test": "cd src && dotnet fable webpack --port free -- --watch"
+        "test": "cd tests && dotnet fable webpack --port free -- --watch"
     },
     "devDependencies": {},
     "dependencies": {

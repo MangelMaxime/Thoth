@@ -73,13 +73,16 @@ let unwrap (decoder : Decoder<'T>) (value : obj) : 'T =
     | Error error ->
         failwith (errorToString error)
 
+///////////////
+// Runners ///
+/////////////
+
 let decodeValue (decoder : Decoder<'T>) (value : obj) : Result<'T, string> =
     try
         match decoder value with
         | Ok success ->
             Ok success
         | Error error ->
-            Fable.Import.JS.console.log(errorToString error)
             Error (errorToString error)
     with
         | ex -> Error ex.Message
@@ -91,6 +94,10 @@ let decodeString (decoder : Decoder<'T>) (value : string) : Result<'T, string> =
     with
         | ex ->
             Error("Given an invalid JSON: " + ex.Message)
+
+//////////////////
+// Primitives ///
+////////////////
 
 let string (value: obj) : Result<string, DecoderError> =
     if Helpers.isString value then
@@ -124,6 +131,11 @@ let float (value: obj) : Result<float, DecoderError> =
         Ok(unbox<float> value)
     else
         BadPrimitive("a float", value) |> Error
+
+
+/////////////////////////
+// Object primitives ///
+///////////////////////
 
 let field (fieldName: string) (decoder : Decoder<'value>) (value: obj) : Result<'value, DecoderError> =
     let fieldValue = value?(fieldName)
@@ -170,12 +182,41 @@ let index (requestedIndex: int) (decoder : Decoder<'value>) (value: obj) : Resul
 
 // let nullable (d1: Decoder<'value>) : Resul<'value option, DecoderError> =
 
+//////////////////////
+// Data structure ///
+////////////////////
+
+let list (decoder : Decoder<'value>) (value: obj) : Result<'value list, DecoderError> =
+    if Helpers.isArray value then
+        unbox<obj array> value
+        |> Array.map (unwrap decoder)
+        |> Array.toList
+        |> Ok
+    else
+        BadPrimitive ("a list", value)
+        |> Error
+
+let array (decoder : Decoder<'value>) (value: obj) : Result<'value array, DecoderError> =
+    if Helpers.isArray value then
+        unbox<obj array> value
+        |> Array.map (unwrap decoder)
+        |> Ok
+    else
+        BadPrimitive ("an array", value)
+        |> Error
+
+//////////////////////////////
+// Inconsistent Structure ///
+////////////////////////////
+
 let optional (d1 : Decoder<'value>) (value: obj) :Result<'value option, DecoderError> =
     match decodeValue d1 value with
     | Ok v -> Ok (Some v)
     | Error _ -> Ok None
 
-// Map functions
+/////////////////////
+// Map functions ///
+///////////////////
 
 let map
     (ctor : 'a -> 'value)

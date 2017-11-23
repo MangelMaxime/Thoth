@@ -290,18 +290,42 @@ Expecting an array but instead got: 1
 
     describe "Data structure" <| fun _ ->
 
-        // it "nullable works" <| fun _ ->
-        //     let expected = Ok({a = 1.; b = 2.} : Record2)
+        it "list works" <| fun _ ->
+            let expected = Ok([1; 2; 3])
 
-        //     let decodePoint =
-        //         map2 Record2.Create
-        //             (field "a" float)
-        //             (field "b" float)
+            let actual =
+                decodeString (list int) "[1, 2, 3]"
 
-        //     let actual =
-        //         decodeString decodePoint jsonRecord
+            Assert.AreEqual(expected, actual)
 
-        //     Assert.AreEqual(expected, actual)
+        it "an invalid list output an error" <| fun _ ->
+            let expected = Error("Expecting a list but instead got: 1")
+
+            let actual =
+                decodeString (list int) "1"
+
+            Assert.AreEqual(expected, actual)
+
+        it "array works" <| fun _ ->
+            // Need to pass by a list otherwise Fable use:
+            // new Int32Array([1, 2, 3]) and the test fails
+            // And this would give:
+            // Expected: Result { tag: 0, data: Int32Array [ 1, 2, 3 ] }
+            // Actual: Result { tag: 0, data: [ 1, 2, 3 ] }
+            let expected = Ok([1; 2; 3] |> List.toArray)
+
+            let actual =
+                decodeString (array int) "[1, 2, 3]"
+
+            Assert.AreEqual(expected, actual)
+
+        it "an invalid array output an error" <| fun _ ->
+            let expected = Error("Expecting an array but instead got: 1")
+
+            let actual =
+                decodeString (array int) "1"
+
+            Assert.AreEqual(expected, actual)
 
     describe "Inconsistent structure" <| fun _ ->
 
