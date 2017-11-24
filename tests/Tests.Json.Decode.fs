@@ -3,9 +3,6 @@ module Tests.Decode
 open Fable.Core
 open Fable.Core.Testing
 open Thot.Json.Decode
-open System
-open Thot.Json.Decode
-open Thot.Json.Decode
 
 [<Global>]
 let it (msg: string) (f: unit->unit): unit = jsNative
@@ -154,6 +151,13 @@ describe "Decode" <| fun _ ->
             let expected = Ok(true)
             let actual =
                 decodeString bool "true"
+
+            Assert.AreEqual(expected, actual)
+
+        it "an invalid bool output an error" <| fun _ ->
+            let expected = Error("Expecting a boolean but instead got: 2")
+            let actual =
+                decodeString bool "2"
 
             Assert.AreEqual(expected, actual)
 
@@ -382,6 +386,54 @@ Expecting an array but instead got: 1
             let expected = Error(msg)
             let actual =
                 decodeString (fail msg) "true"
+
+            Assert.AreEqual(expected, actual)
+
+        it "andThen works" <| fun _ ->
+            let expected = Ok 1
+            let infoHelp version =
+                match version with
+                | 4 ->
+                    succeed 1
+                | 3 ->
+                    succeed 1
+                | _ ->
+                    fail <| "Tying to decode info, but version " + (version.ToString()) + "is not supported"
+
+            let info =
+                field "version" int
+                |> andThen infoHelp
+
+            let actual =
+                decodeString info """{ "version": 3, "data": 2 }"""
+
+            Assert.AreEqual(expected, actual)
+
+        it "andThen generate an error if an error occuered" <| fun _ ->
+            let expected =
+                Error(
+                    """
+Expecting an object with a field named `version` but instead got:
+{
+    "info": 3,
+    "data": 2
+}
+                    """.Trim())
+            let infoHelp version =
+                match version with
+                | 4 ->
+                    succeed 1
+                | 3 ->
+                    succeed 1
+                | _ ->
+                    fail <| "Tying to decode info, but version " + (version.ToString()) + "is not supported"
+
+            let info =
+                field "version" int
+                |> andThen infoHelp
+
+            let actual =
+                decodeString info """{ "info": 3, "data": 2 }"""
 
             Assert.AreEqual(expected, actual)
 

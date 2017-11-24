@@ -3,7 +3,6 @@ module Thot.Json.Decode
 open Fable.Core
 open Fable.Core.JsInterop
 open Fable.Import
-open System.Text
 
 module Helpers =
 
@@ -228,7 +227,11 @@ let succeed (output : 'a) (_: obj) : Result<'a, DecoderError> =
 let fail (msg: string) (_:obj) : Result<'a, DecoderError> =
     CustomMessage msg |> Error
 
-// let andThen (f: 'a -> Decoder<'b>) (decoder : Decoder<'a>) (value: obj) : Result<'b, DecoderError> =
+let andThen (cb: 'a -> Decoder<'b>) (decoder : Decoder<'a>) (value: obj) : Result<'b, DecoderError> =
+    match decodeValue decoder value with
+    | Error error -> failwith error
+    | Ok result ->
+        cb result value
 
 
 /////////////////////
