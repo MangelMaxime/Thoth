@@ -342,6 +342,26 @@ Expecting an array but instead got: 1
 
             Assert.AreEqual(expected, actual)
 
+        it "oneOf output errors if all case fails" <| fun _ ->
+            let expected =
+                Error (
+                    """
+I run into the following problems:
+
+Expecting a string but instead got: 1
+Expecting an object with a field named `test` but instead got:
+1
+                    """.Trim())
+
+            let badInt =
+                oneOf [ string; field "test" string ]
+
+            let actual =
+                decodeString (list badInt) "[1,2,null,4]"
+
+            Assert.AreEqual(expected, actual)
+
+
         it "optional works" <| fun _ ->
             let json = """{ "name": "maxime", "age": 25 }"""
 
@@ -404,7 +424,7 @@ Expecting an array but instead got: 1
 
         it "fail works" <| fun _ ->
             let msg = "Failing because it's fun"
-            let expected = Error(msg)
+            let expected = Error("I run into a `fail` decoder: "+ msg)
             let actual =
                 decodeString (fail msg) "true"
 

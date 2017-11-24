@@ -43,7 +43,7 @@ type DecoderError =
     | BadField of string * obj
     | BadPath of string * obj * string
     | TooSmallArray of string * obj
-    | CustomMessage of string
+    | FailMessage of string
     | BadOneOf of string list
 
 type Decoder<'T> = obj -> Result<'T, DecoderError>
@@ -67,8 +67,10 @@ let errorToString =
         genericMsg msg value true + ("\nNode `" + fieldName + "` is unkown.")
     | TooSmallArray (msg, value) ->
         "Expecting " + msg + ".\n" + (Helpers.anyToString value)
-    | CustomMessage msg ->
-        msg
+    | BadOneOf messages ->
+        "I run into the following problems:\n\n" + String.concat "\n" messages
+    | FailMessage msg ->
+        "I run into a `fail` decoder: " + msg
 
 let unwrap (decoder : Decoder<'T>) (value : obj) : 'T =
     match decoder value with
@@ -87,9 +89,12 @@ let decodeValue (decoder : Decoder<'T>) (value : obj) : Result<'T, string> =
         | Ok success ->
             Ok success
         | Error error ->
+            Fable.Import.JS.console.log (errorToString error)
             Error (errorToString error)
     with
-        | ex -> Error ex.Message
+        | ex ->
+            Fable.Import.JS.console.log (ex.Message)
+            Error ex.Message
 
 let decodeString (decoder : Decoder<'T>) (value : string) : Result<'T, string> =
     try
@@ -219,7 +224,7 @@ let oneOf (decoders : Decoder<'value> list) (value: obj) : Result<'value, Decode
             match decodeValue head value with
             | Ok v ->
                 Ok v
-            | Error error -> runner tail (error :: errors)
+            | Error error -> runner tail (errors @ [error])
         | [] -> BadOneOf errors |> Error
 
     runner decoders []
@@ -238,7 +243,7 @@ let succeed (output : 'a) (_: obj) : Result<'a, DecoderError> =
     Ok output
 
 let fail (msg: string) (_:obj) : Result<'a, DecoderError> =
-    CustomMessage msg |> Error
+    FailMessage msg |> Error
 
 let andThen (cb: 'a -> Decoder<'b>) (decoder : Decoder<'a>) (value: obj) : Result<'b, DecoderError> =
     match decodeValue decoder value with
