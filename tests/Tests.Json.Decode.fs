@@ -109,6 +109,16 @@ type Record8 =
           g = g
           h = h }
 
+type User =
+    { Id : int
+      Name : string
+      Email : string }
+
+    static member Create id name email =
+        { Id = id
+          Name = name
+          Email = email }
+
 let jsonRecord =
     """{ "a": 1,
          "b": 2,
@@ -321,24 +331,35 @@ Expecting an array but instead got: 1
 
     describe "Inconsistent structure" <| fun _ ->
 
+        it "oneOf works" <| fun _ ->
+            let expected = Ok([1; 2; 0; 4])
+
+            let badInt =
+                oneOf [ int; nil 0 ]
+
+            let actual =
+                decodeString (list badInt) "[1,2,null,4]"
+
+            Assert.AreEqual(expected, actual)
+
         it "optional works" <| fun _ ->
             let json = """{ "name": "maxime", "age": 25 }"""
 
             let expectedValid = Ok(Some "maxime")
             let actualValid =
-                decodeString (optional (field "name" string) ) json
+                decodeString (option (field "name" string) ) json
 
             Assert.AreEqual(expectedValid, actualValid)
 
             let expectedInvalidType = Ok(None)
             let actualInvalidType =
-                decodeString (optional (field "name" int) ) json
+                decodeString (option (field "name" int) ) json
 
             Assert.AreEqual(expectedInvalidType, actualInvalidType)
 
             let expectedMissingField = Ok(None)
             let actualMissingField =
-                decodeString (optional (field "height" int) ) json
+                decodeString (option (field "height" int) ) json
 
             Assert.AreEqual(expectedMissingField, actualMissingField)
 
@@ -347,7 +368,7 @@ Expecting an array but instead got: 1
             let json = """{ "name": "maxime", "age": 25 }"""
 
             let actual =
-                decodeString (optional (field "name" string) ) json
+                decodeString (option (field "name" string) ) json
 
             Assert.AreEqual(expected, actual)
 
@@ -599,3 +620,23 @@ Expecting an object with a field named `version` but instead got:
                 decodeString decodePoint jsonRecordInvalid
 
             Assert.AreEqual(expected, actual)
+
+    // describe "Pipeline" <| fun _ ->
+
+    //     it "required works" <| fun _ ->
+    //         let expected = Ok "maxime"
+
+    //         let userDecoder =
+    //             decode User.Create
+    //                 |> required "id" int
+    //                 |> required "email" string
+    //                 |> optional "name" string ""
+
+    //         let actual =
+    //             decodeString
+    //                 userDecoder
+    //                 """
+    //                     { "id": 67, "email": "user@mail.com" }
+    //                 """
+
+    //         Assert.AreEqual(expected, actual)

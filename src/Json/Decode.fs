@@ -44,6 +44,7 @@ type DecoderError =
     | BadPath of string * obj * string
     | TooSmallArray of string * obj
     | CustomMessage of string
+    | BadOneOf of string list
 
 type Decoder<'T> = obj -> Result<'T, DecoderError>
 
@@ -206,10 +207,22 @@ let array (decoder : Decoder<'value>) (value: obj) : Result<'value array, Decode
 // Inconsistent Structure ///
 ////////////////////////////
 
-let optional (d1 : Decoder<'value>) (value: obj) :Result<'value option, DecoderError> =
+let option (d1 : Decoder<'value>) (value: obj) :Result<'value option, DecoderError> =
     match decodeValue d1 value with
     | Ok v -> Ok (Some v)
     | Error _ -> Ok None
+
+let oneOf (decoders : Decoder<'value> list) (value: obj) : Result<'value, DecoderError> =
+    let rec runner (decoders : Decoder<'value> list) (errors : string list) =
+        match decoders with
+        | head::tail ->
+            match decodeValue head value with
+            | Ok v ->
+                Ok v
+            | Error error -> runner tail (error :: errors)
+        | [] -> BadOneOf errors |> Error
+
+    runner decoders []
 
 //////////////////////
 // Fancy decoding ///
@@ -232,7 +245,6 @@ let andThen (cb: 'a -> Decoder<'b>) (decoder : Decoder<'a>) (value: obj) : Resul
     | Error error -> failwith error
     | Ok result ->
         cb result value
-
 
 /////////////////////
 // Map functions ///
@@ -364,3 +376,22 @@ let map8
 
             Ok (ctor v1 v2 v3 v4 v5 v6 v7 v8)
         )
+
+////////////////
+// Pipeline ///
+//////////////
+
+let custom<'a, 'b, 'c> : Decoder<'a> -> Decoder<('a -> 'b)> -> 'c -> Result<'b, DecoderError> =
+    map2 (|>)
+
+let hardcoded<'a, 'b, 'c> : 'a -> Decoder<('a -> 'b)> -> 'c -> Result<'b,DecoderError> =
+    succeed >> custom
+
+let required (key : string) (valDecoder : Decoder<'a>) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
+    custom (field key valDecoder) decoder
+
+
+let requiredAt (path : string list) (valDecoder : Decoder<'a>) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
+    custom (at path valDecoder) decoder
+
+let decode = succeed
