@@ -33,6 +33,9 @@ module Helpers =
     [<Emit("JSON.stringify($0, null, 4) + ''")>]
     let anyToString (_: obj) : string= jsNative
 
+    [<Emit("typeof $0 === 'function'")>]
+    let isFunction (_: obj) : bool = jsNative
+
 type PrimitiveError =
     { Msg : string
       Value : obj }
@@ -75,6 +78,7 @@ let errorToString =
 let unwrap (decoder : Decoder<'T>) (value : obj) : 'T =
     match decoder value with
     | Ok success ->
+        // Fable.Import.JS.console.log success
         success
     | Error error ->
         failwith (errorToString error)
@@ -239,7 +243,9 @@ let nil (output : 'a) (value: obj) : Result<'a, DecoderError> =
     else
         BadPrimitive("null", value) |> Error
 
-let succeed (output : 'a) (_: obj) : Result<'a, DecoderError> =
+let value v = Ok v
+
+let succeed (output : 'a) (value: obj) : Result<'a, DecoderError> =
     Ok output
 
 let fail (msg: string) (_:obj) : Result<'a, DecoderError> =
@@ -386,17 +392,45 @@ let map8
 // Pipeline ///
 //////////////
 
-let custom<'a, 'b, 'c> : Decoder<'a> -> Decoder<('a -> 'b)> -> 'c -> Result<'b, DecoderError> =
-    map2 (|>)
+let custom d1 d2 = map2 (|>) d1 d2
 
-let hardcoded<'a, 'b, 'c> : 'a -> Decoder<('a -> 'b)> -> 'c -> Result<'b,DecoderError> =
-    succeed >> custom
+// let hardcoded = succeed >> custom
 
 let required (key : string) (valDecoder : Decoder<'a>) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
     custom (field key valDecoder) decoder
-
 
 let requiredAt (path : string list) (valDecoder : Decoder<'a>) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
     custom (at path valDecoder) decoder
 
 let decode = succeed
+
+let resolve<'a, 'b> : Decoder<Decoder<'a>> -> 'b -> Result<'a,DecoderError> =
+    andThen id
+
+let optionalDecoder pathDecoder valDecoder fallback =
+    let nullOr decoder =
+        oneOf [ decoder; nil fallback ]
+
+    let handleResult input =
+        match decodeValue pathDecoder input with
+        | Ok rawValue ->
+            // Field was present, so we try to decode the value
+            match decodeValue (nullOr valDecoder) rawValue with
+            | Ok finalResult ->
+                succeed finalResult
+
+            | Error finalErr ->
+                fail finalErr
+
+        | Error _ ->
+            // Field was not present
+            succeed fallback
+
+    value
+    |> handleResult
+
+let optional key valDecoder fallback decoder =
+    custom (optionalDecoder (field key value) valDecoder fallback) decoder
+
+let optionalAt path valDecoder fallback decoder =
+    custom (optionalDecoder (at path value) valDecoder fallback) decoder
