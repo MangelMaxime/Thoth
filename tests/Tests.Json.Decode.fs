@@ -3,6 +3,8 @@ module Tests.Decode
 open Fable.Core
 open Fable.Core.Testing
 open Thot.Json.Decode
+open Thot.Json.Decode
+open Thot.Json.Decode
 
 [<Global>]
 let it (msg: string) (f: unit->unit): unit = jsNative
@@ -110,14 +112,16 @@ type Record8 =
           h = h }
 
 type User =
-    { Id : int
-      Name : string
-      Email : string }
+    { Id : int }
+    //   Name : string
+    //   Email : string
+    //   Followers : int }
 
-    static member Create id name email =
-        { Id = id
-          Name = name
-          Email = email }
+    static member Create id = // name email followers =
+        { Id = id }
+        //   Name = name
+        //   Email = email
+        //   Followers = followers }
 
 let jsonRecord =
     """{ "a": 1,
@@ -342,6 +346,26 @@ Expecting an array but instead got: 1
 
             Assert.AreEqual(expected, actual)
 
+        it "oneOf output errors if all case fails" <| fun _ ->
+            let expected =
+                Error (
+                    """
+I run into the following problems:
+
+Expecting a string but instead got: 1
+Expecting an object with a field named `test` but instead got:
+1
+                    """.Trim())
+
+            let badInt =
+                oneOf [ string; field "test" string ]
+
+            let actual =
+                decodeString (list badInt) "[1,2,null,4]"
+
+            Assert.AreEqual(expected, actual)
+
+
         it "optional works" <| fun _ ->
             let json = """{ "name": "maxime", "age": 25 }"""
 
@@ -404,7 +428,7 @@ Expecting an array but instead got: 1
 
         it "fail works" <| fun _ ->
             let msg = "Failing because it's fun"
-            let expected = Error(msg)
+            let expected = Error("I run into a `fail` decoder: "+ msg)
             let actual =
                 decodeString (fail msg) "true"
 
@@ -621,22 +645,24 @@ Expecting an object with a field named `version` but instead got:
 
             Assert.AreEqual(expected, actual)
 
-    // describe "Pipeline" <| fun _ ->
+    describe "Pipeline" <| fun _ ->
 
-    //     it "required works" <| fun _ ->
-    //         let expected = Ok "maxime"
+        it "required works" <| fun _ ->
+            let expected =
+                Ok(User.Create 67 )//"" "user@mail.com" 0)
 
-    //         let userDecoder =
-    //             decode User.Create
-    //                 |> required "id" int
-    //                 |> required "email" string
-    //                 |> optional "name" string ""
+            let userDecoder =
+                decode User.Create
+                    |> required "id" int
+                    // |> required "email" string
+                    // |> required "email" string
+                    // |> required "id" int
+                    // |> optional "name" string ""
+                    // |> optional "dlzpdzpdlpz" int 0
 
-    //         let actual =
-    //             decodeString
-    //                 userDecoder
-    //                 """
-    //                     { "id": 67, "email": "user@mail.com" }
-    //                 """
+            let actual =
+                decodeString
+                    userDecoder
+                    """{ "id": 67, "email": "user@mail.com" }"""
 
-    //         Assert.AreEqual(expected, actual)
+            Assert.AreEqual(expected, actual)
