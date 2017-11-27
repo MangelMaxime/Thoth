@@ -112,16 +112,16 @@ type Record8 =
           h = h }
 
 type User =
-    { Id : int }
-    //   Name : string
-    //   Email : string
-    //   Followers : int }
+    { Id : int
+      Name : string
+      Email : string
+      Followers : int }
 
-    static member Create id = // name email followers =
-        { Id = id }
-        //   Name = name
-        //   Email = email
-        //   Followers = followers }
+    static member Create id name email followers =
+        { Id = id
+          Name = name
+          Email = email
+          Followers = followers }
 
 let jsonRecord =
     """{ "a": 1,
@@ -649,16 +649,14 @@ Expecting an object with a field named `version` but instead got:
 
         it "required works" <| fun _ ->
             let expected =
-                Ok(User.Create 67 )//"" "user@mail.com" 0)
+                Ok(User.Create 67 "" "user@mail.com" 0)
 
             let userDecoder =
                 decode User.Create
                     |> required "id" int
-                    // |> required "email" string
-                    // |> required "email" string
-                    // |> required "id" int
-                    // |> optional "name" string ""
-                    // |> optional "dlzpdzpdlpz" int 0
+                    |> optional "name" string ""
+                    |> required "email" string
+                    |> optional "non_existing_key" int 0
 
             let actual =
                 decodeString

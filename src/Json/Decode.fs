@@ -245,7 +245,7 @@ let nil (output : 'a) (value: obj) : Result<'a, DecoderError> =
 
 let value v = Ok v
 
-let succeed (output : 'a) (value: obj) : Result<'a, DecoderError> =
+let succeed (output : 'a) (_: obj) : Result<'a, DecoderError> =
     Ok output
 
 let fail (msg: string) (_:obj) : Result<'a, DecoderError> =
