@@ -93,11 +93,9 @@ let decodeValue (decoder : Decoder<'T>) (value : obj) : Result<'T, string> =
         | Ok success ->
             Ok success
         | Error error ->
-            Fable.Import.JS.console.log (errorToString error)
             Error (errorToString error)
     with
         | ex ->
-            Fable.Import.JS.console.log (ex.Message)
             Error ex.Message
 
 let decodeString (decoder : Decoder<'T>) (value : string) : Result<'T, string> =
@@ -427,7 +425,7 @@ let optionalDecoder pathDecoder valDecoder fallback =
             succeed fallback
 
     value
-    |> handleResult
+    |> andThen handleResult
 
 let optional key valDecoder fallback decoder =
     custom (optionalDecoder (field key value) valDecoder fallback) decoder
