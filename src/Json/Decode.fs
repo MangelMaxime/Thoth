@@ -402,7 +402,7 @@ let required (key : string) (valDecoder : Decoder<'a>) (decoder : Decoder<'a -> 
 let requiredAt (path : string list) (valDecoder : Decoder<'a>) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
     custom (at path valDecoder) decoder
 
-let decode = succeed
+let decode output value = succeed output value
 
 let resolve<'a, 'b> : Decoder<Decoder<'a>> -> 'b -> Result<'a,DecoderError> =
     andThen id
