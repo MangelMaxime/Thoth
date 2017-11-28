@@ -392,7 +392,7 @@ let map8
 
 let custom d1 d2 = map2 (|>) d1 d2
 
-// let hardcoded = succeed >> custom
+let hardcoded<'a, 'b, 'c> : 'a -> Decoder<('a -> 'b)> -> 'c -> Result<'b,DecoderError> = succeed >> custom
 
 let required (key : string) (valDecoder : Decoder<'a>) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
     custom (field key valDecoder) decoder
@@ -402,8 +402,9 @@ let requiredAt (path : string list) (valDecoder : Decoder<'a>) (decoder : Decode
 
 let decode output value = succeed output value
 
-let resolve<'a, 'b> : Decoder<Decoder<'a>> -> 'b -> Result<'a,DecoderError> =
-    andThen id
+/// Convert a `Decoder<Result<x, 'a>>` into a `Decoder<'a>`
+let resolve d1 value : Result<'a,DecoderError> =
+    andThen id d1 value
 
 let optionalDecoder pathDecoder valDecoder fallback =
     let nullOr decoder =

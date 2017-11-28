@@ -117,7 +117,7 @@ type User =
       Email : string
       Followers : int }
 
-    static member Create id name email followers =
+    static member Create id email name followers =
         { Id = id
           Name = name
           Email = email
@@ -649,14 +649,14 @@ Expecting an object with a field named `version` but instead got:
 
         it "required works" <| fun _ ->
             let expected =
-                Ok(User.Create 67 "" "user@mail.com" 0)
+                Ok(User.Create 67 "user@mail.com" "" 0)
 
             let userDecoder =
                 decode User.Create
                     |> required "id" int
-                    |> optional "name" string ""
                     |> required "email" string
-                    |> optional "non_existing_key" int 0
+                    |> optional "name" string ""
+                    |> hardcoded 0
 
             let actual =
                 decodeString
