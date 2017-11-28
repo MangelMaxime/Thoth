@@ -14,13 +14,14 @@ open System.Text.RegularExpressions
 System.Console.OutputEncoding <- System.Text.Encoding.UTF8
 #endif
 
-let dotnetcliVersion = "2.0.2"
+let dotnetcliVersion = "2.0.3"
 
 let mutable dotnetExePath = "dotnet"
 
 let release = LoadReleaseNotes "RELEASE_NOTES.md"
 let srcGlob = "src/**/*.fsproj"
 let testsGlob = "tests/**/*.fsproj"
+let docsGlob = "docs/**/*.fsproj"
 
 module Util =
 
@@ -54,18 +55,12 @@ module Logger =
 
 
 Target "Clean" (fun _ ->
-    ["bin"]
+    !! "src/**/bin"
+    ++ "src/**/obj"
+    ++ "docs/**/bin"
+    ++ "docs/**/obj"
     |> CleanDirs
-
-    !! srcGlob
-    |> Seq.collect(fun p ->
-        ["bin";"obj"]
-        |> Seq.map(fun sp ->
-             Path.GetDirectoryName p @@ sp)
-        )
-    |> CleanDirs
-
-    )
+)
 
 Target "InstallDotNetCore" (fun _ ->
    dotnetExePath <- DotNetCli.InstallDotNetSDK dotnetcliVersion
@@ -81,6 +76,7 @@ Target "YarnInstall"(fun _ ->
 Target "DotnetRestore" (fun _ ->
     !! srcGlob
     ++ testsGlob
+    ++ docsGlob
     |> Seq.iter (fun proj ->
         DotNetCli.Restore (fun c ->
             { c with
@@ -118,7 +114,7 @@ Target "MochaTest" (fun _ ->
     |> Seq.iter(fun proj ->
         let projDir = proj |> DirectoryName
         //Compile to JS
-        dotnet projDir "fable webpack --port free"
+        dotnet projDir "fable yarn-run rollup --port free -- -c tests/rollup.config.js "
 
         //Run mocha tests
         let projDirOutput = projDir </> "bin"
@@ -140,6 +136,22 @@ Target "DotnetPack" (fun _ ->
                         sprintf "/p:PackageReleaseNotes=\"%s\"" (String.Join("\n",release.Notes))
                     ]
             })
+    )
+)
+
+Target "Docs.Watch" (fun _ ->
+    !! docsGlob
+    |> Seq.iter (fun proj ->
+        let projDir = proj |> DirectoryName
+        dotnet projDir "fable yarn-run fable-splitter --port free -- -c docs/splitter.config.js -w"
+    )
+)
+
+Target "Docs.Build" (fun _ ->
+    !! docsGlob
+    |> Seq.iter (fun proj ->
+        let projDir = proj |> DirectoryName
+        dotnet projDir "fable yarn-run fable-splitter --port free -- -c docs/splitter.config.js"
     )
 )
 
@@ -220,5 +232,10 @@ Target "Release" (fun _ ->
 "Watch"
     <== [ "DotnetBuild" ]
 
+"Docs.Build"
+    <== [ "DotnetRestore" ]
+
+"Docs.Watch"
+    <== [ "DotnetRestore" ]
 
 RunTargetOrDefault "DotnetPack"

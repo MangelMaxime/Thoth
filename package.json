@@ -1,11 +1,8 @@
 {
     "private": true,
     "scripts": {
-        "watcher": "node tests-runner.js",
-        "test": "cd tests && dotnet fable npm-rollup --port free -- --w",
-        "rollup": "node node_modules/rollup/bin/rollup -c tests/rollup.config.js",
-        "watch-docs": "cd docs/src && dotnet fable yarn-fable-splitter --port free -- -w",
-        "fable-splitter": "node node_modules/fable-splitter/cli.js -c docs/splitter.config.js",
+        "rollup": "node node_modules/rollup/bin/rollup",
+        "fable-splitter": "node node_modules/fable-splitter/cli.js",
         "server": "cd docs/public && reload -b"
     },
     "devDependencies": {
@@ -22,14 +19,12 @@
         "babel-core": "^6.26.0",
         "babel-loader": "^7.1.2",
         "babel-preset-es2015": "^6.24.1",
-        "chokidar": "^1.7.0",
         "fable-loader": "^1.1.4",
         "handlebars": "^4.0.11",
         "isomorphic-fetch": "^2.2.1",
         "mocha": "^4.0.1",
         "react": "^16.1.1",
         "react-dom": "^16.1.1",
-        "showdown": "^1.8.3",
-        "webpack": "^3.8.1"
+        "showdown": "^1.8.3"
     }
 }

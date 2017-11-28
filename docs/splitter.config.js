@@ -23,7 +23,7 @@ var babelOptions = fableUtils.resolveBabelOptions({
 });
 
 module.exports = {
-  entry: resolve("src/Fable.StaticPageGenerator.fsproj"),
+  entry: resolve("Docs.fsproj"),
   outDir: path.dirname(outFile),
   babel: babelOptions,
   fable: { define: ["DEBUG"] },
