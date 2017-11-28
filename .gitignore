@@ -254,3 +254,7 @@ paket-files/
 TestResults.xml
 
 dist/
+
+
+docs/build/
+docs/public/

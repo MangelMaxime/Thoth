@@ -8,3 +8,18 @@ clitool dotnet-fable
 group Build
     source https://www.nuget.org/api/v2
     nuget FAKE
+
+
+group Docs
+    framework: netstandard2.0
+    content: none
+
+    source https://www.nuget.org/api/v2
+
+    clitool dotnet-fable
+    nuget Fable.Core
+    nuget Fable.Import.Browser
+    nuget Fable.React
+    nuget Fable.PowerPack
+    nuget Fable.Import.Node
+    nuget Fulma prerelease
