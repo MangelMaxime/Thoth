@@ -5,6 +5,8 @@
   <ItemGroup>
     <Compile Include="src/Fable.Import.Showdown.fs" />
     <Compile Include="src/Helpers.fs" />
+    <Compile Include="src/Renderer/Navbar.fs" />
+    <Compile Include="src/Renderer/Page.fs" />
     <Compile Include="src/Main.fs" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />

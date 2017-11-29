@@ -59,6 +59,7 @@ Target "Clean" (fun _ ->
     ++ "src/**/obj"
     ++ "docs/**/bin"
     ++ "docs/**/obj"
+    ++ "docs/**/build"
     |> CleanDirs
 )
 
@@ -160,6 +161,10 @@ Target "Docs.Watch" (fun _ ->
     )
 )
 
+Target "Docs.Setup" (fun _ ->
+    CopyDir "./docs/public/fonts" "./node_modules/font-awesome/fonts" (fun _ -> true)
+)
+
 Target "Docs.Build" (fun _ ->
     !! docsGlob
     |> Seq.iter (fun proj ->
@@ -251,9 +256,11 @@ Target "Release" (fun _ ->
     <== [ "DotnetBuild" ]
 
 "Docs.Build"
-    <== [ "DotnetRestore" ]
+    <== [ "DotnetRestore"
+          "Docs.Setup" ]
 
 "Docs.Watch"
-    <== [ "DotnetRestore" ]
+    <== [ "Docs.Setup" ]
+    // <== [ "DotnetRestore" ]
 
 RunTargetOrDefault "DotnetPack"

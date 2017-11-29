@@ -3,29 +3,38 @@ const path = require("path");
 const fableUtils = require("fable-utils");
 
 function resolve(filePath) {
-  return path.resolve(__dirname, filePath)
+    return path.resolve(__dirname, filePath)
 }
 
 function runScript(scriptPath) {
-  var scriptDir = path.dirname(scriptPath);
-  // Delete files in directory from require cache
-  Object.keys(require.cache).forEach(function(key) {
-    if (key.startsWith(scriptDir))
-      delete require.cache[key]
-  })
-  require(scriptPath);
+    try {
+        console.log("Running script")
+        var childProcess = require("child_process");
+        var path = require("path");
+        var cp = childProcess.fork(scriptPath);
+        cp.on("exit", function (code, signal) {
+            if (code === 0) {
+                console.log("Success");
+            } else {
+                console.log("Exit", { code: code, signal: signal });
+            }
+        });
+        cp.on("error", console.error.bind(console));
+    } catch (err) {
+        console.error(err);
+    }
 }
-
-var outFile = resolve("build/Main.js");
 
 var babelOptions = fableUtils.resolveBabelOptions({
     plugins: ["transform-es2015-modules-commonjs"]
 });
 
 module.exports = {
-  entry: resolve("Docs.fsproj"),
-  outDir: path.dirname(outFile),
-  babel: babelOptions,
-  fable: { define: ["DEBUG"] },
-  postbuild() { runScript(outFile) }
+    entry: resolve("Docs.fsproj"),
+    outDir: resolve("build"),
+    babel: babelOptions,
+    fable: { define: ["DEBUG"] },
+    postbuild() {
+        runScript(resolve("build/src/Main.js"))
+    }
 };

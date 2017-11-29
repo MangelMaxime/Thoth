@@ -19,7 +19,7 @@ group Docs
     clitool dotnet-fable
     nuget Fable.Core
     nuget Fable.Import.Browser
-    nuget Fable.React
+    nuget Fable.React prerelease
     nuget Fable.PowerPack
     nuget Fable.Import.Node
     nuget Fulma prerelease

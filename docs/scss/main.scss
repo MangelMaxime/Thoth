@@ -2,9 +2,30 @@
 
 // Bulma customization
 $body-size: 14px;
+$primary: #2D3947;
 
+$navbar-item-color: $white;
+$navbar-item-active-background-color: rgb(120, 156, 197);
 
-$fa-font-path: "./../../node_modules/font-awesome/fonts/";
+$fa-font-path: "./fonts/";
 @import './../../node_modules/font-awesome/scss/font-awesome';
 
 @import './../../node_modules/bulma/bulma';
+
+.bd-special-shadow {
+	background-image: linear-gradient(rgba(0, 0, 0, 0.2), transparent);
+	height: 8px;
+	left: 0;
+	opacity: 0;
+	position: absolute;
+	right: 0;
+	top: 100%;
+	transform: scaleY(0);
+	transform-origin: center top;
+}
+
+.navbar {
+    .title {
+        color: white;
+    }
+}
