@@ -143,7 +143,20 @@ Target "Docs.Watch" (fun _ ->
     !! docsGlob
     |> Seq.iter (fun proj ->
         let projDir = proj |> DirectoryName
-        dotnet projDir "fable yarn-run fable-splitter --port free -- -c docs/splitter.config.js -w"
+
+        [ async {
+            dotnet projDir "fable yarn-run fable-splitter --port free -- -c docs/splitter.config.js"
+          }
+          async {
+            Yarn(fun yarnParams ->
+                    { yarnParams
+                        with Command = "node-sass --output-style compressed --watch --output docs/public/ docs/scss/main.scss" |> YarnCommand.Custom }
+                )
+          }
+        ]
+        |> Async.Parallel
+        |> Async.RunSynchronously
+        |> ignore
     )
 )
 
@@ -151,7 +164,12 @@ Target "Docs.Build" (fun _ ->
     !! docsGlob
     |> Seq.iter (fun proj ->
         let projDir = proj |> DirectoryName
+
         dotnet projDir "fable yarn-run fable-splitter --port free -- -c docs/splitter.config.js"
+        Yarn(fun yarnParams ->
+                { yarnParams
+                    with Command = "node-sass --output-style compressed --output docs/public/ docs/scss/main.scss" |> YarnCommand.Custom }
+            )
     )
 )
 

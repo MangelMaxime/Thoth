@@ -1,19 +1,30 @@
 <!doctype html>
 <html>
-  <head>
+
+<head>
     <title>{{ title }}</title>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.1/css/bulma.min.css">
-    <style>
-      body { margin: 20px 10px }
-    </style>
-  </head>
-  <body>
+    <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+
+<body>
+    <nav class="navbar" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://bulma.io">
+                <img src="https://bulma.io/images/bulma-logo.png" alt="Bulma: a modern CSS framework based on Flexbox" width="112" height="28">
+            </a>
+
+            <button class="button navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
     <div class="content">
-      {{{ body }}}
-      {{{ data }}}
+        {{{ body }}} {{{ data }}}
     </div>
-  </body>
+</body>
+
 </html>
