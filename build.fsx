@@ -145,7 +145,7 @@ Target "Docs.Watch" (fun _ ->
         let projDir = proj |> DirectoryName
 
         [ async {
-            dotnet projDir "fable yarn-run fable-splitter --port free -- -c docs/splitter.config.js"
+            dotnet projDir "fable yarn-run fable-splitter --port free -- -c docs/splitter.config.js -w"
           }
           async {
             Yarn(fun yarnParams ->
