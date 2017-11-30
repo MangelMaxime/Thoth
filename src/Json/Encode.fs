@@ -43,4 +43,5 @@ let list (values : Value list) : Value =
     FFI.encodeList values
 
 let encode (space: int) (value: obj) : string =
+let encode (space: int) (value: Value) : string =
     FFI.stringify value None space
