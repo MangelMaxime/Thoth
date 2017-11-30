@@ -63,7 +63,7 @@ describe "Encode" <| fun _ ->
     it "a null works" <| fun _ ->
         let expected = "null"
         let actual =
-            ``null``
+            nil
             |> encode 0
         Assert.AreEqual(expected, actual)
 

@@ -13,7 +13,7 @@ module Helpers =
     let private handleBarsCompile (_: string): obj->string = import "compile" "handlebars"
     // let private marked (markdown: string): string = importDefault "marked"
 
-    let private converter = Showdown.Globals.Converter.Create()
+    let converter = Showdown.Globals.Converter.Create()
 
     /// Resolves a path to prevent using location of target JS file
     /// Note the function is inline so `__dirname` will belong to the calling file

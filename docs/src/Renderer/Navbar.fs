@@ -83,4 +83,3 @@ module Navbar =
                 [ navbarBrand
                   navbarMenu activeMenu
                   navbarEnd ] ]
-        |> Docs.Helpers.parseReactStatic

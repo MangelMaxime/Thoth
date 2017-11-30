@@ -12,6 +12,8 @@ $fa-font-path: "./fonts/";
 
 @import './../../node_modules/bulma/bulma';
 
+@import "./prism-fsharp";
+
 .bd-special-shadow {
 	background-image: linear-gradient(rgba(0, 0, 0, 0.2), transparent);
 	height: 8px;
