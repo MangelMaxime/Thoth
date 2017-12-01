@@ -63,6 +63,7 @@ module Helpers =
     open Fable.Core
     open Fable.Helpers.React
     open Fable.Helpers.React.Props
+    open Fulma.Elements
 
     [<Pojo>]
     type DangerousInnerHtml =
@@ -70,3 +71,7 @@ module Helpers =
 
     let htmlFromMarkdown str =
         div [ DangerouslySetInnerHTML { __html = makeHtml str } ] [ ]
+
+    let contentFromMarkdown str =
+        Content.content [ Content.props [ DangerouslySetInnerHTML { __html = makeHtml str } ] ]
+            [ ]

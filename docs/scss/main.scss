@@ -64,3 +64,34 @@ $fa-font-path: "./fonts/";
     }
 
 }
+
+.content {
+
+    h1, h2, h3,
+    h4, h5, h6 {
+
+        .anchor-control {
+            color: grey;
+            float: left;
+            padding-right: 4px;
+            margin: 5px 0 0 -20px;
+            line-height: 1;
+            font-size: 1rem;
+            visibility: hidden;
+        }
+
+        &:hover {
+            .anchor-control {
+                visibility: visible;
+            }
+        }
+
+        .anchor {
+            display: block;
+            position: relative;
+            top: -($navbar-height + 1rem);
+            visibility: hidden;
+        }
+    }
+
+}

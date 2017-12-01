@@ -5,17 +5,20 @@ module Page =
 
     open Docs.Helpers
     open Fable.Core.JsInterop
-    open Fable.Import.React
+    open Fulma.Layouts
 
     type PageConfig =
-        { ActivePage : Navbar.ActivePage
+        { Page : Route.Page
           Title : string option
-          Body : string
-          OutputFile : string }
+          Body : string }
+
+    let private footer =
+        Footer.footer [ Footer.customClass "has-text-centered" ]
+            [ Container.container [ ]
+                [ contentFromMarkdown "**Thot** by [Maxime Mangel](https://twitter.com/MangelMaxime)" ]
+            ]
 
     let private templatePath = resolve "${entryDir}/templates/template.hbs"
-    let private markdownPath = resolve "${entryDir}/README.md"
-    let private indexPath = resolve "${entryDir}/public/index.html"
 
     let render (config: PageConfig) =
         let title =
@@ -23,11 +26,12 @@ module Page =
             | Some title -> "Thot: " + title
             | None -> "Thot"
 
-        let outputFile = resolve ("${entryDir}/public/" + config.OutputFile)
+        let outputFile = resolve ("${entryDir}/public/" + (Route.toUrl config.Page))
 
         [ "title" ==> title
-          "navbar" ==> ((Navbar.render config.ActivePage) |> parseReactStatic)
+          "navbar" ==> ((Navbar.render config.Page) |> parseReactStatic)
           "body" ==> config.Body
+          "footer" ==> (footer |> parseReactStatic)
         ]
         |> parseTemplate templatePath
         |> writeFile outputFile

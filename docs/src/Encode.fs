@@ -13,6 +13,8 @@ let private content =
 
 Module for turning F# values into Json values.
 
+*This mobule is inspired by [Json.Encode from Elm](http://package.elm-lang.org/packages/elm-lang/core/latest/Json-Encode).*
+
 ## How to use it ?
 
 ```fsharp
@@ -51,8 +53,7 @@ let body =
 
 let render () =
     Page.render {
-        ActivePage = Route.Encode
+        Page = Route.Encode
         Title = None
         Body = body |> parseReactStatic
-        OutputFile = "encode.html"
     }

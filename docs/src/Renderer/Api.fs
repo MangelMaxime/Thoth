@@ -15,7 +15,7 @@ open Fulma.Layouts
 module rec Api =
 
     type PageConfig =
-        { ActivePage : Navbar.ActivePage
+        { ActivePage : Route.Page
           Title : string option
           Body : ReactElement }
 

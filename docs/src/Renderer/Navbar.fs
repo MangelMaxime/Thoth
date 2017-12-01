@@ -59,14 +59,16 @@ module Navbar =
 
     let private navbarMenu activeMenu =
         Navbar.menu [ ]
-            [ Navbar.item_a [ if activeMenu = Route.Decode then yield Navbar.Item.isActive ]
+            [ Navbar.item_a [ if activeMenu = Route.Decode then yield Navbar.Item.isActive
+                              yield Navbar.Item.props [ Href (Route.toUrl Route.Decode) ] ]
                 [ str "Decode" ]
-              Navbar.item_a [ if activeMenu = Route.Encode then yield Navbar.Item.isActive ]
+              Navbar.item_a [ if activeMenu = Route.Encode then yield Navbar.Item.isActive
+                              yield Navbar.Item.props [ Href (Route.toUrl Route.Encode) ] ]
                 [ str "Encode" ] ]
 
     let private navbarBrand =
         Navbar.brand_div [ ]
-            [ Navbar.item_a [ Navbar.Item.props [ Href "https://mangelmaxime.github.io/Thot" ] ]
+            [ Navbar.item_a [ Navbar.Item.props [ Href (Route.toUrl Route.Index) ] ]
                 [ Heading.p [ Heading.is4 ]
                     [ str "Thot" ] ] ]
 

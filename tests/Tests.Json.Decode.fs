@@ -3,8 +3,6 @@ module Tests.Decode
 open Fable.Core
 open Fable.Core.Testing
 open Thot.Json.Decode
-open Thot.Json.Decode
-open Thot.Json.Decode
 
 [<Global>]
 let it (msg: string) (f: unit->unit): unit = jsNative
