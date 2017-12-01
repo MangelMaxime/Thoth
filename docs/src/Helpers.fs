@@ -6,14 +6,14 @@ module Helpers =
     open System.Collections.Generic
     open Fable.Core.JsInterop
     open Fable.Import
+    // open Fable.Import.Showdown
     open Fable.Import.Node.Globals
     open Fable.Import.Node.Exports
 
     let private templateCache = Dictionary<string, obj->string>()
     let private handleBarsCompile (_: string): obj->string = import "compile" "handlebars"
-    // let private marked (markdown: string): string = importDefault "marked"
 
-    let converter = Showdown.Globals.Converter.Create()
+    let makeHtml (_:string) : string = importMember "./Renderer/utils.js"
 
     /// Resolves a path to prevent using location of target JS file
     /// Note the function is inline so `__dirname` will belong to the calling file
@@ -33,7 +33,7 @@ module Helpers =
 
     /// Parses a markdown file
     let parseMarkdown (path: string) =
-        Fs.readFileSync(path).toString() |> converter.makeHtml
+        Fs.readFileSync(path).toString() |> makeHtml
 
     /// Parses a React element invoking ReactDOMServer.renderToString
     let parseReact (el: React.ReactElement) =
@@ -59,3 +59,14 @@ module Helpers =
 
     let readFile (path: string) =
         Fs.readFileSync(path).toString()
+
+    open Fable.Core
+    open Fable.Helpers.React
+    open Fable.Helpers.React.Props
+
+    [<Pojo>]
+    type DangerousInnerHtml =
+        { __html : string }
+
+    let htmlFromMarkdown str =
+        div [ DangerouslySetInnerHTML { __html = makeHtml str } ] [ ]

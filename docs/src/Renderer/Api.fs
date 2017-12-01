@@ -9,6 +9,7 @@ open System.Text.RegularExpressions
 open Fable.Helpers.React
 open Fable.Helpers.React.Props
 open Fulma.Elements
+open Fulma.Layouts
 
 [<RequireQualifiedAccess>]
 module rec Api =
@@ -154,7 +155,7 @@ module rec Api =
     let htmlFromMarkdown str =
         pre [ ]
             [ code [ ClassName "language-fsharp"
-                     DangerouslySetInnerHTML { __html = converter.makeHtml str } ] [] ]
+                     DangerouslySetInnerHTML { __html = makeHtml str } ] [] ]
 
     let private viewDeclaration (decls : string list ) =
         let text = decls |> String.concat "\n"
@@ -168,24 +169,21 @@ module rec Api =
             | Some d -> str d |> Some
             | None -> None
 
-        tr [ ]
-           [ td [ ] [ str name ]
-             td [ ] [ str typ ]
-             td [ ] [ ofOption description ] ]
-
+        Columns.columns [ Columns.props [ Key (name + typ) ] ]
+            [ Column.column [ Column.Width.is3 ] [ str name]
+              Column.column [ Column.Width.is2 ] [ str typ ]
+              Column.column [ ] [ ofOption description ] ]
 
     let private viewFunction (info : FunctionInfo) =
         div [ ]
             [ hr [ ]
               viewDeclaration info.Declaration
-              Table.table [ ]
-                [ thead [ ]
-                    [ tr [ ]
-                        [ th [ ] [ str "Name" ]
-                          th [ ] [ str "Type" ]
-                          th [ ] [ str "Description" ] ] ]
-                  tbody [ ]
-                    (info.Parameters |> List.map viewParameter) ] ]
+              div [ ClassName "function-doc" ]
+                  [ Columns.columns [ Columns.customClass "function-doc-headers"]
+                        [ Column.column [ Column.Width.is3 ] [ str "Name" ]
+                          Column.column [ Column.Width.is2 ] [ str "Type" ]
+                          Column.column [ ] [ str "Description" ] ]
+                    (info.Parameters |> List.map viewParameter) |> ofList ] ]
 
     let render (filepath : string) =
         let fileContent = readFile filepath

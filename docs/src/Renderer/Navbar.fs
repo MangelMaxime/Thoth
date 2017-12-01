@@ -11,11 +11,6 @@ module Navbar =
     open Fulma.Elements.Form
     open Fulma.Extra.FontAwesome
 
-    type ActivePage =
-        | Decode
-        | Encode
-        | Index
-
     let private shadow =
         div [ ClassName "bd-special-shadow"
               Style [ Opacity 1.
@@ -64,9 +59,9 @@ module Navbar =
 
     let private navbarMenu activeMenu =
         Navbar.menu [ ]
-            [ Navbar.item_a [ if activeMenu = Decode then yield Navbar.Item.isActive ]
+            [ Navbar.item_a [ if activeMenu = Route.Decode then yield Navbar.Item.isActive ]
                 [ str "Decode" ]
-              Navbar.item_a [ if activeMenu = Encode then yield Navbar.Item.isActive ]
+              Navbar.item_a [ if activeMenu = Route.Encode then yield Navbar.Item.isActive ]
                 [ str "Encode" ] ]
 
     let private navbarBrand =

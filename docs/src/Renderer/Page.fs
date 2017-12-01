@@ -10,7 +10,8 @@ module Page =
     type PageConfig =
         { ActivePage : Navbar.ActivePage
           Title : string option
-          Body : ReactElement }
+          Body : string
+          OutputFile : string }
 
     let private templatePath = resolve "${entryDir}/templates/template.hbs"
     let private markdownPath = resolve "${entryDir}/README.md"
@@ -22,9 +23,11 @@ module Page =
             | Some title -> "Thot: " + title
             | None -> "Thot"
 
+        let outputFile = resolve ("${entryDir}/public/" + config.OutputFile)
+
         [ "title" ==> title
           "navbar" ==> ((Navbar.render config.ActivePage) |> parseReactStatic)
-          "body" ==> (config.Body |> parseReactStatic)
+          "body" ==> config.Body
         ]
         |> parseTemplate templatePath
-        |> writeFile indexPath
+        |> writeFile outputFile

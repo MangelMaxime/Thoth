@@ -31,3 +31,36 @@ $fa-font-path: "./fonts/";
         color: white;
     }
 }
+
+.function-doc {
+    .function-doc-headers {
+        .column {
+            font-weight: bold;
+        }
+    }
+
+    .columns:not(:last-child) {
+        border-bottom: solid 1px black;
+    }
+
+}
+
+// Override bulma .number class for prismjs classes
+.fsharp,
+.language-fsharp {
+    .number {
+        align-items: inherit !important;
+        background-color: inherit !important;
+        border-radius: inherit !important;
+        display: inherit !important;
+        font-size: inherit !important;
+        // height: inherit !important;
+        justify-content: inherit !important;
+        margin-right: inherit !important;
+        min-width: inherit !important;
+        padding: inherit !important;
+        text-align: inherit !important;
+        vertical-align: inherit !important;
+    }
+
+}
