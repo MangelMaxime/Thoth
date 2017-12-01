@@ -56,8 +56,6 @@ showdown.extension('linked-title', function () {
                             .replace(/[&+$,\/:;=?@"#{}|^¨~\[\]`\\*)(%.!'<>]/g, '')
                             .toLowerCase();
 
-                        console.log(tag);
-
                         var anchor =
                             `<a href="#${tag}" class="anchor-control">
                                 <span class="anchor" id="${tag}"></span>

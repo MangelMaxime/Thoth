@@ -8,8 +8,7 @@
     <Compile Include="src/Renderer/Navbar.fs" />
     <Compile Include="src/Renderer/Page.fs" />
     <Compile Include="src/Renderer/Api.fs" />
-    <Compile Include="src/Decode.fs" />
-    <Compile Include="src/Encode.fs" />
+    <Compile Include="src/Renderer/FromMarkdown.fs" />
     <Compile Include="src/Main.fs" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />

@@ -1,14 +1,3 @@
-[<RequireQualifiedAccess>]
-module Encode
-
-open Renderer
-open Docs.Helpers
-
-open Fulma.Elements
-open Fable.Helpers.React
-
-let private content =
-    """
 # Encode
 
 Module for turning F# values into Json values.
@@ -44,16 +33,3 @@ Module for turning F# values into Json values.
     //     }
     // }
 ```
-    """.Trim()
-
-let body =
-    Content.content [ ]
-        [ br [ ]
-          htmlFromMarkdown content ]
-
-let render () =
-    Page.render {
-        Page = Route.Encode
-        Title = None
-        Body = body |> parseReactStatic
-    }

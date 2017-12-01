@@ -18,13 +18,14 @@ module Navbar =
             [ ]
 
     let private viewSimpleIcon =
-        let inline itemKey key = Navbar.Item.props [ Key ("simple-icon-"+ key) ]
+        let inline props key url = Navbar.Item.props [ Key ("simple-icon-"+ key)
+                                                       Href url ]
 
-        [ Navbar.item_a [ itemKey "Github" ]
+        [ Navbar.item_a [ props "Github" "https://github.com/MangelMaxime/thot"]
             [ Icon.faIcon [ ]
                 [ Fa.icon Fa.I.Github
                   Fa.faLg ] ]
-          Navbar.item_a [ itemKey "Twitter" ]
+          Navbar.item_a [ props "Twitter" "https://twitter.com/FableCompiler" ]
             [ Icon.faIcon [ ]
                 [ Fa.icon Fa.I.Twitter
                   Fa.faLg ] ]
@@ -34,7 +35,7 @@ module Navbar =
         Navbar.item_div [ ]
             [ Field.field_div [ Field.isGrouped ]
                 [ Control.control_p [ ]
-                    [ Button.button_a [  ]
+                    [ Button.button_a [ Button.href "https://twitter.com/FableCompiler" ]
                         [ Icon.faIcon [ ]
                             [ Fa.icon Fa.I.Twitter
                               Fa.faLg ]
@@ -42,7 +43,7 @@ module Navbar =
                         ]
                     ]
                   Control.control_p [ ]
-                    [ Button.button_a [ ]
+                    [ Button.button_a [ Button.href "https://github.com/MangelMaxime/thot" ]
                         [ Icon.faIcon [ ]
                             [ Fa.icon Fa.I.Github
                               Fa.faLg ]

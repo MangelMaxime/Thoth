@@ -6,6 +6,7 @@ module Page =
     open Docs.Helpers
     open Fable.Core.JsInterop
     open Fulma.Layouts
+    open Fable.Helpers.React
 
     type PageConfig =
         { Page : Route.Page
@@ -13,10 +14,12 @@ module Page =
           Body : string }
 
     let private footer =
-        Footer.footer [ Footer.customClass "has-text-centered" ]
-            [ Container.container [ ]
-                [ contentFromMarkdown "**Thot** by [Maxime Mangel](https://twitter.com/MangelMaxime)" ]
-            ]
+        div [ ]
+            [ br [ ]
+              Footer.footer [ Footer.customClass "has-text-centered" ]
+                [ Container.container [ ]
+                    [ contentFromMarkdown "**Thot** by [Maxime Mangel](https://twitter.com/MangelMaxime)" ]
+                ] ]
 
     let private templatePath = resolve "${entryDir}/templates/template.hbs"
 
