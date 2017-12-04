@@ -58,14 +58,32 @@ module Navbar =
             [ viewSimpleIcon
               viewButton ]
 
-    let private navbarMenu activeMenu =
-        Navbar.menu [ ]
-            [ Navbar.item_a [ if activeMenu = Route.Decode then yield Navbar.Item.isActive
-                              yield Navbar.Item.props [ Href (Route.toUrl Route.Decode) ] ]
+    let private navbarJson activeMenu =
+        let jsonPage =
+            match activeMenu with
+            | Route.Json jsonPage -> jsonPage
+            | Route.Index -> Unchecked.defaultof<Route.JsonPage>
+
+        Navbar.dropdown_div [ ]
+            [ Navbar.item_a [ if jsonPage = Route.Decode then yield Navbar.Item.isActive
+                              yield Navbar.Item.props [ Href (Route.toUrl (Route.Json Route.Decode)) ] ]
                 [ str "Decode" ]
-              Navbar.item_a [ if activeMenu = Route.Encode then yield Navbar.Item.isActive
-                              yield Navbar.Item.props [ Href (Route.toUrl Route.Encode) ] ]
+              Navbar.item_a [ if jsonPage = Route.Encode then yield Navbar.Item.isActive
+                              yield Navbar.Item.props [ Href (Route.toUrl (Route.Json Route.Encode)) ] ]
                 [ str "Encode" ] ]
+
+    let private navbarMenu activeMenu =
+        let jsonActive =
+            match activeMenu with
+            | Route.Json jsonPage -> true
+            | Route.Index -> false
+
+        Navbar.menu [ ]
+            [ Navbar.item_div [ Navbar.Item.hasDropdown
+                                Navbar.Item.isHoverable ]
+                [ Navbar.link_div [ ]
+                    [ str "Json" ]
+                  navbarJson activeMenu ] ]
 
     let private navbarBrand =
         Navbar.brand_div [ ]

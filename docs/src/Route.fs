@@ -1,9 +1,12 @@
 [<RequireQualifiedAccess>]
 module Route
 
-type Page =
+type JsonPage =
     | Decode
     | Encode
+
+type Page =
+    | Json of JsonPage
     | Index
 
 #if DEBUG
@@ -14,7 +17,9 @@ let host = "https://mangelmaxime.github.io/Thot"
 
 let toUrl url =
     match url with
-    | Decode -> "decode"
-    | Encode -> "encode"
+    | Json subPage ->
+        match subPage with
+        | Decode -> "json/decode"
+        | Encode -> "json/encode"
     | Index -> "index"
     |> fun url -> host + "/" + url + ".html"

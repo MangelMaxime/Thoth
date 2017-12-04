@@ -21,7 +21,11 @@ module Page =
                     [ contentFromMarkdown "**Thot** by [Maxime Mangel](https://twitter.com/MangelMaxime)" ]
                 ] ]
 
-    let private templatePath = resolve "${entryDir}/templates/template.hbs"
+    #if DEBUG
+    let private templatePath = resolve "${entryDir}/templates/template.dev.hbs"
+    #else
+    let private templatePath = resolve "${entryDir}/templates/template.prod.hbs"
+    #endif
 
     let render (config: PageConfig) =
         let title =

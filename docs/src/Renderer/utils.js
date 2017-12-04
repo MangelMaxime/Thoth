@@ -44,6 +44,7 @@ showdown.extension('linked-title', function () {
                     right = '</h[123456]>',
                     flags = 'g',
                     replacement = function (wholeMatch, match, left, right) {
+                        console.log(match);
                         var tag =
                             // Borrowed from showdonws header.js
                             match.replace(/ /g, '-')

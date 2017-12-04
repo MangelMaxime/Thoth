@@ -1,5 +1,10 @@
+<section class="hero is-medium">
+<div markdown="1" class="hero-body">
+<center>
 # Thot
 
-# Json.Decode
+Thot is a set of several libraries for working with Fable applications.
 
-# Json.Encode
+</center>
+</div>
+</section>
