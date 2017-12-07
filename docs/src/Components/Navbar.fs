@@ -1,4 +1,4 @@
-namespace Renderer
+namespace Components
 
 [<RequireQualifiedAccess>]
 module Navbar =
@@ -20,22 +20,28 @@ module Navbar =
     let private viewSimpleIcon =
         let inline props key url = Navbar.Item.props [ Key ("simple-icon-"+ key)
                                                        Href url ]
+        let inline className cls = Navbar.Item.customClass cls
 
-        [ Navbar.item_a [ props "Github" "https://github.com/MangelMaxime/thot"]
+        [ Navbar.item_a [ props "Github" "https://github.com/MangelMaxime/thot" ]
             [ Icon.faIcon [ ]
                 [ Fa.icon Fa.I.Github
                   Fa.faLg ] ]
-          Navbar.item_a [ props "Twitter" "https://twitter.com/FableCompiler" ]
+          Navbar.item_a [ props "Twitter" "https://twitter.com/MangelMaxime"
+                          className "twitter" ]
             [ Icon.faIcon [ ]
                 [ Fa.icon Fa.I.Twitter
                   Fa.faLg ] ]
         ] |> ofList
 
+    let tweetUrl = "https://twitter.com/intent/tweet?via=MangelMaxime&text=Thot%20is%20a%20set%20of%20several%20libraries%20for%20working%20with%20@FableCompiler%20applications"
+
     let private viewButton =
         Navbar.item_div [ ]
             [ Field.field_div [ Field.isGrouped ]
                 [ Control.control_p [ ]
-                    [ Button.button_a [ Button.href "https://twitter.com/FableCompiler" ]
+                    [ Button.button_a [ Button.customClass "twitter"
+                                        Button.props [ Href tweetUrl
+                                                       Target "_blank" ] ]
                         [ Icon.faIcon [ ]
                             [ Fa.icon Fa.I.Twitter
                               Fa.faLg ]
@@ -43,7 +49,8 @@ module Navbar =
                         ]
                     ]
                   Control.control_p [ ]
-                    [ Button.button_a [ Button.href "https://github.com/MangelMaxime/thot" ]
+                    [ Button.button_a [ Button.customClass "github"
+                                        Button.props [ Href "https://github.com/MangelMaxime/thot" ] ]
                         [ Icon.faIcon [ ]
                             [ Fa.icon Fa.I.Github
                               Fa.faLg ]
@@ -58,44 +65,34 @@ module Navbar =
             [ viewSimpleIcon
               viewButton ]
 
-    let private navbarJson activeMenu =
-        let jsonPage =
-            match activeMenu with
-            | Route.Json jsonPage -> jsonPage
-            | Route.Index -> Unchecked.defaultof<Route.JsonPage>
-
+    let private navbarJson pageUrl =
         Navbar.dropdown_div [ ]
-            [ Navbar.item_a [ if jsonPage = Route.Decode then yield Navbar.Item.isActive
-                              yield Navbar.Item.props [ Href (Route.toUrl (Route.Json Route.Decode)) ] ]
+            [ Navbar.item_a [ if pageUrl = Route.Json.Decode then yield Navbar.Item.isActive
+                              yield Navbar.Item.props [ Href Route.Json.Decode ] ]
                 [ str "Decode" ]
-              Navbar.item_a [ if jsonPage = Route.Encode then yield Navbar.Item.isActive
-                              yield Navbar.Item.props [ Href (Route.toUrl (Route.Json Route.Encode)) ] ]
+              Navbar.item_a [ if pageUrl = Route.Json.Encode then yield Navbar.Item.isActive
+                              yield Navbar.Item.props [ Href Route.Json.Encode ] ]
                 [ str "Encode" ] ]
 
-    let private navbarMenu activeMenu =
-        let jsonActive =
-            match activeMenu with
-            | Route.Json jsonPage -> true
-            | Route.Index -> false
-
+    let private navbarMenu pageUrl =
         Navbar.menu [ ]
             [ Navbar.item_div [ Navbar.Item.hasDropdown
                                 Navbar.Item.isHoverable ]
                 [ Navbar.link_div [ ]
                     [ str "Json" ]
-                  navbarJson activeMenu ] ]
+                  navbarJson pageUrl ] ]
 
     let private navbarBrand =
         Navbar.brand_div [ ]
-            [ Navbar.item_a [ Navbar.Item.props [ Href (Route.toUrl Route.Index) ] ]
+            [ Navbar.item_a [ Navbar.Item.props [ Href Route.Index ] ]
                 [ Heading.p [ Heading.is4 ]
                     [ str "Thot" ] ] ]
 
-    let render activeMenu =
+    let render pageUrl =
         Navbar.navbar [ Navbar.isPrimary
                         Navbar.customClass "is-fixed-top" ]
             [ shadow
               Container.container [ ]
                 [ navbarBrand
-                  navbarMenu activeMenu
+                  navbarMenu pageUrl
                   navbarEnd ] ]

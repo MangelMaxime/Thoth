@@ -7,9 +7,11 @@ module Page =
     open Fable.Core.JsInterop
     open Fulma.Layouts
     open Fable.Helpers.React
+    open Fable.Helpers.React.Props
+    open Components
 
     type PageConfig =
-        { Page : Route.Page
+        { PageUrl : string
           Title : string option
           Body : string }
 
@@ -18,14 +20,15 @@ module Page =
             [ br [ ]
               Footer.footer [ Footer.customClass "has-text-centered" ]
                 [ Container.container [ ]
-                    [ contentFromMarkdown "**Thot** by [Maxime Mangel](https://twitter.com/MangelMaxime)" ]
+                    [ contentFromMarkdown
+                        """
+**Thot** by [Maxime Mangel](https://twitter.com/MangelMaxime)
+
+Powered by [Fulma](https://mangelmaxime.github.io/Fulma/) and [Fable static-page-generator](https://github.com/fable-compiler/static-page-generator).
+                        """ ]
                 ] ]
 
-    #if DEBUG
-    let private templatePath = resolve "${entryDir}/templates/template.dev.hbs"
-    #else
-    let private templatePath = resolve "${entryDir}/templates/template.prod.hbs"
-    #endif
+    let private templatePath = resolve "${entryDir}/templates/template.hbs"
 
     let render (config: PageConfig) =
         let title =
@@ -33,10 +36,25 @@ module Page =
             | Some title -> "Thot: " + title
             | None -> "Thot"
 
-        let outputFile = resolve ("${entryDir}/public/" + (Route.toUrl config.Page))
+        // Local ref to host in order to access the string length
+        let host = Route.Host
+        // Remove the host part of the url
+        let outputFile = resolve ("${entryDir}/public/" + config.PageUrl.Substring(host.Length))
+
+        let styleTags =
+            [ "main.css" ]
+            |> List.mapi(fun index styleUrl ->
+                link [ Rel "stylesheet"
+                       Type "text/css"
+                       Key ("style-" + string index)
+                       Href (Route.Host + styleUrl) ]
+            )
+            |> ofList
+            |> parseReactStatic
 
         [ "title" ==> title
-          "navbar" ==> ((Navbar.render config.Page) |> parseReactStatic)
+          "styles" ==> styleTags
+          "navbar" ==> ((Navbar.render config.PageUrl) |> parseReactStatic)
           "body" ==> config.Body
           "footer" ==> (footer |> parseReactStatic)
         ]

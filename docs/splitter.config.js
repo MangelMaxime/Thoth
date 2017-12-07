@@ -25,6 +25,9 @@ function runScript(scriptPath) {
     }
 }
 
+var isProduction = process.argv.indexOf("-p") >= 0;
+console.log("[Environment]: " + (isProduction ? "production" : "development"));
+
 var babelOptions = fableUtils.resolveBabelOptions({
     plugins: ["transform-es2015-modules-commonjs"]
 });
@@ -33,7 +36,7 @@ module.exports = {
     entry: resolve("Docs.fsproj"),
     outDir: resolve("build"),
     babel: babelOptions,
-    fable: { define: ["DEBUG"] },
+    fable: { define: isProduction ? [] : ["DEBUG"], },
     postbuild() {
         runScript(resolve("build/src/Main.js"))
     }

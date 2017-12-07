@@ -12,7 +12,7 @@ $fa-font-path: "./fonts/";
 
 @import './../../node_modules/bulma/bulma';
 
-@import "./prism-fsharp";
+@import "./extra/highlight.js/atom-one-light";
 
 .bd-special-shadow {
 	background-image: linear-gradient(rgba(0, 0, 0, 0.2), transparent);
@@ -36,61 +36,20 @@ $fa-font-path: "./fonts/";
             color: black;
         }
     }
-}
 
-.function-doc {
-    .function-doc-headers {
-        .column {
-            font-weight: bold;
-        }
+    .twitter {
+        color: #55acee !important
     }
 
-    .columns:not(:last-child) {
-        border-bottom: solid 1px black;
+    .github {
+        color: #202020 !important
     }
-
-}
-
-// Override bulma .number class for prismjs classes
-.fsharp,
-.language-fsharp {
-    .number {
-        align-items: inherit !important;
-        background-color: inherit !important;
-        border-radius: inherit !important;
-        display: inherit !important;
-        font-size: inherit !important;
-        // height: inherit !important;
-        justify-content: inherit !important;
-        margin-right: inherit !important;
-        min-width: inherit !important;
-        padding: inherit !important;
-        text-align: inherit !important;
-        vertical-align: inherit !important;
-    }
-
 }
 
 .content {
 
     h1, h2, h3,
     h4, h5, h6 {
-
-        .anchor-control {
-            color: grey;
-            float: left;
-            padding-right: 4px;
-            margin: 5px 0 0 -20px;
-            line-height: 1;
-            font-size: 1rem;
-            visibility: hidden;
-        }
-
-        &:hover {
-            .anchor-control {
-                visibility: visible;
-            }
-        }
 
         .anchor {
             display: block;
@@ -100,4 +59,8 @@ $fa-font-path: "./fonts/";
         }
     }
 
+}
+
+.hljs {
+    background-color: #f5f5f5;
 }

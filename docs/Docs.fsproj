@@ -5,7 +5,7 @@
   <ItemGroup>
     <Compile Include="src/Helpers.fs" />
     <Compile Include="src/Route.fs" />
-    <Compile Include="src/Renderer/Navbar.fs" />
+    <Compile Include="src/Components/Navbar.fs" />
     <Compile Include="src/Renderer/Page.fs" />
     <Compile Include="src/Renderer/Api.fs" />
     <Compile Include="src/Renderer/FromMarkdown.fs" />

@@ -12,7 +12,7 @@ module FromMarkdown =
     let render page filePath =
         let filePath = "${entryDir}/src/Content/" + filePath
         Page.render {
-            Page = page
+            PageUrl = page
             Title = None
             Body = parseMarkdown (resolve filePath)
         }

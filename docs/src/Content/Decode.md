@@ -86,8 +86,7 @@ val it : Result<int, string> = Ok 21
 
 **Important:**
 
-This two decoders, they only take account of the field or path.
-The object, can have other fields/paths with other content.
+This two decoders, only take account of the field or path. The object, can have other fields/paths with other content.
 
 ### Map functions
 

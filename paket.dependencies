@@ -8,6 +8,7 @@ clitool dotnet-fable
 group Build
     source https://www.nuget.org/api/v2
     nuget FAKE
+    nuget FSharpx.Async
 
 
 group Docs

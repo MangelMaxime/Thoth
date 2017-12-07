@@ -13,7 +13,7 @@ module Helpers =
     let private templateCache = Dictionary<string, obj->string>()
     let private handleBarsCompile (_: string): obj->string = import "compile" "handlebars"
 
-    let makeHtml (_:string) : string = importMember "./Renderer/utils.js"
+    let makeHtml (_:string) : string = importMember "./js/utils.js"
 
     /// Resolves a path to prevent using location of target JS file
     /// Note the function is inline so `__dirname` will belong to the calling file

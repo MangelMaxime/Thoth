@@ -1,4 +1,5 @@
 #r @"packages/build/FAKE/tools/FakeLib.dll"
+#r @"./packages/build/FSharpx.Async/lib/net45/FSharpx.Async.dll"
 open Fake
 open Fake.Git
 open Fake.AssemblyInfoFile
@@ -8,6 +9,7 @@ open Fake.YarnHelper
 open System
 open System.IO
 open System.Text.RegularExpressions
+open FSharpx.Control.Observable
 
 #if MONO
 // prevent incorrect output encoding (e.g. https://github.com/fsharp/FAKE/issues/1196)
@@ -60,6 +62,8 @@ Target "Clean" (fun _ ->
     ++ "docs/**/bin"
     ++ "docs/**/obj"
     ++ "docs/**/build"
+    ++ "docs/scss/extra"
+    ++ "docs/public"
     |> CleanDirs
 )
 
@@ -140,7 +144,47 @@ Target "DotnetPack" (fun _ ->
     )
 )
 
+let root = __SOURCE_DIRECTORY__
+let docs = root </> "docs"
+let docsContent = docs </> "src" </> "Content"
+let buildMain = docs </> "build" </> "src" </> "Main.js"
+
+let buildSass _ =
+    Yarn(fun yarnParams ->
+            { yarnParams
+                with Command = "node-sass --output-style compressed --output docs/public/ docs/scss/main.scss" |> YarnCommand.Custom }
+        )
+
 Target "Docs.Watch" (fun _ ->
+    use watcher = new FileSystemWatcher(docsContent, "*.md")
+    watcher.IncludeSubdirectories <- true
+    watcher.EnableRaisingEvents <- true
+
+    let rec watchDocsContent () = async {
+        let execudeNode =
+            Observable.map (fun _ -> async {
+                printfn "Changed detected, re-generate the documentation"
+                execProcess
+                    (fun proc ->
+                        proc.FileName <- "node"
+                        proc.Arguments <- buildMain
+                    )
+                    (TimeSpan.FromSeconds 30.) |> ignore
+                return! watchDocsContent() })
+
+        let! op =
+          [ watcher.Deleted
+            watcher.Changed
+            watcher.Created  ]
+          |> List.map execudeNode
+          |> List.reduce Observable.merge
+          |> Async.AwaitObservable
+        return! op }
+
+    // Make sure the style is generated
+    // Watch mode of node-sass don't trigger a first build
+    buildSass ()
+
     !! docsGlob
     |> Seq.iter (fun proj ->
         let projDir = proj |> DirectoryName
@@ -154,6 +198,7 @@ Target "Docs.Watch" (fun _ ->
                         with Command = "node-sass --output-style compressed --watch --output docs/public/ docs/scss/main.scss" |> YarnCommand.Custom }
                 )
           }
+          watchDocsContent ()
         ]
         |> Async.Parallel
         |> Async.RunSynchronously
@@ -162,7 +207,12 @@ Target "Docs.Watch" (fun _ ->
 )
 
 Target "Docs.Setup" (fun _ ->
+    // Make sure directories exist
+    ensureDirectory "./docs/scss/extra/highlight.js/"
+
+    // Copy files from node_modules allow us to manage them via yarn
     CopyDir "./docs/public/fonts" "./node_modules/font-awesome/fonts" (fun _ -> true)
+    CopyFile "./docs/scss/extra/highlight.js/atom-one-light.css" "./node_modules/highlight.js/styles/atom-one-light.css"
 )
 
 Target "Docs.Build" (fun _ ->
@@ -170,11 +220,8 @@ Target "Docs.Build" (fun _ ->
     |> Seq.iter (fun proj ->
         let projDir = proj |> DirectoryName
 
-        dotnet projDir "fable yarn-run fable-splitter --port free -- -c docs/splitter.config.js"
-        Yarn(fun yarnParams ->
-                { yarnParams
-                    with Command = "node-sass --output-style compressed --output docs/public/ docs/scss/main.scss" |> YarnCommand.Custom }
-            )
+        dotnet projDir "fable yarn-run fable-splitter --port free -- -c docs/splitter.config.js -p"
+        buildSass ()
     )
 )
 
@@ -261,6 +308,5 @@ Target "Release" (fun _ ->
 
 "Docs.Watch"
     <== [ "Docs.Setup" ]
-    // <== [ "DotnetRestore" ]
 
 RunTargetOrDefault "DotnetPack"
