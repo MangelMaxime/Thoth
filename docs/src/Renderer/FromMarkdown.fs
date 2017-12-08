@@ -1,13 +1,7 @@
-namespace Renderer
-
 [<RequireQualifiedAccess>]
-module FromMarkdown =
+module Renderer.FromMarkdown
 
-    open Renderer
-    open Docs.Helpers
-
-    open Fulma.Elements
-    open Fable.Helpers.React
+    open Helpers
 
     let render page filePath =
         let filePath = "${entryDir}/src/Content/" + filePath

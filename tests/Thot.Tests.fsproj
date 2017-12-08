@@ -3,7 +3,7 @@
     <TargetFramework>netstandard1.6</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../src/Thot.fsproj" />
+    <ProjectReference Include="../src/Thot.Json/Thot.Json.fsproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Tests.Json.Decode.fs" />

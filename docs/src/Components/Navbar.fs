@@ -1,7 +1,5 @@
-namespace Components
-
 [<RequireQualifiedAccess>]
-module Navbar =
+module Components.Navbar
 
     open Fulma.Components
     open Fable.Helpers.React

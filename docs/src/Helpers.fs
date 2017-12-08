@@ -1,6 +1,4 @@
-namespace Docs
-
-module Helpers =
+module Helpers
 
     open System
     open System.Collections.Generic

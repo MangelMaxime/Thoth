@@ -9,6 +9,7 @@
     "devDependencies": {
         "@babel/core": "^7.0.0-beta.32",
         "@babel/preset-env": "^7.0.0-beta.32",
+        "autoprefixer": "^7.2.2",
         "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
         "bulma": "^0.6.1",
         "fable-splitter": "^0.1.20",
@@ -19,6 +20,8 @@
         "markdown-it-highlightjs": "^3.0.0",
         "node-prismjs": "^0.1.1",
         "node-sass": "^4.7.2",
+        "npx": "^9.7.1",
+        "postcss-cli": "^4.1.1",
         "prismjs": "^1.8.4",
         "reload": "^2.2.2",
         "rollup": "^0.52.0",
@@ -35,5 +38,8 @@
         "mocha": "^4.0.1",
         "react": "^16.1.1",
         "react-dom": "^16.1.1"
-    }
+    },
+    "browserslist": [
+        "last 2 version"
+    ]
 }

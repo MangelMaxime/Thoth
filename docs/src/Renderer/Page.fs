@@ -1,9 +1,7 @@
-namespace Renderer
-
 [<RequireQualifiedAccess>]
-module Page =
+module Renderer.Page
 
-    open Docs.Helpers
+    open Helpers
     open Fable.Core.JsInterop
     open Fulma.Layouts
     open Fable.Helpers.React
