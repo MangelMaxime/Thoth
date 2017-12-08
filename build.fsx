@@ -35,8 +35,6 @@ open Fake.Core.String
 System.Console.OutputEncoding <- System.Text.Encoding.UTF8
 #endif
 
-let dotnetcliVersion = "2.0.3"
-
 let mutable dotnetExePath = "dotnet"
 
 let srcFiles =
@@ -95,10 +93,6 @@ Target.Create "Clean" (fun _ ->
     ++ "docs/public"
     |> Shell.CleanDirs
 )
-
-// Target.Create "InstallDotNetCore" (fun _ ->
-//    DotnetCliInstall id
-// )
 
 Target.Create "YarnInstall"(fun _ ->
     yarn "install"
@@ -186,31 +180,19 @@ let applyAutoPrefixer _ =
     execNPX " postcss docs/public/main.css --use autoprefixer -o docs/public/main.css"
 
 Target.Create "Docs.Watch" (fun _ ->
-    // use watcher = new FileSystemWatcher(docsContent, "*.md")
-    // watcher.IncludeSubdirectories <- true
-    // watcher.EnableRaisingEvents <- true
+    use watcher = new FileSystemWatcher(docsContent, "*.md")
+    watcher.IncludeSubdirectories <- true
+    watcher.EnableRaisingEvents <- true
 
-    // let rec watchDocsContent () = async {
-    //     let execudeNode =
-    //         Observable.map (fun _ -> async {
-    //             printfn "Changed detected, re-generate the documentation"
-    //             ExecProcess
-    //                 (fun info ->
-    //                     { info with
-    //                         FileName = "node"
-    //                         Arguments = buildMain }
-    //                 )
-    //                 (TimeSpan.FromSeconds 30.) |> ignore
-    //             return! watchDocsContent() })
-
-    //     let! op =
-    //       [ watcher.Deleted
-    //         watcher.Changed
-    //         watcher.Created  ]
-    //       |> List.map execudeNode
-    //       |> List.reduce Observable.merge
-    //       |> Async.AwaitObservable
-    //     return! op }
+    watcher.Changed.Add(fun _ ->
+        ExecProcess
+            (fun info ->
+                { info with
+                    FileName = "node"
+                    Arguments = buildMain }
+            )
+            (TimeSpan.FromSeconds 30.) |> ignore
+    )
 
     // Make sure the style is generated
     // Watch mode of node-sass don't trigger a first build
@@ -226,7 +208,6 @@ Target.Create "Docs.Watch" (fun _ ->
           async {
                 execNPX "node-sass --output-style compressed --watch --output docs/public/ docs/scss/main.scss"
           }
-        //   watchDocsContent ()
         ]
         |> Async.Parallel
         |> Async.RunSynchronously
@@ -341,7 +322,6 @@ Target.Create "Publish" (fun _ ->
 // )
 
 "Clean"
-    // ==> "InstallDotNetCore"
     ==> "YarnInstall"
     ==> "DotnetRestore"
     ==> "DotnetBuild"
