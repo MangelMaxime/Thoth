@@ -1,6 +1,5 @@
 import * as path from 'path';
 import fable from 'rollup-plugin-fable';
-import fableUtils from 'fable-utils';
 
 function resolve(filePath) {
     return path.join(__dirname, filePath)
