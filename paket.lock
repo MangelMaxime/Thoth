@@ -1231,8 +1231,20 @@ NUGET
       NETStandard.Library (>= 1.6.1) - restriction: && (< net46) (>= netstandard1.6) (< netstandard2.0)
       NETStandard.Library (>= 2.0.1) - restriction: >= net46
       System.Diagnostics.FileVersionInfo (>= 4.3) - restriction: || (>= net46) (>= netstandard1.6)
-    FSharp.Control.AsyncSeq (2.0.17)
-    FSharp.Core (4.2.3)
+    Fake.Tools.Git (5.0.0-beta010)
+      Fake.Core.BuildServer (>= 5.0.0-beta010) - restriction: || (>= net46) (>= netstandard1.6)
+      Fake.Core.Context (>= 5.0.0-beta010) - restriction: || (>= net46) (>= netstandard1.6)
+      Fake.Core.Environment (>= 5.0.0-beta010) - restriction: || (>= net46) (>= netstandard1.6)
+      Fake.Core.Globbing (>= 5.0.0-beta010) - restriction: || (>= net46) (>= netstandard1.6)
+      Fake.Core.Process (>= 5.0.0-beta010) - restriction: || (>= net46) (>= netstandard1.6)
+      Fake.Core.SemVer (>= 5.0.0-beta010) - restriction: || (>= net46) (>= netstandard1.6)
+      Fake.Core.String (>= 5.0.0-beta010) - restriction: || (>= net46) (>= netstandard1.6)
+      Fake.Core.Tracing (>= 5.0.0-beta010) - restriction: || (>= net46) (>= netstandard1.6)
+      Fake.IO.FileSystem (>= 5.0.0-beta010) - restriction: || (>= net46) (>= netstandard1.6)
+      FSharp.Core (>= 4.1.18) - restriction: || (>= net46) (>= netstandard1.6)
+      NETStandard.Library (>= 1.6.1) - restriction: && (< net46) (>= netstandard1.6) (< netstandard2.0)
+      NETStandard.Library (>= 2.0.1) - restriction: >= net46
+    FSharp.Core (4.2.3) - restriction: || (>= net46) (>= netstandard1.6)
       System.Collections (>= 4.0.11) - restriction: && (< net45) (>= netstandard1.6)
       System.Console (>= 4.0) - restriction: && (< net45) (>= netstandard1.6)
       System.Diagnostics.Debug (>= 4.0.11) - restriction: && (< net45) (>= netstandard1.6)
@@ -1256,9 +1268,6 @@ NUGET
       System.Threading.Thread (>= 4.0) - restriction: && (< net45) (>= netstandard1.6)
       System.Threading.ThreadPool (>= 4.0.10) - restriction: && (< net45) (>= netstandard1.6)
       System.Threading.Timer (>= 4.0.1) - restriction: && (< net45) (>= netstandard1.6)
-    FSharpx.Async (1.13.2)
-      FSharp.Control.AsyncSeq
-      FSharp.Core
     Microsoft.NETCore.Platforms (2.0.1) - restriction: || (&& (>= monoandroid) (< netstandard1.0) (>= netstandard1.6)) (&& (< monoandroid) (< netstandard1.0) (>= netstandard1.6)) (&& (< monoandroid) (< netstandard1.1) (>= netstandard1.6)) (&& (< monoandroid) (< netstandard1.3) (>= netstandard1.6)) (>= monotouch) (&& (>= net45) (>= netstandard1.6) (< portable-net451+win81+wpa81)) (&& (< net45) (>= net46) (< netstandard1.2)) (&& (< net45) (>= net46) (>= netstandard1.4) (< netstandard1.5)) (&& (< net45) (>= net46) (>= netstandard1.5) (< netstandard1.6)) (&& (< net45) (>= net46) (>= netstandard2.0)) (&& (< net45) (>= netstandard1.6)) (&& (>= net451) (< netstandard1.3) (>= netstandard1.6)) (&& (>= net46) (< netstandard1.0)) (&& (>= net46) (< netstandard1.1)) (&& (>= net46) (< netstandard1.3)) (&& (>= net46) (< netstandard1.4)) (&& (>= net46) (< portable-net45+win8+wp8+wpa81)) (&& (>= net46) (< portable-net45+win8+wpa81)) (&& (>= net46) (< portable-net451+win81+wpa81)) (&& (>= net46) (>= uap10.0)) (&& (< net46) (>= netstandard1.6)) (>= net461) (>= netcoreapp1.1) (&& (< netstandard1.0) (>= netstandard1.6) (< portable-net451+win81+wpa81)) (&& (< netstandard1.1) (>= netstandard1.6) (< portable-net451+win81+wpa81)) (&& (< netstandard1.3) (>= netstandard1.6) (>= wpa81)) (&& (>= netstandard1.6) (< portable-net45+win8+wp8+wpa81)) (&& (>= netstandard1.6) (< portable-net45+win8+wpa81)) (&& (>= netstandard1.6) (>= uap10.0)) (>= xamarinios) (>= xamarinmac) (>= xamarintvos) (>= xamarinwatchos)
     Microsoft.NETCore.Targets (2.0) - restriction: || (&& (< monoandroid) (< net45) (< netstandard1.2) (>= netstandard1.6)) (&& (< monoandroid) (< net45) (< netstandard1.4) (>= netstandard1.6)) (&& (< monoandroid) (< net45) (< netstandard1.5) (>= netstandard1.6)) (&& (< monoandroid) (< net46) (< netstandard1.4) (>= netstandard1.6)) (&& (< monoandroid) (< netstandard1.1) (>= netstandard1.6)) (&& (< monoandroid) (< netstandard1.3) (>= netstandard1.6)) (&& (< monotouch) (< net45) (>= netstandard1.6) (< xamarinios) (< xamarinmac) (< xamarintvos) (< xamarinwatchos)) (&& (< monotouch) (< net46) (>= netstandard1.6) (< xamarinios) (< xamarinmac) (< xamarintvos) (< xamarinwatchos)) (&& (< net45) (>= net46) (< netstandard1.2)) (&& (< net45) (>= net46) (>= netstandard1.4) (< netstandard1.5)) (&& (< net45) (>= net46) (< netstandard1.4)) (&& (< net45) (>= net46) (>= netstandard1.5) (< netstandard1.6)) (&& (< net45) (>= net46) (< netstandard1.5) (>= netstandard1.6)) (&& (< net45) (>= net46) (>= netstandard1.6) (< netstandard2.0)) (&& (< net45) (>= net46) (< portable-net451+win81+wpa81)) (&& (< net45) (>= netstandard1.6) (< portable-net451+win81+wpa81)) (&& (>= net46) (< netstandard1.1)) (&& (>= net46) (< netstandard1.3)) (&& (>= net46) (< portable-net45+win8+wp8+wpa81)) (&& (>= net46) (< portable-net45+win8+wpa81)) (&& (>= net46) (>= uap10.0)) (>= netcoreapp1.1) (&& (< netstandard1.1) (>= netstandard1.6) (< portable-net451+win81+wpa81)) (&& (>= netstandard1.6) (< portable-net45+win8+wp8+wpa81)) (&& (>= netstandard1.6) (< portable-net45+win8+wpa81)) (&& (>= netstandard1.6) (>= uap10.0))
     Microsoft.Win32.Primitives (4.3) - restriction: || (&& (< monoandroid) (< net45) (< netstandard1.4) (>= netstandard1.6)) (&& (< monoandroid) (< net45) (< netstandard1.5) (>= netstandard1.6)) (&& (< monotouch) (< net45) (>= netstandard1.6) (< netstandard2.0) (< xamarinios) (< xamarinmac) (< xamarintvos) (< xamarinwatchos)) (&& (< monotouch) (< net46) (>= netstandard1.6) (< xamarinios) (< xamarinmac) (< xamarintvos) (< xamarinwatchos)) (&& (< net45) (>= net46) (>= netstandard1.4) (< netstandard1.5)) (&& (< net45) (>= net46) (>= netstandard1.5) (< netstandard1.6)) (&& (< net45) (>= net46) (>= netstandard1.6) (< netstandard2.0)) (&& (>= net46) (< netstandard1.4)) (&& (>= net46) (>= uap10.0)) (&& (>= netstandard1.6) (>= uap10.0))

@@ -16,8 +16,7 @@ group netcorebuild
     nuget Fake.Core.Globbing
     nuget Fake.Core.ReleaseNotes
     nuget Fake.IO.FileSystem
-    nuget FSharpx.Async
-
+    nuget Fake.Tools.Git
 
 group Docs
     framework: netstandard2.0

@@ -15,6 +15,7 @@ group netcorebuild
 #r "Fake.Core.ReleaseNotes/lib/netstandard2.0/Fake.Core.ReleaseNotes.dll"
 #r "Fake.Core.Process/lib/netstandard2.0/Fake.Core.Process.dll"
 #r "Fake.Core.Environment/lib/netstandard2.0/Fake.Core.Environment.dll"
+#r "Fake.Tools.Git/lib/netstandard2.0/Fake.Tools.Git.dll"
 #endif
 
 open System
@@ -27,8 +28,8 @@ open Fake.Core.TargetOperators
 open Fake.DotNet.Cli
 open Fake.IO
 open Fake.IO.FileSystemOperators
-open Fake.DotNet
 open Fake.Core.String
+open Fake.Tools.Git
 
 #if MONO
 // prevent incorrect output encoding (e.g. https://github.com/fsharp/FAKE/issues/1196)
@@ -309,6 +310,22 @@ Target.Create "Publish" (fun _ ->
     )
 )
 
+// Where to push generated documentation
+let githubLink = "git@github.com:MangelMaxime/thot.git"
+let publishBranch = "gh-pages"
+let repoRoot = __SOURCE_DIRECTORY__
+let temp = repoRoot </> "temp"
+
+Target.Create "PublishDocs" (fun _ ->
+    Shell.CleanDir temp
+    Repository.cloneSingleBranch "" githubLink publishBranch temp
+
+    Shell.CopyRecursive "docs/public" temp true |> printfn "%A"
+    Staging.StageAll temp
+    Commit.Commit temp (sprintf "Update site (%s)" (DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")))
+    Branches.push temp
+)
+
 // Target "Release" (fun _ ->
 
 //     if Git.Information.getBranchName "" <> "master" then failwith "Not on master"
@@ -339,5 +356,8 @@ Target.Create "Publish" (fun _ ->
 
 "Docs.Watch"
     <== [ "Docs.Setup" ]
+
+"PublishDocs"
+    ==> "Docs.Build"
 
 Target.RunOrDefault "DotnetPack"
