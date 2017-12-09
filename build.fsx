@@ -35,7 +35,7 @@ open Fake.Core.String
 System.Console.OutputEncoding <- System.Text.Encoding.UTF8
 #endif
 
-let mutable dotnetExePath = "dotnet"
+let dotnetCommon = { DotnetOptions.Default with DotnetCliPath = "dotnet" }
 
 let srcFiles =
     !! "./src/Thot.Json/Thot.Json.fsproj"
@@ -105,7 +105,7 @@ Target.Create "DotnetRestore" (fun _ ->
     |> Seq.iter (fun proj ->
         DotnetRestore (fun c ->
             { c with
-                Common = { DotnetOptions.Default with DotnetCliPath = dotnetExePath }
+                Common = dotnetCommon
             }) proj
 ))
 
@@ -114,17 +114,15 @@ Target.Create "DotnetBuild" (fun _ ->
     |> Seq.iter (fun proj ->
         DotnetCompile (fun c ->
             { c with
-                Common = { DotnetOptions.Default with DotnetCliPath = dotnetExePath }
+                Common = dotnetCommon
             }) proj
 ))
 
 
 let dotnet workingDir args =
     Dotnet
-        { DotnetOptions.Default
-            with
-                WorkingDirectory = workingDir
-                DotnetCliPath = dotnetExePath }
+        { dotnetCommon with
+            WorkingDirectory = workingDir }
          args
     |> ignore
 
@@ -146,14 +144,16 @@ Target.Create "MochaTest" (fun _ ->
 
 Target.Create "DotnetPack" (fun _ ->
     srcFiles
-    |> Seq.iter(fun s ->
-        let projFile = s
+    |> Seq.iter(fun projFile ->
         let projDir = IO.Path.GetDirectoryName(projFile)
         let release = projDir </> "RELEASE_NOTES.md" |> ReleaseNotes.LoadReleaseNotes
-        Paket.Pack  (fun p ->
+        let releaseNotes = sprintf "/p:PackageReleaseNotes=\"%s\"" (toLines release.Notes)
+
+        DotnetPack (fun p ->
             { p with
-                Version = release.NugetVersion
-                ReleaseNotes = toLines release.Notes } )
+                Configuration = Release
+                Common = { dotnetCommon with CustomParams = Some releaseNotes } } )
+            projFile
     )
 )
 
