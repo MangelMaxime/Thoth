@@ -321,8 +321,6 @@ Target.Create "PublishDocs" (fun _ ->
     Shell.CleanDir temp
     Repository.cloneSingleBranch "" githubLink publishBranch temp
 
-    // Remove old files
-    Shell.CleanDir temp
     // Copy new files
     Shell.CopyRecursive "docs/public" temp true |> printfn "%A"
 
