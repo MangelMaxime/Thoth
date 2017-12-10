@@ -143,21 +143,6 @@ Target.Create "MochaTest" (fun _ ->
     )
 )
 
-Target.Create "DotnetPack" (fun _ ->
-    srcFiles
-    |> Seq.iter(fun projFile ->
-        let projDir = IO.Path.GetDirectoryName(projFile)
-        let release = projDir </> "RELEASE_NOTES.md" |> ReleaseNotes.LoadReleaseNotes
-        let releaseNotes = sprintf "/p:PackageReleaseNotes=\"%s\"" (toLines release.Notes)
-
-        DotnetPack (fun p ->
-            { p with
-                Configuration = Release
-                Common = { dotnetCommon with CustomParams = Some releaseNotes } } )
-            projFile
-    )
-)
-
 let root = __SOURCE_DIRECTORY__
 let docs = root </> "docs"
 let docsContent = docs </> "src" </> "Content"
@@ -277,28 +262,20 @@ let pushNuget (releaseNotes: ReleaseNotes.ReleaseNotes) (projFile: string) =
         (versionRegex, projFile) ||> Util.replaceLines (fun line _ ->
             versionRegex.Replace(line, "<Version>" + releaseNotes.NugetVersion + "</Version>") |> Some)
 
-        // Directory.GetFiles(projDir </> "bin" </> "Release", "*.nupkg")
-        // |> Array.find (fun nupkg -> nupkg.Contains(releaseNotes.NugetVersion))
-        // |> (fun nupkg ->
-        //         Paket.Push (fun p ->
-        //                         { p with
-        //                             PublishUrl
-        //                             ApiKey = nugetKey } )
-        //     )
+        let pkgReleaseNotes = sprintf "/p:PackageReleaseNotes=\"%s\"" (toLines releaseNotes.Notes)
 
-// { ToolPath : string
-//       TimeOut : TimeSpan
-//       PublishUrl : string
-//       EndPoint : string
-//       WorkingDir : string
-//       DegreeOfParallelism : int
-// ApiKey : string }
+        DotnetPack (fun p ->
+            { p with
+                Configuration = Release
+                Common = { dotnetCommon with CustomParams = Some pkgReleaseNotes } } )
+            projFile
 
-            // (Path.GetFullPath nupkg, nugetKey)
-            // ||> sprintf "nuget push %s -s nuget.org -k %s"
-            // |> DotNetCli.RunCommand (fun c ->
-            //                                 { c with ToolPath = dotnetExePath })
-
+        Directory.GetFiles(projDir </> "bin" </> "Release", "*.nupkg")
+        |> Array.find (fun nupkg -> nupkg.Contains(releaseNotes.NugetVersion))
+        |> (fun nupkg ->
+            (Path.GetFullPath nupkg, nugetKey)
+            ||> sprintf "nuget push %s -s nuget.org -k %s")
+        |> dotnet ""
 
 Target.Create "Publish" (fun _ ->
     srcFiles
@@ -347,7 +324,6 @@ Target.Create "PublishDocs" (fun _ ->
     ==> "DotnetRestore"
     ==> "DotnetBuild"
     ==> "MochaTest"
-    ==> "DotnetPack"
     ==> "Publish"
     // ==> "Release"
 
