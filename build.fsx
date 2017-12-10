@@ -317,10 +317,16 @@ let repoRoot = __SOURCE_DIRECTORY__
 let temp = repoRoot </> "temp"
 
 Target.Create "PublishDocs" (fun _ ->
+    // Clean the repo before cloning this avoid potential conflicts
     Shell.CleanDir temp
     Repository.cloneSingleBranch "" githubLink publishBranch temp
 
+    // Remove old files
+    Shell.CleanDir temp
+    // Copy new files
     Shell.CopyRecursive "docs/public" temp true |> printfn "%A"
+
+    // Deploy the new site
     Staging.StageAll temp
     Commit.Commit temp (sprintf "Update site (%s)" (DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")))
     Branches.push temp
@@ -357,7 +363,7 @@ Target.Create "PublishDocs" (fun _ ->
 "Docs.Watch"
     <== [ "Docs.Setup" ]
 
-"PublishDocs"
-    ==> "Docs.Build"
+"Docs.Build"
+    ==> "PublishDocs"
 
 Target.RunOrDefault "DotnetPack"
