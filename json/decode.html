@@ -103,7 +103,7 @@ like <code>map2</code>, <code>map3</code>, ..., <code>map8</code>.</p>
              (field <span class="hljs-string">"y"</span> int)
 
 &gt; decodeString Point.Decoder <span class="hljs-string">"""{"x": 10, "y": 21"}"""</span>
-<span class="hljs-keyword">val</span> it : Result&lt;int, string&gt; = Ok { X = <span class="hljs-number">10</span>; Y = <span class="hljs-number">21</span> }
+<span class="hljs-keyword">val</span> it : Result&lt;Point, string&gt; = Ok { X = <span class="hljs-number">10</span>; Y = <span class="hljs-number">21</span> }
 </code></pre>
 <h3><a href="#pipeline-decode-style" aria-hidden="true"><span class="anchor" id="pipeline-decode-style"></span>&#128279;</a> Pipeline decode style</h3>
 <p>When working with larger object or if you prefer to use <code>(|&gt;)</code> operator you can use pipelines helpers.</p>
@@ -122,7 +122,7 @@ like <code>map2</code>, <code>map3</code>, ..., <code>map8</code>.</p>
             |&gt; required <span class="hljs-string">"y"</span> int
 
 &gt; decodeString Point.Decoder <span class="hljs-string">"""{"x": 10, "y": 21"}"""</span>
-<span class="hljs-keyword">val</span> it : Result&lt;int, string&gt; = Ok { X = <span class="hljs-number">10</span>; Y = <span class="hljs-number">21</span> }
+<span class="hljs-keyword">val</span> it : Result&lt;Point, string&gt; = Ok { X = <span class="hljs-number">10</span>; Y = <span class="hljs-number">21</span> }
 </code></pre>
 
         </div>
