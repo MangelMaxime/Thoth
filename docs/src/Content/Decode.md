@@ -108,7 +108,7 @@ type Point =
              (field "y" int)
 
 > decodeString Point.Decoder """{"x": 10, "y": 21"}"""
-val it : Result<int, string> = Ok { X = 10; Y = 21 }
+val it : Result<Point, string> = Ok { X = 10; Y = 21 }
 ```
 
 ### Pipeline decode style
@@ -131,5 +131,5 @@ type Point =
             |> required "y" int
 
 > decodeString Point.Decoder """{"x": 10, "y": 21"}"""
-val it : Result<int, string> = Ok { X = 10; Y = 21 }
+val it : Result<Point, string> = Ok { X = 10; Y = 21 }
 ```
