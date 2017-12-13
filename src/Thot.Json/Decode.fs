@@ -3,6 +3,7 @@ module Thot.Json.Decode
 open Fable.Core
 open Fable.Core.JsInterop
 open Fable.Import
+open Fable.AST.Fable
 
 module Helpers =
 
@@ -17,6 +18,9 @@ module Helpers =
 
     [<Emit("$0 instanceof Array")>]
     let isArray (_ : obj) : bool = jsNative
+
+    [<Emit("typeof $0 === 'object' && ($0 !== null)")>]
+    let isObject (_ : obj) : bool = jsNative
 
     [<Emit("Number.isNaN($0)")>]
     let isNaN (_: obj) : bool = jsNative
@@ -35,6 +39,10 @@ module Helpers =
 
     [<Emit("typeof $0 === 'function'")>]
     let isFunction (_: obj) : bool = jsNative
+
+open Helpers
+    [<Emit("Object.keys($0)")>]
+    let objectKeys (_: obj) : string list = jsNative
 
 type PrimitiveError =
     { Msg : string
@@ -208,6 +216,17 @@ let array (decoder : Decoder<'value>) (value: obj) : Result<'value array, Decode
         |> Ok
     else
         BadPrimitive ("an array", value)
+        |> Error
+
+let dict (decoder : Decoder<'value>) (value: obj) : Result<Map<string,'value>, DecoderError> =
+    if Helpers.isObject value then
+        value
+        |> objectKeys
+        |> List.map (fun key -> (key, value?(key) |> unwrap decoder))
+        |> Map.ofList
+        |> Ok
+    else
+        BadPrimitive ("an object", value)
         |> Error
 
 //////////////////////////////

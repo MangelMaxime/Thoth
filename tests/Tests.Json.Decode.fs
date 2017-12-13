@@ -331,6 +331,22 @@ Expecting an array but instead got: 1
 
             Assert.AreEqual(expected, actual)
 
+        it "dict works" <| fun _ ->
+            let expected = Ok(Map.ofList([("a", 1) ; ("b", 2) ; ("c", 3)]))
+
+            let actual =
+                decodeString (dict int) """{ "a": 1, "b": 2, "c": 3 }"""
+
+            Assert.AreEqual(expected, actual)
+
+        it "an invalid dict output an error" <| fun _ ->
+            let expected = Error("Expecting an object but instead got: 1")
+
+            let actual =
+                decodeString (dict int) "1"
+
+            Assert.AreEqual(expected, actual)
+
     describe "Inconsistent structure" <| fun _ ->
 
         it "oneOf works" <| fun _ ->
