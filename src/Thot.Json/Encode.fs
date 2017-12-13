@@ -1,7 +1,6 @@
 module Thot.Json.Encode
 
 open Fable.Core.JsInterop
-open System.Threading.Tasks
 
 type Replacer = string -> obj -> obj
 

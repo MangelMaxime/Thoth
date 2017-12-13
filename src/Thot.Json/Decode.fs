@@ -3,7 +3,6 @@ module Thot.Json.Decode
 open Fable.Core
 open Fable.Core.JsInterop
 open Fable.Import
-open Fable.AST.Fable
 
 module Helpers =
 
