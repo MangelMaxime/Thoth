@@ -15,17 +15,23 @@ module Components.Navbar
                       Transform "scaleY(1)" ] ]
             [ ]
 
-    let private viewSimpleIcon =
+    let private viewSimpleIcon isHiddenDesktop =
         let inline props key url = Navbar.Item.props [ Key ("simple-icon-"+ key)
                                                        Href url ]
-        let inline className cls = Navbar.Item.customClass cls
 
-        [ Navbar.item_a [ props "Github" "https://github.com/MangelMaxime/thot" ]
+        let visibility =
+            if isHiddenDesktop then
+                "is-hidden-desktop"
+            else
+                "is-hidden-mobile"
+
+        [ Navbar.item_a [ props "Github" "https://github.com/MangelMaxime/thot"
+                          Navbar.Item.customClass visibility ]
             [ Icon.faIcon [ ]
                 [ Fa.icon Fa.I.Github
                   Fa.faLg ] ]
           Navbar.item_a [ props "Twitter" "https://twitter.com/MangelMaxime"
-                          className "twitter" ]
+                          Navbar.Item.customClass ("twitter " + visibility) ]
             [ Icon.faIcon [ ]
                 [ Fa.icon Fa.I.Twitter
                   Fa.faLg ] ]
@@ -60,7 +66,7 @@ module Components.Navbar
 
     let private navbarEnd =
         Navbar.end_div [ ]
-            [ viewSimpleIcon
+            [ viewSimpleIcon false
               viewButton ]
 
     let private navbarJson pageUrl =
@@ -73,7 +79,7 @@ module Components.Navbar
                 [ str "Encode" ] ]
 
     let private navbarMenu pageUrl =
-        Navbar.menu [ ]
+        Navbar.menu [ Navbar.Menu.props [ Id "navMenu" ] ]
             [ Navbar.item_div [ Navbar.Item.hasDropdown
                                 Navbar.Item.isHoverable ]
                 [ Navbar.link_div [ ]
@@ -84,7 +90,12 @@ module Components.Navbar
         Navbar.brand_div [ ]
             [ Navbar.item_a [ Navbar.Item.props [ Href Route.Index ] ]
                 [ Heading.p [ Heading.is4 ]
-                    [ str "Thot" ] ] ]
+                    [ str "Thot" ] ]
+              viewSimpleIcon true
+              Navbar.burger [ ]
+                [ span [ ] [ ]
+                  span [ ] [ ]
+                  span [ ] [ ] ] ]
 
     let render pageUrl =
         Navbar.navbar [ Navbar.isPrimary

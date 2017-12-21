@@ -5,7 +5,6 @@ $body-size: 14px;
 $primary: #2D3947;
 
 $navbar-item-color: $white;
-$navbar-item-active-background-color: rgb(120, 156, 197);
 
 $fa-font-path: "./fonts/";
 @import './../../node_modules/font-awesome/scss/font-awesome';
@@ -56,6 +55,11 @@ $fa-font-path: "./fonts/";
             position: relative;
             top: -($navbar-height + 1rem);
             visibility: hidden;
+
+            @media screen and (max-width: $tablet - 1px) {
+                // Responsive styles
+                top: -(6.25rem + 1rem);
+            }
         }
     }
 
@@ -63,4 +67,29 @@ $fa-font-path: "./fonts/";
 
 .hljs {
     background-color: #f5f5f5;
+}
+
+@media screen and (max-width: $tablet - 1px) {
+    // Responsive styles
+    html.has-navbar-fixed-top {
+        padding-top: 6.25rem;
+    }
+
+    .navbar {
+        .navbar-menu {
+            background-color: $primary;
+
+            .navbar-item {
+                color: $white;
+
+                .is-active,
+                &:hover {
+                    color: black;
+                }
+
+            }
+
+        }
+    }
+
 }
