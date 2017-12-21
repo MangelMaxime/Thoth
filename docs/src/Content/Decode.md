@@ -2,10 +2,10 @@
 
 Turn Json value into F# values.
 
-By using a Decoder instead of Fable `ofJson` function, you will garantee the JSON structure is correct.
+By using a Decoder instead of Fable `ofJson` function, you will have a guarantee that the JSON structure is correct.
 This is especially useful if you use Fable without sharing your domain with the server.
 
-*This mobule is inspired by [Json.Decode from Elm](http://package.elm-lang.org/packages/elm-lang/core/latest/Json-Decode)
+*This module is inspired by [Json.Decode from Elm](http://package.elm-lang.org/packages/elm-lang/core/latest/Json-Decode)
 and [elm-decode-pipeline](http://package.elm-lang.org/packages/NoRedInk/elm-decode-pipeline/latest).*
 
 As so, to complete this documentation, you can also take a look at the [Elm documentation](https://guide.elm-lang.org/interop/json.html).
@@ -18,12 +18,12 @@ Here is the signature of a `Decoder`:
 type Decoder<'T> = obj -> Result<'T, DecoderError>
 ```
 
-This is taking an "untyped" value, and check if it have the expected structure. If the structure is correct,
-then you get an `Ok` result otherwise an `Error` explaining why the decoder failed.
+This is taking an "untyped" value and checking if it has the expected structure. If the structure is correct,
+then you get an `Ok` result, otherwise an `Error` explaining why the decoder failed.
 
 ## Primitives decoders
 
-There is 4 primitives decoders:
+There are 4 primitives decoders:
 
 - `string : Decoder<String>`
 - `int : Decoder<Int>`
@@ -46,11 +46,11 @@ val it : Result<bool, string> = Ok true
 val it : Result<float, string> = Err "Expecting a float but instead got: true"
 ```
 
-With this 4 primitives decoders we can handle the basic Json values.
+With these 4 primitives decoders we can handle the basic Json values.
 
-## Data Structure
+## Collections
 
-Data structure are really common so they have special decoders.
+There are special decoders for the following collections.
 
 - `list : Decoder<'value> -> Decoder<'value list>`
 - `array : Decoder<'value> -> Decoder<'value array>`
@@ -67,7 +67,7 @@ val it : Result<string list, string> = Ok ["Maxime", "Alfonso", "Vesper"]
 
 ## Decoding Objects
 
-In order to decode obects, you can use:
+In order to decode objects, you can use:
 
 - `field : string -> Decoder<'value> -> Decoder<'value>`
     - Decode a JSON object, requiring a particular field.
@@ -86,7 +86,7 @@ val it : Result<int, string> = Ok 21
 
 **Important:**
 
-This two decoders, only take account of the field or path. The object, can have other fields/paths with other content.
+These two decoders only take into account the field or path. The object can have other fields/paths with other content.
 
 ### Map functions
 
@@ -113,7 +113,7 @@ val it : Result<Point, string> = Ok { X = 10; Y = 21 }
 
 ### Pipeline decode style
 
-When working with larger object or if you prefer to use `(|>)` operator you can use pipelines helpers.
+When working with larger object or if you prefer to use the `(|>)` operator, you can use pipeline helpers.
 
 ```fsharp
 open Thot.Json.Decode
