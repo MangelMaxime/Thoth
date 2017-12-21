@@ -14,19 +14,19 @@
         <div class="content" style="margin: 1rem 0 0">
             <h1><a href="#decode" aria-hidden="true"><span class="anchor" id="decode"></span>&#128279;</a> Decode</h1>
 <p>Turn Json value into F# values.</p>
-<p>By using a Decoder instead of Fable <code>ofJson</code> function, you will garantee the JSON structure is correct.
+<p>By using a Decoder instead of Fable <code>ofJson</code> function, you will have a guarantee that the JSON structure is correct.
 This is especially useful if you use Fable without sharing your domain with the server.</p>
-<p><em>This mobule is inspired by <a href="http://package.elm-lang.org/packages/elm-lang/core/latest/Json-Decode">Json.Decode from Elm</a>
+<p><em>This module is inspired by <a href="http://package.elm-lang.org/packages/elm-lang/core/latest/Json-Decode">Json.Decode from Elm</a>
 and <a href="http://package.elm-lang.org/packages/NoRedInk/elm-decode-pipeline/latest">elm-decode-pipeline</a>.</em></p>
 <p>As so, to complete this documentation, you can also take a look at the <a href="https://guide.elm-lang.org/interop/json.html">Elm documentation</a>.</p>
 <h2><a href="#what-is-a-decoder" aria-hidden="true"><span class="anchor" id="what-is-a-decoder"></span>&#128279;</a> What is a Decoder ?</h2>
 <p>Here is the signature of a <code>Decoder</code>:</p>
 <pre><code class="hljs language-fsharp"><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-title">Decoder</span>&lt;<span class="hljs-title">'T</span>&gt; </span>= obj -&gt; Result&lt;<span class="hljs-symbol">'T</span>, DecoderError&gt;
 </code></pre>
-<p>This is taking an &quot;untyped&quot; value, and check if it have the expected structure. If the structure is correct,
-then you get an <code>Ok</code> result otherwise an <code>Error</code> explaining why the decoder failed.</p>
+<p>This is taking an &quot;untyped&quot; value and checking if it has the expected structure. If the structure is correct,
+then you get an <code>Ok</code> result, otherwise an <code>Error</code> explaining why the decoder failed.</p>
 <h2><a href="#primitives-decoders" aria-hidden="true"><span class="anchor" id="primitives-decoders"></span>&#128279;</a> Primitives decoders</h2>
-<p>There is 4 primitives decoders:</p>
+<p>There are 4 primitives decoders:</p>
 <ul>
 <li><code>string : Decoder&lt;String&gt;</code></li>
 <li><code>int : Decoder&lt;Int&gt;</code></li>
@@ -47,9 +47,9 @@ then you get an <code>Ok</code> result otherwise an <code>Error</code> explainin
 &gt; decodeString float <span class="hljs-string">"true"</span>
 <span class="hljs-keyword">val</span> it : Result&lt;float, string&gt; = Err <span class="hljs-string">"Expecting a float but instead got: true"</span>
 </code></pre>
-<p>With this 4 primitives decoders we can handle the basic Json values.</p>
-<h2><a href="#data-structure" aria-hidden="true"><span class="anchor" id="data-structure"></span>&#128279;</a> Data Structure</h2>
-<p>Data structure are really common so they have special decoders.</p>
+<p>With these 4 primitives decoders we can handle the basic Json values.</p>
+<h2><a href="#collections" aria-hidden="true"><span class="anchor" id="collections"></span>&#128279;</a> Collections</h2>
+<p>There are special decoders for the following collections.</p>
 <ul>
 <li><code>list : Decoder&lt;'value&gt; -&gt; Decoder&lt;'value list&gt;</code></li>
 <li><code>array : Decoder&lt;'value&gt; -&gt; Decoder&lt;'value array&gt;</code></li>
@@ -63,7 +63,7 @@ then you get an <code>Ok</code> result otherwise an <code>Error</code> explainin
 <span class="hljs-keyword">val</span> it : Result&lt;string list, string&gt; = Ok [<span class="hljs-string">"Maxime"</span>, <span class="hljs-string">"Alfonso"</span>, <span class="hljs-string">"Vesper"</span>]
 </code></pre>
 <h2><a href="#decoding-objects" aria-hidden="true"><span class="anchor" id="decoding-objects"></span>&#128279;</a> Decoding Objects</h2>
-<p>In order to decode obects, you can use:</p>
+<p>In order to decode objects, you can use:</p>
 <ul>
 <li><code>field : string -&gt; Decoder&lt;'value&gt; -&gt; Decoder&lt;'value&gt;</code>
 <ul>
@@ -85,7 +85,7 @@ then you get an <code>Ok</code> result otherwise an <code>Error</code> explainin
 <span class="hljs-keyword">val</span> it : Result&lt;int, string&gt; = Ok <span class="hljs-number">21</span>
 </code></pre>
 <p><strong>Important:</strong></p>
-<p>This two decoders, only take account of the field or path. The object, can have other fields/paths with other content.</p>
+<p>These two decoders only take into account the field or path. The object can have other fields/paths with other content.</p>
 <h3><a href="#map-functions" aria-hidden="true"><span class="anchor" id="map-functions"></span>&#128279;</a> Map functions</h3>
 <p>To get data from several fields and apply them into a record you will need to use the maps functions
 like <code>map2</code>, <code>map3</code>, ..., <code>map8</code>.</p>
@@ -106,7 +106,7 @@ like <code>map2</code>, <code>map3</code>, ..., <code>map8</code>.</p>
 <span class="hljs-keyword">val</span> it : Result&lt;Point, string&gt; = Ok { X = <span class="hljs-number">10</span>; Y = <span class="hljs-number">21</span> }
 </code></pre>
 <h3><a href="#pipeline-decode-style" aria-hidden="true"><span class="anchor" id="pipeline-decode-style"></span>&#128279;</a> Pipeline decode style</h3>
-<p>When working with larger object or if you prefer to use <code>(|&gt;)</code> operator you can use pipelines helpers.</p>
+<p>When working with larger object or if you prefer to use the <code>(|&gt;)</code> operator, you can use pipeline helpers.</p>
 <pre><code class="hljs language-fsharp"><span class="hljs-keyword">open</span> Thot.Json.Decode
 
 <span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-title">Point</span> </span>=
