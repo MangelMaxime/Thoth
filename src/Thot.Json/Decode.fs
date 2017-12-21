@@ -39,7 +39,6 @@ module Helpers =
     [<Emit("typeof $0 === 'function'")>]
     let isFunction (_: obj) : bool = jsNative
 
-open Helpers
     [<Emit("Object.keys($0)")>]
     let objectKeys (_: obj) : string list = jsNative
 
@@ -217,16 +216,15 @@ let array (decoder : Decoder<'value>) (value: obj) : Result<'value array, Decode
         BadPrimitive ("an array", value)
         |> Error
 
-let dict (decoder : Decoder<'value>) (value: obj) : Result<Map<string,'value>, DecoderError> =
-    if Helpers.isObject value then
-        value
-        |> objectKeys
-        |> List.map (fun key -> (key, value?(key) |> unwrap decoder))
-        |> Map.ofList
-        |> Ok
-    else
+let keyValuePairs (decoder : Decoder<'value>) (value: obj) : Result<(string * 'value) list, DecoderError> =
+    if not (Helpers.isObject value) || Helpers.isArray value then
         BadPrimitive ("an object", value)
         |> Error
+    else
+        value
+        |> Helpers.objectKeys
+        |> List.map (fun key -> (key, value?(key) |> unwrap decoder))
+        |> Ok
 
 //////////////////////////////
 // Inconsistent Structure ///
@@ -403,6 +401,9 @@ let map8
 
             Ok (ctor v1 v2 v3 v4 v5 v6 v7 v8)
         )
+
+let dict (decoder : Decoder<'value>) =
+    map Map.ofList (keyValuePairs decoder)
 
 ////////////////
 // Pipeline ///

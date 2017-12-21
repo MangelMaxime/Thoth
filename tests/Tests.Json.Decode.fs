@@ -331,11 +331,51 @@ Expecting an array but instead got: 1
 
             Assert.AreEqual(expected, actual)
 
+        it "keyValuePairs works" <| fun _ ->
+            let expected = Ok([("a", 1) ; ("b", 2) ; ("c", 3)])
+
+            let actual =
+                decodeString (keyValuePairs int) """{ "a": 1, "b": 2, "c": 3 }"""
+
+            Assert.AreEqual(expected, actual)
+
         it "dict works" <| fun _ ->
             let expected = Ok(Map.ofList([("a", 1) ; ("b", 2) ; ("c", 3)]))
 
             let actual =
                 decodeString (dict int) """{ "a": 1, "b": 2, "c": 3 }"""
+
+            Assert.AreEqual(expected, actual)
+
+        it "dict with custom decoder works" <| fun _ ->
+            let expected = Ok(Map.ofList([("a", Record2.Create 1. 1.) ; ("b", Record2.Create 2. 2.) ; ("c", Record2.Create 3. 3.)]))
+
+            let decodePoint =
+                map2 Record2.Create
+                    (field "a" float)
+                    (field "b" float)
+
+            let actual =
+                decodeString (dict decodePoint)
+                    """
+{
+    "a":
+        {
+            "a": 1,
+            "b": 1
+        },
+    "b":
+        {
+            "a": 2,
+            "b": 2
+        },
+    "c":
+        {
+            "a": 3,
+            "b": 3
+        }
+}
+                    """
 
             Assert.AreEqual(expected, actual)
 
