@@ -142,3 +142,16 @@ let list (values : Value list) : Value =
 ///
 let encode (space: int) (value: Value) : string =
     FFI.stringify value None space
+
+///**Description**
+/// Encode an option
+///**Parameters**
+///  * `encoder` - parameter of type `'a -> Value`
+///
+///**Output Type**
+///  * `'a option -> Value`
+///
+///**Exceptions**
+///
+let option (encoder : 'a -> Value) =
+    Option.map encoder >> Option.defaultWith (fun _ -> nil)

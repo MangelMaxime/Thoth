@@ -101,3 +101,25 @@ describe "Encode" <| fun _ ->
                                 ])
                 ] |> encode 4
         Assert.AreEqual(expected, actual)
+
+    it "option with a value `Some ...` works" <| fun _ ->
+        let expected = """{"id":1,"operator":"maxime"}"""
+
+        let actual =
+            object
+                [ ("id", int 1)
+                  ("operator", option string (Some "maxime"))
+                ] |> encode 0
+
+        Assert.AreEqual(expected, actual)
+
+    it "option without a value `None` works" <| fun _ ->
+        let expected = """{"id":1,"operator":null}"""
+
+        let actual =
+            object
+                [ ("id", int 1)
+                  ("operator", option string None)
+                ] |> encode 0
+
+        Assert.AreEqual(expected, actual)
