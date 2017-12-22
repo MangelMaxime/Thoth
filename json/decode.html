@@ -78,10 +78,10 @@ then you get an <code>Ok</code> result, otherwise an <code>Error</code> explaini
 </ul>
 <pre><code class="hljs language-fsharp"><span class="hljs-keyword">open</span> Thot.Json.Decode
 
-&gt; decodeString (field <span class="hljs-string">"x"</span> int) <span class="hljs-string">"""{"x": 10, "y": 21"}"""</span>
+&gt; decodeString (field <span class="hljs-string">"x"</span> int) <span class="hljs-string">"""{"x": 10, "y": 21}"""</span>
 <span class="hljs-keyword">val</span> it : Result&lt;int, string&gt; = Ok <span class="hljs-number">10</span>
 
-&gt; decodeString (field <span class="hljs-string">"y"</span> int) <span class="hljs-string">"""{"x": 10, "y": 21"}"""</span>
+&gt; decodeString (field <span class="hljs-string">"y"</span> int) <span class="hljs-string">"""{"x": 10, "y": 21}"""</span>
 <span class="hljs-keyword">val</span> it : Result&lt;int, string&gt; = Ok <span class="hljs-number">21</span>
 </code></pre>
 <p><strong>Important:</strong></p>
@@ -102,7 +102,7 @@ like <code>map2</code>, <code>map3</code>, ..., <code>map8</code>.</p>
              (field <span class="hljs-string">"x"</span> int)
              (field <span class="hljs-string">"y"</span> int)
 
-&gt; decodeString Point.Decoder <span class="hljs-string">"""{"x": 10, "y": 21"}"""</span>
+&gt; decodeString Point.Decoder <span class="hljs-string">"""{"x": 10, "y": 21}"""</span>
 <span class="hljs-keyword">val</span> it : Result&lt;Point, string&gt; = Ok { X = <span class="hljs-number">10</span>; Y = <span class="hljs-number">21</span> }
 </code></pre>
 <h3><a href="#pipeline-decode-style" aria-hidden="true"><span class="anchor" id="pipeline-decode-style"></span>&#128279;</a> Pipeline decode style</h3>
@@ -121,7 +121,7 @@ like <code>map2</code>, <code>map3</code>, ..., <code>map8</code>.</p>
             |&gt; required <span class="hljs-string">"x"</span> int
             |&gt; required <span class="hljs-string">"y"</span> int
 
-&gt; decodeString Point.Decoder <span class="hljs-string">"""{"x": 10, "y": 21"}"""</span>
+&gt; decodeString Point.Decoder <span class="hljs-string">"""{"x": 10, "y": 21}"""</span>
 <span class="hljs-keyword">val</span> it : Result&lt;Point, string&gt; = Ok { X = <span class="hljs-number">10</span>; Y = <span class="hljs-number">21</span> }
 </code></pre>
 
