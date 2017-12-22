@@ -93,103 +93,112 @@ let unwrap (decoder : Decoder<'T>) (value : obj) : 'T =
 // Runners ///
 /////////////
 
-let decodeValue (decoder : Decoder<'T>) (value : obj) : Result<'T, string> =
-    try
-        match decoder value with
-        | Ok success ->
-            Ok success
-        | Error error ->
-            Error (errorToString error)
-    with
-        | ex ->
-            Error ex.Message
+let decodeValue (decoder : Decoder<'T>) =
+    fun value ->
+        try
+            match decoder value with
+            | Ok success ->
+                Ok success
+            | Error error ->
+                Error (errorToString error)
+        with
+            | ex ->
+                Error ex.Message
 
-let decodeString (decoder : Decoder<'T>) (value : string) : Result<'T, string> =
-    try
-        let json = JS.JSON.parse value
-        decodeValue decoder json
-    with
-        | ex ->
-            Error("Given an invalid JSON: " + ex.Message)
+let decodeString (decoder : Decoder<'T>) =
+    fun value ->
+        try
+            let json = JS.JSON.parse value
+            decodeValue decoder json
+        with
+            | ex ->
+                Error("Given an invalid JSON: " + ex.Message)
 
 //////////////////
 // Primitives ///
 ////////////////
 
-let string (value: obj) : Result<string, DecoderError> =
-    if Helpers.isString value then
-        Ok(unbox<string> value)
-    else
-        BadPrimitive("a string", value) |> Error
-
-let int (value: obj) : Result<int, DecoderError> =
-    if not (Helpers.isNumber value)  then
-        BadPrimitive("an int", value) |> Error
-    else
-        if not (Helpers.isValidIntRange value) then
-            BadPrimitiveExtra("an int", value, "Invalid range") |> Error
+let string : Decoder<string> =
+    fun value ->
+        if Helpers.isString value then
+            Ok(unbox<string> value)
         else
-            Ok(unbox<int> value)
+            BadPrimitive("a string", value) |> Error
 
-let bool (value: obj) : Result<bool, DecoderError> =
-    if Helpers.isBoolean value then
-        Ok(unbox<bool> value)
-    else
-        BadPrimitive("a boolean", value) |> Error
+let int : Decoder<int> =
+    fun value ->
+        if not (Helpers.isNumber value)  then
+            BadPrimitive("an int", value) |> Error
+        else
+            if not (Helpers.isValidIntRange value) then
+                BadPrimitiveExtra("an int", value, "Invalid range") |> Error
+            else
+                Ok(unbox<int> value)
 
-let float (value: obj) : Result<float, DecoderError> =
-    if Helpers.isNumber value then
-        Ok(unbox<float> value)
-    else
-        BadPrimitive("a float", value) |> Error
+let bool : Decoder<bool> =
+    fun value ->
+        if Helpers.isBoolean value then
+            Ok(unbox<bool> value)
+        else
+            BadPrimitive("a boolean", value) |> Error
+
+let float : Decoder<float> =
+    fun value ->
+        if Helpers.isNumber value then
+            Ok(unbox<float> value)
+        else
+            BadPrimitive("a float", value) |> Error
 
 
 /////////////////////////
 // Object primitives ///
 ///////////////////////
 
-let field (fieldName: string) (decoder : Decoder<'value>) (value: obj) : Result<'value, DecoderError> =
-    let fieldValue = value?(fieldName)
-    if Helpers.isDefined fieldValue then
-        decoder fieldValue
-    else
-        BadField ("an object with a field named `" + fieldName + "`", value)
-        |> Error
-
-let at (fieldNames: string list) (decoder : Decoder<'value>) (value: obj) : Result<'value, DecoderError> =
-    let mutable cValue = value
-    try
-        for fieldName in fieldNames do
-            let currentNode = cValue?(fieldName)
-            if Helpers.isDefined currentNode then
-                cValue <- currentNode
-            else
-                failwith fieldName
-        unwrap decoder cValue |> Ok
-    with
-        | ex ->
-            let msg = "an object with path `" + (String.concat "." fieldNames) + "`"
-            BadPath (msg, value, ex.Message)
-            |> Error
-
-let index (requestedIndex: int) (decoder : Decoder<'value>) (value: obj) : Result<'value, DecoderError> =
-    if Helpers.isArray value then
-        let vArray = unbox<obj array> value
-        if requestedIndex < vArray.Length then
-            unwrap decoder (vArray.[requestedIndex]) |> Ok
+let field (fieldName: string) (decoder : Decoder<'value>) : Decoder<'value> =
+    fun value ->
+        let fieldValue = value?(fieldName)
+        if Helpers.isDefined fieldValue then
+            decoder fieldValue
         else
-            let msg =
-                "a longer array. Need index `"
-                    + (requestedIndex.ToString())
-                    + "` but there are only `"
-                    + (vArray.Length.ToString())
-                    + "` entries"
-
-            TooSmallArray(msg, value)
+            BadField ("an object with a field named `" + fieldName + "`", value)
             |> Error
-    else
-        BadPrimitive("an array", value)
-        |> Error
+
+let at (fieldNames: string list) (decoder : Decoder<'value>) : Decoder<'value> =
+    fun value ->
+        let mutable cValue = value
+        try
+            for fieldName in fieldNames do
+                let currentNode = cValue?(fieldName)
+                if Helpers.isDefined currentNode then
+                    cValue <- currentNode
+                else
+                    failwith fieldName
+            unwrap decoder cValue |> Ok
+        with
+            | ex ->
+                let msg = "an object with path `" + (String.concat "." fieldNames) + "`"
+                BadPath (msg, value, ex.Message)
+                |> Error
+
+let index (requestedIndex: int) (decoder : Decoder<'value>) : Decoder<'value> =
+    fun value ->
+        if Helpers.isArray value then
+            let vArray = unbox<obj array> value
+            if requestedIndex < vArray.Length then
+                unwrap decoder (vArray.[requestedIndex]) |> Ok
+            else
+                let msg =
+                    "a longer array. Need index `"
+                        + (requestedIndex.ToString())
+                        + "` but there are only `"
+                        + (vArray.Length.ToString())
+                        + "` entries"
+
+                TooSmallArray(msg, value)
+                |> Error
+        else
+            BadPrimitive("an array", value)
+            |> Error
 
 // let nullable (d1: Decoder<'value>) : Resul<'value option, DecoderError> =
 
@@ -197,79 +206,88 @@ let index (requestedIndex: int) (decoder : Decoder<'value>) (value: obj) : Resul
 // Data structure ///
 ////////////////////
 
-let list (decoder : Decoder<'value>) (value: obj) : Result<'value list, DecoderError> =
-    if Helpers.isArray value then
-        unbox<obj array> value
-        |> Array.map (unwrap decoder)
-        |> Array.toList
-        |> Ok
-    else
-        BadPrimitive ("a list", value)
-        |> Error
+let list (decoder : Decoder<'value>) : Decoder<'value list> =
+    fun value ->
+        if Helpers.isArray value then
+            unbox<obj array> value
+            |> Array.map (unwrap decoder)
+            |> Array.toList
+            |> Ok
+        else
+            BadPrimitive ("a list", value)
+            |> Error
 
-let array (decoder : Decoder<'value>) (value: obj) : Result<'value array, DecoderError> =
-    if Helpers.isArray value then
-        unbox<obj array> value
-        |> Array.map (unwrap decoder)
-        |> Ok
-    else
-        BadPrimitive ("an array", value)
-        |> Error
+let array (decoder : Decoder<'value>) : Decoder<'value array> =
+    fun value ->
+        if Helpers.isArray value then
+            unbox<obj array> value
+            |> Array.map (unwrap decoder)
+            |> Ok
+        else
+            BadPrimitive ("an array", value)
+            |> Error
 
-let keyValuePairs (decoder : Decoder<'value>) (value: obj) : Result<(string * 'value) list, DecoderError> =
-    if not (Helpers.isObject value) || Helpers.isArray value then
-        BadPrimitive ("an object", value)
-        |> Error
-    else
-        value
-        |> Helpers.objectKeys
-        |> List.map (fun key -> (key, value?(key) |> unwrap decoder))
-        |> Ok
+let keyValuePairs (decoder : Decoder<'value>) : Decoder<(string * 'value) list> =
+    fun value ->
+        if not (Helpers.isObject value) || Helpers.isArray value then
+            BadPrimitive ("an object", value)
+            |> Error
+        else
+            value
+            |> Helpers.objectKeys
+            |> List.map (fun key -> (key, value?(key) |> unwrap decoder))
+            |> Ok
 
 //////////////////////////////
 // Inconsistent Structure ///
 ////////////////////////////
 
-let option (d1 : Decoder<'value>) (value: obj) :Result<'value option, DecoderError> =
-    match decodeValue d1 value with
-    | Ok v -> Ok (Some v)
-    | Error _ -> Ok None
+let option (d1 : Decoder<'value>) : Decoder<'value option> =
+    fun value ->
+        match decodeValue d1 value with
+        | Ok v -> Ok (Some v)
+        | Error _ -> Ok None
 
-let oneOf (decoders : Decoder<'value> list) (value: obj) : Result<'value, DecoderError> =
-    let rec runner (decoders : Decoder<'value> list) (errors : string list) =
-        match decoders with
-        | head::tail ->
-            match decodeValue head value with
-            | Ok v ->
-                Ok v
-            | Error error -> runner tail (errors @ [error])
-        | [] -> BadOneOf errors |> Error
+let oneOf (decoders : Decoder<'value> list) : Decoder<'value> =
+    fun value ->
+        let rec runner (decoders : Decoder<'value> list) (errors : string list) =
+            match decoders with
+            | head::tail ->
+                match decodeValue head value with
+                | Ok v ->
+                    Ok v
+                | Error error -> runner tail (errors @ [error])
+            | [] -> BadOneOf errors |> Error
 
-    runner decoders []
+        runner decoders []
 
 //////////////////////
 // Fancy decoding ///
 ////////////////////
 
-let nil (output : 'a) (value: obj) : Result<'a, DecoderError> =
-    if isNull value then
-        Ok output
-    else
-        BadPrimitive("null", value) |> Error
+let nil (output : 'a) : Decoder<'a> =
+    fun value ->
+        if isNull value then
+            Ok output
+        else
+            BadPrimitive("null", value) |> Error
 
 let value v = Ok v
 
-let succeed (output : 'a) (_: obj) : Result<'a, DecoderError> =
-    Ok output
+let succeed (output : 'a) : Decoder<'a> =
+    fun _ ->
+        Ok output
 
-let fail (msg: string) (_:obj) : Result<'a, DecoderError> =
-    FailMessage msg |> Error
+let fail (msg: string) : Decoder<'a> =
+    fun _ ->
+        FailMessage msg |> Error
 
-let andThen (cb: 'a -> Decoder<'b>) (decoder : Decoder<'a>) (value: obj) : Result<'b, DecoderError> =
-    match decodeValue decoder value with
-    | Error error -> failwith error
-    | Ok result ->
-        cb result value
+let andThen (cb: 'a -> Decoder<'b>) (decoder : Decoder<'a>) : Decoder<'b> =
+    fun value ->
+        match decodeValue decoder value with
+        | Error error -> failwith error
+        | Ok result ->
+            cb result value
 
 /////////////////////
 // Map functions ///
@@ -402,7 +420,7 @@ let map8
             Ok (ctor v1 v2 v3 v4 v5 v6 v7 v8)
         )
 
-let dict (decoder : Decoder<'value>) =
+let dict (decoder : Decoder<'value>) : Decoder<Map<string, 'value>> =
     map Map.ofList (keyValuePairs decoder)
 
 ////////////////
@@ -422,8 +440,9 @@ let requiredAt (path : string list) (valDecoder : Decoder<'a>) (decoder : Decode
 let decode output value = succeed output value
 
 /// Convert a `Decoder<Result<x, 'a>>` into a `Decoder<'a>`
-let resolve d1 value : Result<'a,DecoderError> =
-    andThen id d1 value
+let resolve d1 : Decoder<'a> =
+    fun value ->
+        andThen id d1 value
 
 let optionalDecoder pathDecoder valDecoder fallback =
     let nullOr decoder =
