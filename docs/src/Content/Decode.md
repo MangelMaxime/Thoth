@@ -77,10 +77,10 @@ In order to decode objects, you can use:
 ```fsharp
 open Thot.Json.Decode
 
-> decodeString (field "x" int) """{"x": 10, "y": 21"}"""
+> decodeString (field "x" int) """{"x": 10, "y": 21}"""
 val it : Result<int, string> = Ok 10
 
-> decodeString (field "y" int) """{"x": 10, "y": 21"}"""
+> decodeString (field "y" int) """{"x": 10, "y": 21}"""
 val it : Result<int, string> = Ok 21
 ```
 
@@ -107,7 +107,7 @@ type Point =
              (field "x" int)
              (field "y" int)
 
-> decodeString Point.Decoder """{"x": 10, "y": 21"}"""
+> decodeString Point.Decoder """{"x": 10, "y": 21}"""
 val it : Result<Point, string> = Ok { X = 10; Y = 21 }
 ```
 
@@ -130,6 +130,6 @@ type Point =
             |> required "x" int
             |> required "y" int
 
-> decodeString Point.Decoder """{"x": 10, "y": 21"}"""
+> decodeString Point.Decoder """{"x": 10, "y": 21}"""
 val it : Result<Point, string> = Ok { X = 10; Y = 21 }
 ```
