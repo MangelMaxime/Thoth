@@ -130,6 +130,21 @@ let list (values : Value list) : Value =
     FFI.encodeList values
 
 ///**Description**
+/// Encode a dictionary
+///**Parameters**
+///  * `values` - parameter of type `Map<string, Value>`
+///
+///**Output Type**
+///  * `Value`
+///
+///**Exceptions**
+///
+let dict (values : Map<string, Value>) : Value =
+    values
+    |> Map.toList
+    |> object
+
+///**Description**
 /// Convert a `Value` into a prettified string.
 ///**Parameters**
 ///  * `space` - parameter of type `int` - Amount of indentation

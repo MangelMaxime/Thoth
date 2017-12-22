@@ -74,15 +74,19 @@ module Logger =
     let errorfn str = Printf.kprintf (fun s -> use c = consoleColor ConsoleColor.Red in printfn "%s" s) str
 
 let yarn args =
-    ExecProcess
-        (fun info ->
-            { info with
-                FileName = "yarn"
-                Arguments = args
-            }
-        )
-        (TimeSpan.FromMinutes 10.)
-    |> ignore
+    let code =
+        ExecProcess
+            (fun info ->
+                { info with
+                    FileName = "yarn"
+                    Arguments = args
+                }
+            )
+            (TimeSpan.FromMinutes 10.)
+    if code <> 0 then
+        failwithf "Yarn exited with code: %i" code
+    else
+        ()
 
 Target.Create "Clean" (fun _ ->
     !! "src/**/bin"

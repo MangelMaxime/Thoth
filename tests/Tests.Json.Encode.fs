@@ -77,6 +77,19 @@ describe "Encode" <| fun _ ->
                 ] |> encode 0
         Assert.AreEqual(expected, actual)
 
+    it "a dict works" <| fun _ ->
+        let expected =
+            """{"a":1,"b":2,"c":3}"""
+        let actual =
+            Map.ofList
+                [ ("a", int 1)
+                  ("b", int 2)
+                  ("c", int 3)
+                ]
+            |> dict
+            |> encode 0
+        Assert.AreEqual(expected, actual)
+
     it "using pretty space works" <| fun _ ->
         let expected = "{\n    \"firstname\": \"maxime\",\n    \"age\": 25\n}"
 
