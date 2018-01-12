@@ -139,7 +139,7 @@ Target.Create "MochaTest" (fun _ ->
     |> Seq.iter(fun proj ->
         let projDir = proj |> Path.getDirectory
         //Compile to JS
-        dotnet projDir "fable yarn-run rollup --port free -- -c tests/rollup.config.js "
+        dotnet projDir "fable yarn-run rollup --port free -- -c tests/rollup.config.js"
 
         //Run mocha tests
         let projDirOutput = projDir </> "bin"
@@ -230,7 +230,7 @@ Target.Create "Watch" (fun _ ->
     |> Seq.iter(fun proj ->
         let projDir = proj |> Path.getDirectory
         //Compile to JS
-        dotnet projDir "fable webpack --port free -- --watch"
+        dotnet projDir "fable yarn-run rollup --port free -- -c tests/rollup.config.js -w"
     )
 )
 
