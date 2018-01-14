@@ -58,11 +58,18 @@ type DecoderError =
 type Decoder<'T> = obj -> Result<'T, DecoderError>
 
 let inline genericMsg msg value newLine =
-    "Expecting "
-        + msg
-        + " but instead got:"
-        + (if newLine then "\n" else " ")
-        + (Helpers.anyToString value)
+    try
+        "Expecting "
+            + msg
+            + " but instead got:"
+            + (if newLine then "\n" else " ")
+            + (Helpers.anyToString value)
+    with
+        | _ ->
+            "Expecting "
+            + msg
+            + " but decoder failed. Couldn't report given value due to circular structure."
+            + (if newLine then "\n" else " ")
 
 let errorToString =
     function

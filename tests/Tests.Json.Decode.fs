@@ -2,6 +2,7 @@ module Tests.Decode
 
 open Fable.Core
 open Fable.Core.Testing
+open Fable.Core.JsInterop
 open Thot.Json.Decode
 
 [<Global>]
@@ -142,6 +143,19 @@ let jsonRecordInvalid =
          "h": "invalid_a_field" }"""
 
 describe "Decode" <| fun _ ->
+
+    describe "Errors: " <| fun _ ->
+
+        it "circular structure are supported when reporting error" <| fun _ ->
+            let a = createObj [ ]
+            let b = createObj [ ]
+            a?child <- b
+            b?child <- a
+
+            let expected : Result<float, string>= Error "Expecting a float but decoder failed. Couldn\'t report given value due to circular structure. "
+            let actual = decodeValue float b
+
+            Assert.AreEqual(expected, actual)
 
     describe "Primitives: " <| fun _ ->
 
