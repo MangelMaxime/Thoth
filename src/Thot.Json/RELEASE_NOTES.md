@@ -1,6 +1,6 @@
 #### 1.0.0
 
-* Fix #15: If value is "circular structure" then we have a bad error report
+* Fix #15: If value is circular structure then we have a bad error report
 
 #### 0.1.0-beta-003
 
