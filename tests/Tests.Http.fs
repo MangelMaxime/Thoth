@@ -72,6 +72,16 @@ describe "Thot.Http" <| fun _ ->
         let middlewares = jsonServer.defaults()
 
         server.``use``(middlewares) |> ignore
+
+        server.get(U2.Case1 "/echo/headers", (fun (req : express.Request) (res : express.Response) _ ->
+            res.setHeader("Content-Type", !^"application/json")
+            if req.headers?customheader |> unbox<string> |> isNull then
+                res.send "false" |> ignore
+            else
+                res.send "true" |> ignore
+            null
+        )) |> ignore
+
         server.``use``(router) |> ignore
         serverInstance <- server.listen(3000, !!ignore)
 
@@ -288,4 +298,57 @@ describe "Thot.Http" <| fun _ ->
                         Assert.AreEqual(expectedResponse.Body, response.Body)
                         d()
                     | x -> d ("Bad Http.Error type: " + string x)
+            )
+
+    it "`withQueryParams` works" <| fun d ->
+        let expected = "http://localhost:3000/posts/1?firstname=maxime&surname=mangel"
+
+        let request =
+            Http.get "http://localhost:3000/posts/1"
+            |> Http.withQueryParams
+                [ "firstname", "maxime"
+                  "surname", "mangel" ]
+            |> Http.withExpect (Http.expectStringResponse (fun response -> Ok response.Url ))
+
+        Http.toTask
+            request
+            (function
+                | Ok responseUrl ->
+                    Assert.AreEqual(expected, responseUrl)
+                    d ()
+                | Error error -> d error
+            )
+
+    it "`withCacheBuster` works" <| fun d ->
+        let request =
+            Http.get "http://localhost:3000/posts/1"
+            |> Http.withCacheBuster "cacheBuster"
+            |> Http.withExpect (Http.expectStringResponse (fun response -> Ok response.Url ))
+
+        Http.toTask
+            request
+            (function
+                | Ok responseUrl ->
+                    if responseUrl.Contains("http://localhost:3000/posts/1?cacheBuster=") then
+                        d ()
+                    else
+                        d "CacheBuster query param isn't present in the url"
+                | Error error -> d error
+            )
+
+    it "`withCacheBuster` works" <| fun d ->
+        let request =
+            Http.get "http://localhost:3000/echo/headers"
+            |> Http.withHeader "customheader" "customValue"
+            |> Http.withExpect (Http.expectJson Decode.bool)
+
+        Http.toTask
+            request
+            (function
+                | Ok isHeaderPresent ->
+                    if isHeaderPresent then
+                        d()
+                    else
+                        d "`customheader` wasn't present in the request received by the server"
+                | Error error -> d error
             )
