@@ -1,3 +1,4 @@
+[<RequireQualifiedAccess>]
 module Thot.Http
 
 open Fable.Import
@@ -80,7 +81,7 @@ type Request<'Out> =
       /// Query params to add to the request
       QueryParams : (string * string) list }
 
-type HttpError =
+type Error =
     /// The url you provided isn't valid
     | BadUrl of string
     /// The request took too long to execute.
@@ -171,7 +172,7 @@ let private toResponse (xhr : Browser.XMLHttpRequest) : Response =
       Url = !!xhr?responseURL
       Body = unbox<string> xhr.response }
 
-let private handleResponse (xhr : Browser.XMLHttpRequest) (responseToResult : Expect<'Out>) : Result<'Out, HttpError> =
+let private handleResponse (xhr : Browser.XMLHttpRequest) (responseToResult : Expect<'Out>) : Result<'Out, Error> =
     let response : Response = toResponse xhr
 
     if response.Status.Code < 200 || response.Status.Code >= 300 then

@@ -197,7 +197,7 @@ describe "Thot.Http" <| fun _ ->
                     d "Should not have a valid response"
                 | Error error ->
                     match error with
-                    | Http.HttpError.BadStatus response ->
+                    | Http.Error.BadStatus response ->
                         // We ignore the headers check in the test because it's dynamic.
                         // For example, their is a date in it etc.
                         Assert.AreEqual(expected.Url, response.Url)
@@ -219,7 +219,7 @@ describe "Thot.Http" <| fun _ ->
                     d "Should not have a valid response"
                 | Error error ->
                     match error with
-                    | Http.HttpError.NetworkError ->
+                    | Http.Error.NetworkError ->
                         d()
                     | x -> d ("Bad Http.Error type: " + string x)
             )
@@ -236,7 +236,7 @@ describe "Thot.Http" <| fun _ ->
                     d "Should not have a valid response"
                 | Error error ->
                     match error with
-                    | Http.HttpError.Timeout ->
+                    | Http.Error.Timeout ->
                         d()
                     | x -> d ("Bad Http.Error type: " + string x)
             )
@@ -252,7 +252,7 @@ describe "Thot.Http" <| fun _ ->
                     d "Should not have a valid response"
                 | Error error ->
                     match error with
-                    | Http.HttpError.BadUrl invalidUrl ->
+                    | Http.Error.BadUrl invalidUrl ->
                         Assert.AreEqual("invalid-url", invalidUrl)
                         d()
                     | x -> d ("Bad Http.Error type: " + string x)
@@ -279,7 +279,7 @@ describe "Thot.Http" <| fun _ ->
                     d "Should not have a valid response"
                 | Error error ->
                     match error with
-                    | Http.HttpError.BadPayload (msg, response) ->
+                    | Http.Error.BadPayload (msg, response) ->
                         // We ignore the headers check in the test because it's dynamic.
                         // For example, their is a date in it etc.
                         Assert.AreEqual(expectedMsg, msg)
