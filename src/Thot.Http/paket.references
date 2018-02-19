@@ -1,4 +1,4 @@
 FSharp.Core
 Fable.Core
 dotnet-fable
-Fable.Import.Express
+Fable.Import.Browser

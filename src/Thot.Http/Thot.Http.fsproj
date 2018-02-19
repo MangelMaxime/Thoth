@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Description>Elm inspire encoder and decoder for JSON</Description>
+        <Description></Description>
         <PackageProjectUrl>https://github.com/MangelMaxime/Thot</PackageProjectUrl>
         <PackageLicenseUrl>https://github.com/MangelMaxime/Thot/blob/master/LICENSE.md</PackageLicenseUrl>
         <RepositoryUrl>https://github.com/MangelMaxime/Thot</RepositoryUrl>
-        <PackageTags>fable;fsharp;json</PackageTags>
+        <PackageTags>fable;fsharp;json;http</PackageTags>
         <Authors>Maxime Mangel</Authors>
-        <Version>1.0.0</Version>
+        <Version>0.0.0</Version>
     </PropertyGroup>
     <PropertyGroup>
         <TargetFramework>netstandard1.6</TargetFramework>
     </PropertyGroup>
     <ItemGroup>
-        <Compile Include="Decode.fs" />
-        <Compile Include="Encode.fs" />
+        <ProjectReference Include="../Thot.Json/Thot.Json.fsproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Include="Http.fs" />
     </ItemGroup>
     <ItemGroup>
         <Content Include="*.fsproj; **\*.fs; **\*.js" PackagePath="fable" />

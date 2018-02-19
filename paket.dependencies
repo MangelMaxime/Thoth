@@ -1,8 +1,10 @@
 source https://www.nuget.org/api/v2
 content:none
 
+nuget Fable.Import.Express
 nuget FSharp.Core redirects:force
 nuget Fable.Core
+nuget Fable.Import.Browser
 clitool dotnet-fable
 
 group netcorebuild

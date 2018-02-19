@@ -1,13 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard1.6</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../src/Thot.Json/Thot.Json.fsproj" />
+    <ProjectReference Include="../src/Thot.Http/Thot.Http.fsproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Tests.Json.Decode.fs" />
     <Compile Include="Tests.Json.Encode.fs" />
+    <Compile Include="Tests.Http.fs" />
     <Compile Include="Tests.fs" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />

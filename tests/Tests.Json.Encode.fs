@@ -10,7 +10,7 @@ let it (msg: string) (f: unit->unit): unit = jsNative
 [<Global>]
 let describe (msg: string) (f: unit->unit): unit = jsNative
 
-describe "Encode" <| fun _ ->
+describe "Thot.Json.Encode" <| fun _ ->
 
     it "a string works" <| fun _ ->
         let expected = "\"maxime\""

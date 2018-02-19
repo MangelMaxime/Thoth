@@ -142,7 +142,7 @@ let jsonRecordInvalid =
          "g": "invalid_a_field",
          "h": "invalid_a_field" }"""
 
-describe "Decode" <| fun _ ->
+describe "Thot.Json.Decode" <| fun _ ->
 
     describe "Errors: " <| fun _ ->
 

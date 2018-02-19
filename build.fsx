@@ -40,6 +40,8 @@ let dotnetCommon = { DotnetOptions.Default with DotnetCliPath = "dotnet" }
 
 let srcFiles =
     !! "./src/Thot.Json/Thot.Json.fsproj"
+    ++ "./src/Thot.Http/Thot.Http.fsproj"
+
 let testsGlob = "tests/**/*.fsproj"
 let docsGlob = "docs/**/*.fsproj"
 
