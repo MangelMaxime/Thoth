@@ -211,6 +211,7 @@ let private send (xhr : Browser.XMLHttpRequest) (request : Request<'Out>) =
         xhr.send(str)
 
     | FormDataBody data ->
+        xhr.setRequestHeader("Content-Type", "multipart/form-data")
         xhr.send(data)
 
     | JsonBody value ->
@@ -367,7 +368,6 @@ let patch (url : string) =
 let connect (url : string) =
     requestWithMethodAndUrl Method.Connect url
 
-
 ///**Description**
 ///
 /// Add a header to a request
@@ -431,6 +431,29 @@ let withStringBody (contentType : string) (value : string) =
 let withJsonBody (value : Encode.Value) =
     withBody <| JsonBody value
 
+let private toMultipart (keyValues : (string * string) list) =
+    let formData = Browser.FormData.Create()
+
+    keyValues
+    |> List.iter (fun (key, value) ->
+        formData.append(key, value)
+    )
+
+    FormDataBody formData
+
+
+///**Description**
+///
+/// Add a FormData string body to a request
+///
+///**Parameters**
+///  * `keyValues` - parameter of type `(string * string) list`
+///
+///**Output Type**
+///  * `Request<'a> -> Request<'a>`
+///
+let withMultipartStringBody (keyValues : (string * string) list) =
+    withBody <| toMultipart keyValues
 
 ///**Description**
 ///
