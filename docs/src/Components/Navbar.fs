@@ -4,6 +4,7 @@ module Components.Navbar
     open Fulma.Components
     open Fable.Helpers.React
     open Fable.Helpers.React.Props
+    open Fulma
     open Fulma.Layouts
     open Fulma.Elements
     open Fulma.Elements.Form
@@ -16,7 +17,7 @@ module Components.Navbar
             [ ]
 
     let private viewSimpleIcon isHiddenDesktop =
-        let inline props key url = Navbar.Item.props [ Key ("simple-icon-"+ key)
+        let inline props key url = Navbar.Item.Props [ Key ("simple-icon-"+ key)
                                                        Href url ]
 
         let visibility =
@@ -25,13 +26,13 @@ module Components.Navbar
             else
                 "is-hidden-mobile"
 
-        [ Navbar.item_a [ props "Github" "https://github.com/MangelMaxime/thot"
-                          Navbar.Item.customClass visibility ]
+        [ Navbar.Item.a [ props "Github" "https://github.com/MangelMaxime/thot"
+                          Navbar.Item.CustomClass visibility ]
             [ Icon.faIcon [ ]
                 [ Fa.icon Fa.I.Github
                   Fa.faLg ] ]
-          Navbar.item_a [ props "Twitter" "https://twitter.com/MangelMaxime"
-                          Navbar.Item.customClass ("twitter " + visibility) ]
+          Navbar.Item.a [ props "Twitter" "https://twitter.com/MangelMaxime"
+                          Navbar.Item.CustomClass ("twitter " + visibility) ]
             [ Icon.faIcon [ ]
                 [ Fa.icon Fa.I.Twitter
                   Fa.faLg ] ]
@@ -40,21 +41,21 @@ module Components.Navbar
     let tweetUrl = "https://twitter.com/intent/tweet?via=MangelMaxime&text=Thot%20is%20a%20set%20of%20several%20libraries%20for%20working%20with%20@FableCompiler%20applications"
 
     let private viewButton =
-        Navbar.item_div [ ]
-            [ Field.field_div [ Field.isGrouped ]
-                [ Control.control_p [ ]
-                    [ Button.button_a [ Button.customClass "twitter"
-                                        Button.props [ Href tweetUrl
-                                                       Target "_blank" ] ]
+        Navbar.Item.div [ ]
+            [ Field.div [ Field.IsGrouped ]
+                [ Control.p [ ]
+                    [ Button.a [ Button.CustomClass "twitter"
+                                 Button.Props [ Href tweetUrl
+                                                Target "_blank" ] ]
                         [ Icon.faIcon [ ]
                             [ Fa.icon Fa.I.Twitter
                               Fa.faLg ]
                           span [ ] [ str "Tweet" ]
                         ]
                     ]
-                  Control.control_p [ ]
-                    [ Button.button_a [ Button.customClass "github"
-                                        Button.props [ Href "https://github.com/MangelMaxime/thot" ] ]
+                  Control.p [ ]
+                    [ Button.a [ Button.CustomClass "github"
+                                 Button.Props [ Href "https://github.com/MangelMaxime/thot" ] ]
                         [ Icon.faIcon [ ]
                             [ Fa.icon Fa.I.Github
                               Fa.faLg ]
@@ -65,31 +66,45 @@ module Components.Navbar
             ]
 
     let private navbarEnd =
-        Navbar.end_div [ ]
+        Navbar.End.div [ ]
             [ viewSimpleIcon false
               viewButton ]
 
     let private navbarJson pageUrl =
-        Navbar.dropdown_div [ ]
-            [ Navbar.item_a [ if pageUrl = Route.Json.Decode then yield Navbar.Item.isActive
-                              yield Navbar.Item.props [ Href Route.Json.Decode ] ]
+        Navbar.Dropdown.div [ ]
+            [ Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.Decode)
+                              Navbar.Item.Props [ Href Route.Json.Decode ] ]
                 [ str "Decode" ]
-              Navbar.item_a [ if pageUrl = Route.Json.Encode then yield Navbar.Item.isActive
-                              yield Navbar.Item.props [ Href Route.Json.Encode ] ]
+              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.Encode )
+                              Navbar.Item.Props [ Href Route.Json.Encode ] ]
                 [ str "Encode" ] ]
 
+    let private navbarHttp pageUrl =
+        Navbar.Dropdown.div [ ]
+            [ Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Http.Basic)
+                              Navbar.Item.Props [ Href Route.Http.Basic ] ]
+                [ str "Basic" ]
+              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Http.Elmish)
+                              Navbar.Item.Props [ Href Route.Http.Basic ] ]
+                [ str "Elmish usage" ] ]
+
     let private navbarMenu pageUrl =
-        Navbar.menu [ Navbar.Menu.props [ Id "navMenu" ] ]
-            [ Navbar.item_div [ Navbar.Item.hasDropdown
-                                Navbar.Item.isHoverable ]
-                [ Navbar.link_div [ ]
+        Navbar.menu [ Navbar.Menu.Props [ Id "navMenu" ] ]
+            [ Navbar.Item.div [ Navbar.Item.HasDropdown
+                                Navbar.Item.IsHoverable ]
+                [ Navbar.Link.div [ ]
                     [ str "Json" ]
-                  navbarJson pageUrl ] ]
+                  navbarJson pageUrl ]
+              Navbar.Item.div [ Navbar.Item.HasDropdown
+                                Navbar.Item.IsHoverable ]
+                [ Navbar.Link.div [ ]
+                    [ str "Http" ]
+                  navbarHttp pageUrl ] ]
 
     let private navbarBrand =
-        Navbar.brand_div [ ]
-            [ Navbar.item_a [ Navbar.Item.props [ Href Route.Index ] ]
-                [ Heading.p [ Heading.is4 ]
+        Navbar.Brand.div [ ]
+            [ Navbar.Item.a [ Navbar.Item.Props [ Href Route.Index ] ]
+                [ Heading.p [ Heading.Is4 ]
                     [ str "Thot" ] ]
               viewSimpleIcon true
               Navbar.burger [ ]
@@ -98,8 +113,8 @@ module Components.Navbar
                   span [ ] [ ] ] ]
 
     let render pageUrl =
-        Navbar.navbar [ Navbar.isPrimary
-                        Navbar.customClass "is-fixed-top" ]
+        Navbar.navbar [ Navbar.Color IsPrimary
+                        Navbar.CustomClass "is-fixed-top" ]
             [ shadow
               Container.container [ ]
                 [ navbarBrand

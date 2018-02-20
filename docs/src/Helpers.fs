@@ -1,12 +1,10 @@
 module Helpers
 
-    open System
     open System.Collections.Generic
     open Fable.Core.JsInterop
     open Fable.Import
-    // open Fable.Import.Showdown
+    open Fable.Import.Node
     open Fable.Import.Node.Globals
-    open Fable.Import.Node.Exports
 
     let private templateCache = Dictionary<string, obj->string>()
     let private handleBarsCompile (_: string): obj->string = import "compile" "handlebars"
@@ -16,7 +14,7 @@ module Helpers
     /// Resolves a path to prevent using location of target JS file
     /// Note the function is inline so `__dirname` will belong to the calling file
     let inline resolve (path: string) =
-        Path.resolve(__dirname, path)
+        Exports.path.resolve(__dirname, path)
 
     /// Parses a Handlebars template
     let parseTemplate (path: string) (context: (string*obj) list) =
@@ -24,14 +22,14 @@ module Helpers
             match templateCache.TryGetValue(path) with
             | true, template -> template
             | false, _ ->
-                let template = Fs.readFileSync(path).toString() |> handleBarsCompile
+                let template = Exports.fs.readFileSync(path).toString() |> handleBarsCompile
                 templateCache.Add(path, template)
                 template
         createObj context |> template
 
     /// Parses a markdown file
     let parseMarkdown (path: string) =
-        Fs.readFileSync(path).toString() |> makeHtml
+        Exports.fs.readFileSync(path).toString() |> makeHtml
 
     /// Parses a React element invoking ReactDOMServer.renderToString
     let parseReact (el: React.ReactElement) =
@@ -42,21 +40,21 @@ module Helpers
         ReactDomServer.renderToStaticMarkup el
 
     let rec private ensureDirExists (dir: string) (cont: (unit->unit) option) =
-        if Fs.existsSync !^dir then
+        if Exports.fs.existsSync !^dir then
             match cont with Some c -> c() | None -> ()
         else
-            ensureDirExists (Path.dirname dir) (Some (fun () ->
-                if not(Fs.existsSync !^dir) then
-                    Fs?mkdirSync(dir) |> ignore
+            ensureDirExists (Exports.path.dirname dir) (Some (fun () ->
+                if not(Exports.fs.existsSync !^dir) then
+                    Exports.fs?mkdirSync(dir) |> ignore
                 match cont with Some c -> c() | None -> ()
             ))
 
     let writeFile (path: string) (content: string) =
-        ensureDirExists (Path.dirname path) None
-        Fs.writeFileSync(path, content)
+        ensureDirExists (Exports.path.dirname path) None
+        Exports.fs.writeFileSync(path, content)
 
     let readFile (path: string) =
-        Fs.readFileSync(path).toString()
+        Exports.fs.readFileSync(path).toString()
 
     open Fable.Core
     open Fable.Helpers.React
@@ -71,5 +69,5 @@ module Helpers
         div [ DangerouslySetInnerHTML { __html = makeHtml str } ] [ ]
 
     let contentFromMarkdown str =
-        Content.content [ Content.props [ DangerouslySetInnerHTML { __html = makeHtml str } ] ]
+        Content.content [ Content.Props [ DangerouslySetInnerHTML { __html = makeHtml str } ] ]
             [ ]

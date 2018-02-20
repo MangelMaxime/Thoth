@@ -3,10 +3,10 @@ module Renderer.Page
 
     open Helpers
     open Fable.Core.JsInterop
+    open Fulma
     open Fulma.Layouts
     open Fable.Helpers.React
     open Fable.Helpers.React.Props
-    open Components
 
     type PageConfig =
         { PageUrl : string
@@ -16,7 +16,7 @@ module Renderer.Page
     let private footer =
         div [ ]
             [ br [ ]
-              Footer.footer [ Footer.customClass "has-text-centered" ]
+              Footer.footer [ CustomClass "has-text-centered" ]
                 [ Container.container [ ]
                     [ contentFromMarkdown
                         """
@@ -52,7 +52,7 @@ Powered by [Fulma](https://mangelmaxime.github.io/Fulma/) and [Fable static-page
 
         [ "title" ==> title
           "styles" ==> styleTags
-          "navbar" ==> ((Navbar.render config.PageUrl) |> parseReactStatic)
+          "navbar" ==> ((Components.Navbar.render config.PageUrl) |> parseReactStatic)
           "body" ==> config.Body
           "footer" ==> (footer |> parseReactStatic)
         ]

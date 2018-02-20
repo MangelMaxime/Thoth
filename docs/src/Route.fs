@@ -14,3 +14,9 @@ module Json =
 
     let [<Literal>] Encode = Host + "json/" + "encode.html"
     let [<Literal>] Decode = Host + "json/" + "decode.html"
+
+[<RequireQualifiedAccess>]
+module Http =
+
+    let [<Literal>] Basic = Host + "http/" + "basic.html"
+    let [<Literal>] Elmish = Host + "http/" + "elmish.html"
