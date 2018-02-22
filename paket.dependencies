@@ -1,5 +1,5 @@
 source https://www.nuget.org/api/v2
-content:none
+storage:none
 
 nuget Fable.Import.Express
 nuget FSharp.Core redirects:force
@@ -9,6 +9,7 @@ clitool dotnet-fable
 
 group netcorebuild
     source https://www.nuget.org/api/v2
+    storage:none
     nuget NETStandard.Library.NETFramework
     nuget Fake.DotNet.Cli
     nuget Fake.DotNet.Paket
@@ -22,7 +23,7 @@ group netcorebuild
 
 group Docs
     framework: netstandard2.0
-    content: none
+    storage:none
 
     source https://www.nuget.org/api/v2
 

@@ -1,22 +1,5 @@
-(* -- Fake Dependencies paket.dependencies
-file ./paket.dependencies
-group netcorebuild
--- Fake Dependencies -- *)
-
-#if !DOTNETCORE
-#I "./packages/netcorebuild"
-#r "NETStandard.Library.NETFramework/build/net461/lib/netstandard.dll"
-#r "Fake.DotNet.Paket/lib/netstandard2.0/Fake.DotNet.Paket.dll"
-#r "Fake.IO.FileSystem/lib/netstandard2.0/Fake.IO.FileSystem.dll"
-#r "Fake.Core.Globbing/lib/netstandard2.0/Fake.Core.Globbing.dll"
-#r "Fake.Core.String/lib/netstandard2.0/Fake.Core.String.dll"
-#r "Fake.Core.Target/lib/netstandard2.0/Fake.Core.Target.dll"
-#r "Fake.DotNet.Cli/lib/netstandard2.0/Fake.DotNet.Cli.dll"
-#r "Fake.Core.ReleaseNotes/lib/netstandard2.0/Fake.Core.ReleaseNotes.dll"
-#r "Fake.Core.Process/lib/netstandard2.0/Fake.Core.Process.dll"
-#r "Fake.Core.Environment/lib/netstandard2.0/Fake.Core.Environment.dll"
-#r "Fake.Tools.Git/lib/netstandard2.0/Fake.Tools.Git.dll"
-#endif
+#r "paket: groupref netcorebuild //"
+#load ".fake/build.fsx/intellisense.fsx"
 
 open System
 open System.IO
@@ -36,7 +19,7 @@ open Fake.Tools.Git
 System.Console.OutputEncoding <- System.Text.Encoding.UTF8
 #endif
 
-let dotnetCommon = { DotnetOptions.Default with DotnetCliPath = "dotnet" }
+let setCliPath c = { c with DotNetCliPath = "dotnet" }
 
 let srcFiles =
     !! "./src/Thot.Json/Thot.Json.fsproj"
@@ -110,27 +93,24 @@ Target.Create "DotnetRestore" (fun _ ->
     ++ testsGlob
     ++ docsGlob
     |> Seq.iter (fun proj ->
-        DotnetRestore (fun c ->
-            { c with
-                Common = dotnetCommon
-            }) proj
+        DotNetRestore (fun p -> { p with Common = setCliPath p.Common }) proj
 ))
 
 Target.Create "DotnetBuild" (fun _ ->
     srcFiles
     |> Seq.iter (fun proj ->
-        DotnetCompile (fun c ->
-            { c with
-                Common = dotnetCommon
-            }) proj
+        DotNetCompile (fun c ->
+            let p = c()
+            { p with Common = setCliPath p.Common }) proj
 ))
 
 
-let dotnet workingDir args =
-    Dotnet
-        { dotnetCommon with
-            WorkingDirectory = workingDir }
-         args
+let dotnet workingDir command args =
+    DotNet (fun p ->
+                { p with WorkingDirectory = workingDir
+                         DotNetCliPath = "dotnet" } )
+        command
+        args
     |> ignore
 
 let mocha args =
@@ -141,7 +121,7 @@ Target.Create "MochaTest" (fun _ ->
     |> Seq.iter(fun proj ->
         let projDir = proj |> Path.getDirectory
         //Compile to JS
-        dotnet projDir "fable yarn-run rollup --port free -- -c tests/rollup.config.js"
+        dotnet projDir "fable" "yarn-run rollup --port free -- -c tests/rollup.config.js"
 
         //Run mocha tests
         let projDirOutput = projDir </> "bin"
@@ -163,6 +143,17 @@ let execNPX args =
             }
         )
         (TimeSpan.FromSeconds 30.)
+    |> ignore
+
+let execNPXNoTimeout args =
+    ExecProcess
+        (fun info ->
+            { info with
+                FileName = "npx"
+                Arguments = args
+            }
+        )
+        (TimeSpan.FromHours 2.)
     |> ignore
 
 let buildSass _ =
@@ -195,10 +186,10 @@ Target.Create "Docs.Watch" (fun _ ->
         let projDir = proj |> Path.getDirectory
 
         [ async {
-            dotnet projDir "fable yarn-run fable-splitter --port free -- -c docs/splitter.config.js -w"
+            dotnet projDir "fable" "yarn-run fable-splitter --port free -- -c docs/splitter.config.js -w"
           }
           async {
-                execNPX "node-sass --output-style compressed --watch --output docs/public/ docs/scss/main.scss"
+            execNPXNoTimeout "node-sass --output-style compressed --watch --output docs/public/ docs/scss/main.scss"
           }
         ]
         |> Async.Parallel
@@ -219,9 +210,12 @@ Target.Create "Docs.Setup" (fun _ ->
 Target.Create "Docs.Build" (fun _ ->
     !! docsGlob
     |> Seq.iter (fun proj ->
+        printfn "----------------------------------------------"
+        printfn "----------------------------------------------"
+        printfn "----------------------------------------------"
         let projDir = proj |> Path.getDirectory
 
-        dotnet projDir "fable yarn-run fable-splitter --port free -- -c docs/splitter.config.js -p"
+        dotnet projDir "fable" "yarn-run fable-splitter --port free -- -c docs/splitter.config.js -p"
         buildSass ()
         applyAutoPrefixer ()
     )
@@ -232,7 +226,7 @@ Target.Create "Watch" (fun _ ->
     |> Seq.iter(fun proj ->
         let projDir = proj |> Path.getDirectory
         //Compile to JS
-        dotnet projDir "fable yarn-run rollup --port free -- -c tests/rollup.config.js -w"
+        dotnet projDir "fable" "yarn-run rollup --port free -- -c tests/rollup.config.js -w"
     )
 )
 
@@ -270,18 +264,18 @@ let pushNuget (releaseNotes: ReleaseNotes.ReleaseNotes) (projFile: string) =
 
         let pkgReleaseNotes = sprintf "/p:PackageReleaseNotes=\"%s\"" (toLines releaseNotes.Notes)
 
-        DotnetPack (fun p ->
+        DotNetPack (fun p ->
             { p with
                 Configuration = Release
-                Common = { dotnetCommon with CustomParams = Some pkgReleaseNotes } } )
+                Common = { p.Common with CustomParams = Some pkgReleaseNotes } } )
             projFile
 
         Directory.GetFiles(projDir </> "bin" </> "Release", "*.nupkg")
         |> Array.find (fun nupkg -> nupkg.Contains(releaseNotes.NugetVersion))
         |> (fun nupkg ->
             (Path.GetFullPath nupkg, nugetKey)
-            ||> sprintf "nuget push %s -s nuget.org -k %s")
-        |> dotnet ""
+            ||> sprintf "push %s -s nuget.org -k %s")
+        |> dotnet "" "nuget"
 
 Target.Create "Publish" (fun _ ->
     srcFiles
