@@ -2,3 +2,5 @@ FSharp.Core
 Fable.Core
 dotnet-fable
 Fable.Import.Express
+group Tests
+  Expecto

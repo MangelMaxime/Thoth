@@ -260,3 +260,5 @@ docs/build/
 docs/public/
 docs/scss/extra/
 temp/
+
+\.DS_Store

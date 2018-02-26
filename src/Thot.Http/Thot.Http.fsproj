@@ -10,7 +10,7 @@
         <Version>0.1.0-beta-001</Version>
     </PropertyGroup>
     <PropertyGroup>
-        <TargetFramework>netstandard1.6</TargetFramework>
+        <TargetFramework>netstandard2.0</TargetFramework>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="../Thot.Json/Thot.Json.fsproj" />

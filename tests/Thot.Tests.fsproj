@@ -1,16 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../src/Thot.Json/Thot.Json.fsproj" />
+    <ProjectReference Include="../src/Thot.Json.NetCore/Thot.Json.NetCore.fsproj" />
     <ProjectReference Include="../src/Thot.Http/Thot.Http.fsproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Util.fs" />
     <Compile Include="Tests.Json.Decode.fs" />
-    <Compile Include="Tests.Json.Encode.fs" />
-    <Compile Include="Tests.Http.fs" />
-    <Compile Include="Tests.fs" />
+    <Compile Include="Main.fs" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

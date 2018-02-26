@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Description>Elm inspire encoder and decoder for JSON</Description>
+        <Description>Elm inspire encoder and decoder for JSON targetting NetCore runtime</Description>
         <PackageProjectUrl>https://github.com/MangelMaxime/Thot</PackageProjectUrl>
         <PackageLicenseUrl>https://github.com/MangelMaxime/Thot/blob/master/LICENSE.md</PackageLicenseUrl>
         <RepositoryUrl>https://github.com/MangelMaxime/Thot</RepositoryUrl>
-        <PackageTags>fable;fsharp;json</PackageTags>
+        <PackageTags>fsharp;json</PackageTags>
         <Authors>Maxime Mangel</Authors>
-        <Version>1.0.0</Version>
+        <Version>0.0.0</Version>
     </PropertyGroup>
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
@@ -15,9 +15,6 @@
     <ItemGroup>
         <Compile Include="Decode.fs" />
         <Compile Include="Encode.fs" />
-    </ItemGroup>
-    <ItemGroup>
-        <Content Include="*.fsproj; **\*.fs; **\*.js" PackagePath="fable" />
     </ItemGroup>
     <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

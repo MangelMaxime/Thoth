@@ -23,6 +23,7 @@ let setCliPath c = { c with DotNetCliPath = "dotnet" }
 
 let srcFiles =
     !! "./src/Thot.Json/Thot.Json.fsproj"
+    ++ "./src/Thot.Json.NetCore/Thot.Json.NetCore.fsproj"
     ++ "./src/Thot.Http/Thot.Http.fsproj"
 
 let testsGlob = "tests/**/*.fsproj"
@@ -99,8 +100,7 @@ Target.Create "DotnetRestore" (fun _ ->
 Target.Create "DotnetBuild" (fun _ ->
     srcFiles
     |> Seq.iter (fun proj ->
-        DotNetCompile (fun c ->
-            let p = c()
+        DotNetCompile (fun p ->
             { p with Common = setCliPath p.Common }) proj
 ))
 

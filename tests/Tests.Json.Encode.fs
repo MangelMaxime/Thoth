@@ -1,5 +1,7 @@
 module Tests.Encode
 
+#if FABLE_COMPILER
+
 open Fable.Core
 open Thot.Json.Encode
 open Fable.Core.Testing
@@ -136,3 +138,5 @@ describe "Thot.Json.Encode" <| fun _ ->
                 ] |> encode 0
 
         Assert.AreEqual(expected, actual)
+
+#endif
