@@ -1,22 +1,10 @@
 module Thot.Json.NetCore.Encode
 
+open Newtonsoft.Json
+open Newtonsoft.Json.Linq
+open System.IO
+
 type Replacer = string -> obj -> obj
-
-/// **Description**
-/// Represents a JavaScript value
-type Value = Value
-
-module private FFI =
-
-    let identity (_:'a) : Value = failwith "Only Fable support implemented for now"
-
-    let encodeNull : Value = failwith "Only Fable support implemented for now"
-
-    let encodeObject (_ : (string * Value) list) : Value = failwith "Only Fable support implemented for now"
-
-    let stringify (_: obj) (_: Replacer option) (_: int) = failwith "Only Fable support implemented for now"
-
-    let encodeList (_ : Value list) : Value = failwith "Only Fable support implemented for now"
 
 ///**Description**
 /// Encode a string
@@ -29,8 +17,8 @@ module private FFI =
 ///
 ///**Exceptions**
 ///
-let string (value : string) : Value =
-    FFI.identity value
+let string (value : string) : JToken =
+    JValue(value) :> JToken
 
 ///**Description**
 /// Encode an int
@@ -43,8 +31,8 @@ let string (value : string) : Value =
 ///
 ///**Exceptions**
 ///
-let int (value : int) : Value =
-    FFI.identity value
+let int (value : int) : JToken =
+    JValue(value) :> JToken
 
 ///**Description**
 /// Encode a Float. `Infinity` and `NaN` are encoded as `null`.
@@ -57,8 +45,8 @@ let int (value : int) : Value =
 ///
 ///**Exceptions**
 ///
-let float (value : float) : Value =
-    FFI.identity value
+let float (value : float) : JToken =
+    JValue(value) :> JToken
 
 ///**Description**
 /// Encode null
@@ -70,8 +58,8 @@ let float (value : float) : Value =
 ///
 ///**Exceptions**
 ///
-let nil : Value =
-    FFI.encodeNull
+let nil : JToken =
+    JValue(box null) :> JToken
 
 ///**Description**
 /// Encode a bool
@@ -83,8 +71,8 @@ let nil : Value =
 ///
 ///**Exceptions**
 ///
-let bool (value : bool) : Value =
-    FFI.identity value
+let bool (value : bool) : JToken =
+    JValue(value) :> JToken
 
 ///**Description**
 /// Encode an object
@@ -97,8 +85,12 @@ let bool (value : bool) : Value =
 ///
 ///**Exceptions**
 ///
-let object (values : (string * Value) list) : Value =
-    FFI.encodeObject values
+let object (values : (string * JToken) list) : JToken =
+    values
+    |> List.map (fun (key, value) ->
+        JProperty(key, value)
+    )
+    |> JObject :> JToken
 
 ///**Description**
 /// Encode an array
@@ -111,8 +103,8 @@ let object (values : (string * Value) list) : Value =
 ///
 ///**Exceptions**
 ///
-let array (values : array<Value>) : Value =
-    FFI.identity values
+let array (values : array<JToken>) : JToken =
+    JArray(values) :> JToken
 
 ///**Description**
 /// Encode a list
@@ -124,8 +116,8 @@ let array (values : array<Value>) : Value =
 ///
 ///**Exceptions**
 ///
-let list (values : Value list) : Value =
-    FFI.encodeList values
+let list (values : JToken list) : JToken =
+    JArray(values) :> JToken
 
 ///**Description**
 /// Encode a dictionary
@@ -137,7 +129,7 @@ let list (values : Value list) : Value =
 ///
 ///**Exceptions**
 ///
-let dict (values : Map<string, Value>) : Value =
+let dict (values : Map<string, JToken>) =
     values
     |> Map.toList
     |> object
@@ -153,8 +145,18 @@ let dict (values : Map<string, Value>) : Value =
 ///
 ///**Exceptions**
 ///
-let encode (space: int) (value: Value) : string =
-    FFI.stringify value None space
+let encode (space: int) (value: JToken) : string =
+    use sw = new StringWriter()
+
+    let jsonSerializer = JsonSerializer.CreateDefault()
+    use jsonWriter = new JsonTextWriter(sw)
+    jsonWriter.Indentation <- space
+    jsonWriter.Formatting <- if space = 0 then Formatting.None else Formatting.Indented
+    jsonWriter.IndentChar <- ' '
+
+    jsonSerializer.Serialize(jsonWriter, value, typeof<JToken>)
+    sw.Flush()
+    sw.ToString()
 
 ///**Description**
 /// Encode an option
@@ -166,5 +168,5 @@ let encode (space: int) (value: Value) : string =
 ///
 ///**Exceptions**
 ///
-let option (encoder : 'a -> Value) =
+let option (encoder : 'a -> JToken) =
     Option.map encoder >> Option.defaultWith (fun _ -> nil)

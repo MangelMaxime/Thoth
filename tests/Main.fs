@@ -9,6 +9,7 @@ let [<Global>] it (msg: string) (f: unit->unit) = jsNative
 
 let run () =
     let tests = [ Tests.Decode.tests
+                  Tests.Encode.tests
                 ] :> Util.Testing.Test seq
 
     for (moduleName, moduleTests) in tests do
@@ -28,6 +29,7 @@ open Util.Testing
 [<EntryPoint>]
 let main args =
     testList "All" [ Tests.Decode.tests
+                     Tests.Encode.tests
                    ]
     |> runTestsWithArgs defaultConfig args
 

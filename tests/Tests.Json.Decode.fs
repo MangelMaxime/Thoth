@@ -1,8 +1,6 @@
 module Tests.Decode
 
 #if FABLE_COMPILER
-open Fable.Core
-open Fable.Core.Testing
 open Fable.Core.JsInterop
 open Thot.Json.Decode
 #else
