@@ -145,18 +145,16 @@ let dict (values : Map<string, JToken>) =
 ///
 ///**Exceptions**
 ///
-let encode (space: int) (value: JToken) : string =
-    use sw = new StringWriter()
+let encode (space: int) (token: JToken) : string =
+    let format = if space = 0 then Formatting.None else Formatting.Indented
+    use stream = new StringWriter()
+    use jsonWriter = new JsonTextWriter(
+                            stream,
+                            Formatting = format,
+                            Indentation = space )
 
-    let jsonSerializer = JsonSerializer.CreateDefault()
-    use jsonWriter = new JsonTextWriter(sw)
-    jsonWriter.Indentation <- space
-    jsonWriter.Formatting <- if space = 0 then Formatting.None else Formatting.Indented
-    jsonWriter.IndentChar <- ' '
-
-    jsonSerializer.Serialize(jsonWriter, value, typeof<JToken>)
-    sw.Flush()
-    sw.ToString()
+    token.WriteTo(jsonWriter)
+    stream.ToString()
 
 ///**Description**
 /// Encode an option

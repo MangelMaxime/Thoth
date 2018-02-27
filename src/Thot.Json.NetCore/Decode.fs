@@ -7,17 +7,14 @@ open System.IO
 module Helpers =
 
     let anyToString (token: JToken) : string =
-        use sw = new StringWriter()
+        use stream = new StringWriter()
+        use jsonWriter = new JsonTextWriter(
+                                stream,
+                                Formatting = Formatting.Indented,
+                                Indentation = 4 )
 
-        let jsonSerializer = JsonSerializer.CreateDefault()
-        use jsonWriter = new JsonTextWriter(sw)
-        jsonWriter.Indentation <- 4
-        jsonWriter.Formatting <- Formatting.Indented
-        jsonWriter.IndentChar <- ' '
-
-        jsonSerializer.Serialize(jsonWriter, token, typeof<JToken>)
-        sw.Flush()
-        sw.ToString()
+        token.WriteTo(jsonWriter)
+        stream.ToString()
 
 type PrimitiveError =
     { Msg : string
