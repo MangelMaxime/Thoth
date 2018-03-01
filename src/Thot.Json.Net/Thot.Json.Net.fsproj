@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Description>Elm inspire encoder and decoder for JSON targetting NetCore runtime</Description>
+        <Description>Elm inspire encoder and decoder for JSON targetting .Net and NetCore runtime</Description>
         <PackageProjectUrl>https://github.com/MangelMaxime/Thot</PackageProjectUrl>
         <PackageLicenseUrl>https://github.com/MangelMaxime/Thot/blob/master/LICENSE.md</PackageLicenseUrl>
         <RepositoryUrl>https://github.com/MangelMaxime/Thot</RepositoryUrl>
