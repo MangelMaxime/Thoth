@@ -1,3 +1,8 @@
+#### 1.0.1
+
+* Fix `int` decoder ranger
+* Better error message for an invalid `int` range
+
 #### 1.0.0
 
 * Fix #15: If value is circular structure then we have a bad error report

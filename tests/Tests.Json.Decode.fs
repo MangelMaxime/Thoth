@@ -1,16 +1,12 @@
 module Tests.Decode
 
-open Fable.Core
-open Fable.Core.Testing
+#if FABLE_COMPILER
 open Fable.Core.JsInterop
 open Thot.Json.Decode
-
-[<Global>]
-let it (msg: string) (f: unit->unit): unit = jsNative
-
-
-[<Global>]
-let describe (msg: string) (f: unit->unit): unit = jsNative
+#else
+open Thot.Json.Net.Decode
+#endif
+open Util.Testing
 
 type Record2 =
     { a : float
@@ -123,14 +119,14 @@ type User =
           Followers = followers }
 
 let jsonRecord =
-    """{ "a": 1,
-         "b": 2,
-         "c": 3,
-         "d": 4,
-         "e": 5,
-         "f": 6,
-         "g": 7,
-         "h": 8 }"""
+    """{ "a": 1.0,
+         "b": 2.0,
+         "c": 3.0,
+         "d": 4.0,
+         "e": 5.0,
+         "f": 6.0,
+         "g": 7.0,
+         "h": 8.0 }"""
 
 let jsonRecordInvalid =
     """{ "a": "invalid_a_field",
@@ -142,115 +138,123 @@ let jsonRecordInvalid =
          "g": "invalid_a_field",
          "h": "invalid_a_field" }"""
 
-describe "Decode" <| fun _ ->
+let tests : Test =
+    testList "Thot.Json.Decode" [
 
-    describe "Errors: " <| fun _ ->
+        #if FABLE_COMPILER
 
-        it "circular structure are supported when reporting error" <| fun _ ->
-            let a = createObj [ ]
-            let b = createObj [ ]
-            a?child <- b
-            b?child <- a
+        testList "Errors" [
 
-            let expected : Result<float, string>= Error "Expecting a float but decoder failed. Couldn\'t report given value due to circular structure. "
-            let actual = decodeValue float b
+            testCase "circular structure are supported when reporting error" <| fun _ ->
+                let a = createObj [ ]
+                let b = createObj [ ]
+                a?child <- b
+                b?child <- a
 
-            Assert.AreEqual(expected, actual)
+                let expected : Result<float, string>= Error "Expecting a float but decoder failed. Couldn\'t report given value due to circular structure. "
+                let actual = decodeValue float b
 
-    describe "Primitives: " <| fun _ ->
+                equal expected actual
 
-        it "a string works" <| fun _ ->
-            let expected = Ok("maxime")
-            let actual =
-                decodeString string "\"maxime\""
+        ]
 
-            Assert.AreEqual(expected, actual)
+        #endif
 
-        it "a float works" <| fun _ ->
-            let expected = Ok(1.2)
-            let actual =
-                decodeString float "1.2"
+        testList "Primitives" [
 
-            Assert.AreEqual(expected, actual)
+            testCase "a string works" <| fun _ ->
+                let expected = Ok("maxime")
+                let actual =
+                    decodeString string "\"maxime\""
 
-        it "a bool works" <| fun _ ->
-            let expected = Ok(true)
-            let actual =
-                decodeString bool "true"
+                equal expected actual
 
-            Assert.AreEqual(expected, actual)
+            testCase "a float works" <| fun _ ->
+                let expected = Ok(1.2)
+                let actual =
+                    decodeString float "1.2"
 
-        it "an invalid bool output an error" <| fun _ ->
-            let expected = Error("Expecting a boolean but instead got: 2")
-            let actual =
-                decodeString bool "2"
+                equal expected actual
 
-            Assert.AreEqual(expected, actual)
+            testCase "a bool works" <| fun _ ->
+                let expected = Ok(true)
+                let actual =
+                    decodeString bool "true"
 
-        it "an int works" <| fun _ ->
-            let expected = Ok(25)
-            let actual =
-                decodeString int "25"
+                equal expected actual
 
-            Assert.AreEqual(expected, actual)
+            testCase "an invalid bool output an error" <| fun _ ->
+                let expected = Error("Expecting a boolean but instead got: 2")
+                let actual =
+                    decodeString bool "2"
 
-        it "an invalid int [invalid range] output an error" <| fun _ ->
-            let expected = Error("Expecting an int but instead got: 2147483648\nReason: Invalid range")
-            let actual =
-                decodeString int "2147483648"
+                equal expected actual
 
-            Assert.AreEqual(expected, actual)
+            testCase "an int works" <| fun _ ->
+                let expected = Ok(25)
+                let actual =
+                    decodeString int "25"
 
-        it "an invalid int [invalid range] output an error" <| fun _ ->
-            let expected = Error("Expecting an int but instead got: -2147483648\nReason: Invalid range")
-            let actual =
-                decodeString int "-2147483648"
+                equal expected actual
 
-            Assert.AreEqual(expected, actual)
+            testCase "an invalid int [invalid range: too big] output an error" <| fun _ ->
+                let expected = Error("Expecting an int but instead got: 2147483648\nReason: Value was either too large or too small for an int")
+                let actual =
+                    decodeString int "2147483648"
 
-    describe "Object primitives" <| fun _ ->
+                equal expected actual
 
-        it "field works" <| fun _ ->
-            let json = """{ "name": "maxime", "age": 25 }"""
-            let expected = Ok("maxime")
+            testCase "an invalid int [invalid range: too small] output an error" <| fun _ ->
+                let expected = Error("Expecting an int but instead got: -2147483649\nReason: Value was either too large or too small for an int")
+                let actual =
+                    decodeString int "-2147483649"
 
-            let actual =
-                decodeString (field "name" string) json
+                equal expected actual
+        ]
 
-            Assert.AreEqual(expected, actual)
+        testList "Object primitives" [
 
-        it "field output an error when field is missing" <| fun _ ->
-            let json = """{ "name": "maxime", "age": 25 }"""
-            let expected =
-                Error(
-                    """
+            testCase "field works" <| fun _ ->
+                let json = """{ "name": "maxime", "age": 25 }"""
+                let expected = Ok("maxime")
+
+                let actual =
+                    decodeString (field "name" string) json
+
+                equal expected actual
+
+            testCase "field output an error when field is missing" <| fun _ ->
+                let json = """{ "name": "maxime", "age": 25 }"""
+                let expected =
+                    Error(
+                        """
 Expecting an object with a field named `height` but instead got:
 {
     "name": "maxime",
     "age": 25
 }
-                    """.Trim())
+                        """.Trim())
 
-            let actual =
-                decodeString (field "height" float) json
+                let actual =
+                    decodeString (field "height" float) json
 
-            Assert.AreEqual(expected, actual)
+                equal expected actual
 
+            testCase "at works" <| fun _ ->
 
-        it "at works" <| fun _ ->
-            let json = """{ "user": { "name": "maxime", "age": 25 } }"""
-            let expected = Ok "maxime"
+                let json = """{ "user": { "name": "maxime", "age": 25 } }"""
+                let expected = Ok "maxime"
 
-            let actual =
-                decodeString (at ["user"; "name"] string) json
+                let actual =
+                    decodeString (at ["user"; "name"] string) json
 
-            Assert.AreEqual(expected, actual)
+                equal expected actual
 
-        it "at output an error if the path failed" <| fun _ ->
-            let json = """{ "user": { "name": "maxime", "age": 25 } }"""
-            let expected =
-                Error(
-                    """
+            testCase "at output an error if the path failed" <| fun _ ->
+                let json = """{ "user": { "name": "maxime", "age": 25 } }"""
+                let expected =
+                    Error(
+                        """
 Expecting an object with path `user.firstname` but instead got:
 {
     "user": {
@@ -259,476 +263,488 @@ Expecting an object with path `user.firstname` but instead got:
     }
 }
 Node `firstname` is unkown.
-                    """.Trim())
+                        """.Trim())
 
-            let actual =
-                decodeString (at ["user"; "firstname"] string) json
+                let actual =
+                    decodeString (at ["user"; "firstname"] string) json
 
-            Assert.AreEqual(expected, actual)
+                equal expected actual
 
-        it "index works" <| fun _ ->
-            let json = """["maxime", "alfonso", "steffen"]"""
-            let expected = Ok("alfonso")
+            testCase "index works" <| fun _ ->
+                let json = """["maxime", "alfonso", "steffen"]"""
+                let expected = Ok("alfonso")
 
-            let actual =
-                decodeString (index 1 string) json
+                let actual =
+                    decodeString (index 1 string) json
 
-            Assert.AreEqual(expected, actual)
+                equal expected actual
 
-        it "index output an error if array is to small" <| fun _ ->
-            let json = """["maxime", "alfonso", "steffen"]"""
-            let expected =
-                Error(
-                    """
+            testCase "index output an error if array is to small" <| fun _ ->
+                let json = """["maxime", "alfonso", "steffen"]"""
+                let expected =
+                    Error(
+                        """
 Expecting a longer array. Need index `5` but there are only `3` entries.
 [
     "maxime",
     "alfonso",
     "steffen"
 ]
-                    """.Trim())
+                        """.Trim())
 
-            let actual =
-                decodeString (index 5 string) json
+                let actual =
+                    decodeString (index 5 string) json
 
-            Assert.AreEqual(expected, actual)
+                equal expected actual
 
-        it "index output an error if value isn't an array" <| fun _ ->
-            let json = "1"
-            let expected =
-                Error(
-                    """
+            testCase "index output an error if value isn't an array" <| fun _ ->
+                let json = "1"
+                let expected =
+                    Error(
+                        """
 Expecting an array but instead got: 1
-                    """.Trim())
+                        """.Trim())
 
-            let actual =
-                decodeString (index 5 string) json
+                let actual =
+                    decodeString (index 5 string) json
 
-            Assert.AreEqual(expected, actual)
+                equal expected actual
 
-    describe "Data structure" <| fun _ ->
+        ]
 
-        it "list works" <| fun _ ->
-            let expected = Ok([1; 2; 3])
 
-            let actual =
-                decodeString (list int) "[1, 2, 3]"
+        testList "Data structure" [
 
-            Assert.AreEqual(expected, actual)
+            testCase "list works" <| fun _ ->
+                let expected = Ok([1; 2; 3])
 
-        it "an invalid list output an error" <| fun _ ->
-            let expected = Error("Expecting a list but instead got: 1")
+                let actual =
+                    decodeString (list int) "[1, 2, 3]"
 
-            let actual =
-                decodeString (list int) "1"
+                equal expected actual
 
-            Assert.AreEqual(expected, actual)
+            testCase "an invalid list output an error" <| fun _ ->
+                let expected = Error("Expecting a list but instead got: 1")
 
-        it "array works" <| fun _ ->
-            // Need to pass by a list otherwise Fable use:
-            // new Int32Array([1, 2, 3]) and the test fails
-            // And this would give:
-            // Expected: Result { tag: 0, data: Int32Array [ 1, 2, 3 ] }
-            // Actual: Result { tag: 0, data: [ 1, 2, 3 ] }
-            let expected = Ok([1; 2; 3] |> List.toArray)
+                let actual =
+                    decodeString (list int) "1"
 
-            let actual =
-                decodeString (array int) "[1, 2, 3]"
+                equal expected actual
 
-            Assert.AreEqual(expected, actual)
+            testCase "array works" <| fun _ ->
+                // Need to pass by a list otherwise Fable use:
+                // new Int32Array([1, 2, 3]) and the test fails
+                // And this would give:
+                // Expected: Result { tag: 0, data: Int32Array [ 1, 2, 3 ] }
+                // Actual: Result { tag: 0, data: [ 1, 2, 3 ] }
+                let expected = Ok([1; 2; 3] |> List.toArray)
 
-        it "an invalid array output an error" <| fun _ ->
-            let expected = Error("Expecting an array but instead got: 1")
+                let actual =
+                    decodeString (array int) "[1, 2, 3]"
 
-            let actual =
-                decodeString (array int) "1"
+                equal expected actual
 
-            Assert.AreEqual(expected, actual)
+            testCase "an invalid array output an error" <| fun _ ->
+                let expected = Error("Expecting an array but instead got: 1")
 
-        it "keyValuePairs works" <| fun _ ->
-            let expected = Ok([("a", 1) ; ("b", 2) ; ("c", 3)])
+                let actual =
+                    decodeString (array int) "1"
 
-            let actual =
-                decodeString (keyValuePairs int) """{ "a": 1, "b": 2, "c": 3 }"""
+                equal expected actual
 
-            Assert.AreEqual(expected, actual)
+            testCase "keyValuePairs works" <| fun _ ->
+                let expected = Ok([("a", 1) ; ("b", 2) ; ("c", 3)])
 
-        it "dict works" <| fun _ ->
-            let expected = Ok(Map.ofList([("a", 1) ; ("b", 2) ; ("c", 3)]))
+                let actual =
+                    decodeString (keyValuePairs int) """{ "a": 1, "b": 2, "c": 3 }"""
 
-            let actual =
-                decodeString (dict int) """{ "a": 1, "b": 2, "c": 3 }"""
+                equal expected actual
 
-            Assert.AreEqual(expected, actual)
+            testCase "dict works" <| fun _ ->
+                let expected = Ok(Map.ofList([("a", 1) ; ("b", 2) ; ("c", 3)]))
 
-        it "dict with custom decoder works" <| fun _ ->
-            let expected = Ok(Map.ofList([("a", Record2.Create 1. 1.) ; ("b", Record2.Create 2. 2.) ; ("c", Record2.Create 3. 3.)]))
+                let actual =
+                    decodeString (dict int) """{ "a": 1, "b": 2, "c": 3 }"""
 
-            let decodePoint =
-                map2 Record2.Create
-                    (field "a" float)
-                    (field "b" float)
+                equal expected actual
 
-            let actual =
-                decodeString (dict decodePoint)
-                    """
+            testCase "dict with custom decoder works" <| fun _ ->
+                let expected = Ok(Map.ofList([("a", Record2.Create 1. 1.) ; ("b", Record2.Create 2. 2.) ; ("c", Record2.Create 3. 3.)]))
+
+                let decodePoint =
+                    map2 Record2.Create
+                        (field "a" float)
+                        (field "b" float)
+
+                let actual =
+                    decodeString (dict decodePoint)
+                        """
 {
     "a":
         {
-            "a": 1,
-            "b": 1
+            "a": 1.0,
+            "b": 1.0
         },
     "b":
         {
-            "a": 2,
-            "b": 2
+            "a": 2.0,
+            "b": 2.0
         },
     "c":
         {
-            "a": 3,
-            "b": 3
+            "a": 3.0,
+            "b": 3.0
         }
 }
-                    """
+                        """
 
-            Assert.AreEqual(expected, actual)
+                equal expected actual
 
-        it "an invalid dict output an error" <| fun _ ->
-            let expected = Error("Expecting an object but instead got: 1")
+            testCase "an invalid dict output an error" <| fun _ ->
+                let expected = Error("Expecting an object but instead got: 1")
 
-            let actual =
-                decodeString (dict int) "1"
+                let actual =
+                    decodeString (dict int) "1"
 
-            Assert.AreEqual(expected, actual)
+                equal expected actual
 
-    describe "Inconsistent structure" <| fun _ ->
+        ]
 
-        it "oneOf works" <| fun _ ->
-            let expected = Ok([1; 2; 0; 4])
+        testList "Inconsistent structure" [
 
-            let badInt =
-                oneOf [ int; nil 0 ]
+            testCase "oneOf works" <| fun _ ->
+                let expected = Ok([1; 2; 0; 4])
 
-            let actual =
-                decodeString (list badInt) "[1,2,null,4]"
+                let badInt =
+                    oneOf [ int; nil 0 ]
 
-            Assert.AreEqual(expected, actual)
+                let actual =
+                    decodeString (list badInt) "[1,2,null,4]"
 
-        it "oneOf output errors if all case fails" <| fun _ ->
-            let expected =
-                Error (
-                    """
+                equal expected actual
+
+
+            testCase "oneOf output errors if all case fails" <| fun _ ->
+                let expected =
+                    Error (
+                        """
 I run into the following problems:
 
 Expecting a string but instead got: 1
 Expecting an object with a field named `test` but instead got:
 1
-                    """.Trim())
+                        """.Trim())
 
-            let badInt =
-                oneOf [ string; field "test" string ]
+                let badInt =
+                    oneOf [ string; field "test" string ]
 
-            let actual =
-                decodeString (list badInt) "[1,2,null,4]"
+                let actual =
+                    decodeString (list badInt) "[1,2,null,4]"
 
-            Assert.AreEqual(expected, actual)
+                equal expected actual
+
+            testCase "optional works" <| fun _ ->
+                let json = """{ "name": "maxime", "age": 25 }"""
+
+                let expectedValid = Ok(Some "maxime")
+                let actualValid =
+                    decodeString (option (field "name" string) ) json
+
+                equal expectedValid actualValid
+
+                let expectedInvalidType = Ok(None)
+                let actualInvalidType =
+                    decodeString (option (field "name" int) ) json
+
+                equal expectedInvalidType actualInvalidType
+
+                let expectedMissingField = Ok(None)
+                let actualMissingField =
+                    decodeString (option (field "height" int) ) json
+
+                equal expectedMissingField actualMissingField
+
+        ]
+
+        testList "Fancy decoding" [
+
+            testCase "null works (test on an int)" <| fun _ ->
+                let expected = Ok(20)
+                let actual =
+                    decodeString (nil 20) "null"
+
+                equal expected actual
+
+            testCase "null works (test on a boolean)" <| fun _ ->
+                let expected = Ok(false)
+                let actual =
+                    decodeString (nil false) "null"
+
+                equal expected actual
+
+            testCase "succeed works" <| fun _ ->
+                let expected = Ok(7)
+                let actual =
+                    decodeString (succeed 7) "true"
+
+                equal expected actual
+
+            testCase "succeed output an error if the JSON is invalid" <| fun _ ->
+                #if FABLE_COMPILER
+                let expected = Error("Given an invalid JSON: Unexpected token m in JSON at position 0")
+                #else
+                let expected = Error("Given an invalid JSON: Unexpected character encountered while parsing value: m. Path '', line 0, position 0.")
+                #endif
+                let actual =
+                    decodeString (succeed 7) "maxime"
+
+                equal expected actual
+
+            testCase "fail works" <| fun _ ->
+                let msg = "Failing because it's fun"
+                let expected = Error("I run into a `fail` decoder: " + msg)
+                let actual =
+                    decodeString (fail msg) "true"
+
+                equal expected actual
+
+            testCase "andThen works" <| fun _ ->
+                let expected = Ok 1
+                let infoHelp version =
+                    match version with
+                    | 4 ->
+                        succeed 1
+                    | 3 ->
+                        succeed 1
+                    | _ ->
+                        fail <| "Tying to decode info, but version " + (version.ToString()) + "is not supported"
+
+                let info =
+                    field "version" int
+                    |> andThen infoHelp
+
+                let actual =
+                    decodeString info """{ "version": 3, "data": 2 }"""
+
+                equal expected actual
 
 
-        it "optional works" <| fun _ ->
-            let json = """{ "name": "maxime", "age": 25 }"""
-
-            let expectedValid = Ok(Some "maxime")
-            let actualValid =
-                decodeString (option (field "name" string) ) json
-
-            Assert.AreEqual(expectedValid, actualValid)
-
-            let expectedInvalidType = Ok(None)
-            let actualInvalidType =
-                decodeString (option (field "name" int) ) json
-
-            Assert.AreEqual(expectedInvalidType, actualInvalidType)
-
-            let expectedMissingField = Ok(None)
-            let actualMissingField =
-                decodeString (option (field "height" int) ) json
-
-            Assert.AreEqual(expectedMissingField, actualMissingField)
-
-        it "optional works" <| fun _ ->
-            let expected = Ok(Some "maxime")
-            let json = """{ "name": "maxime", "age": 25 }"""
-
-            let actual =
-                decodeString (option (field "name" string) ) json
-
-            Assert.AreEqual(expected, actual)
-
-    describe "Fancy decoding" <| fun _ ->
-
-        it "null works" <| fun _ ->
-            let expected = Ok(20)
-            let actual =
-                decodeString (nil 20) "null"
-
-            Assert.AreEqual(expected, actual)
-
-        it "null works" <| fun _ ->
-            let expected = Ok(false)
-            let actual =
-                decodeString (nil false) "null"
-
-            Assert.AreEqual(expected, actual)
-
-        it "succeed works" <| fun _ ->
-            let expected = Ok(7)
-            let actual =
-                decodeString (succeed 7) "true"
-
-            Assert.AreEqual(expected, actual)
-
-        it "succeed output an error if the JSON is invalid" <| fun _ ->
-            let expected = Error("Given an invalid JSON: Unexpected token m in JSON at position 0")
-            let actual =
-                decodeString (succeed 7) "maxime"
-
-            Assert.AreEqual(expected, actual)
-
-        it "fail works" <| fun _ ->
-            let msg = "Failing because it's fun"
-            let expected = Error("I run into a `fail` decoder: "+ msg)
-            let actual =
-                decodeString (fail msg) "true"
-
-            Assert.AreEqual(expected, actual)
-
-        it "andThen works" <| fun _ ->
-            let expected = Ok 1
-            let infoHelp version =
-                match version with
-                | 4 ->
-                    succeed 1
-                | 3 ->
-                    succeed 1
-                | _ ->
-                    fail <| "Tying to decode info, but version " + (version.ToString()) + "is not supported"
-
-            let info =
-                field "version" int
-                |> andThen infoHelp
-
-            let actual =
-                decodeString info """{ "version": 3, "data": 2 }"""
-
-            Assert.AreEqual(expected, actual)
-
-        it "andThen generate an error if an error occuered" <| fun _ ->
-            let expected =
-                Error(
-                    """
+            testCase "andThen generate an error if an error occuered" <| fun _ ->
+                let expected =
+                    Error(
+                        """
 Expecting an object with a field named `version` but instead got:
 {
     "info": 3,
     "data": 2
 }
-                    """.Trim())
-            let infoHelp version =
-                match version with
-                | 4 ->
-                    succeed 1
-                | 3 ->
-                    succeed 1
-                | _ ->
-                    fail <| "Tying to decode info, but version " + (version.ToString()) + "is not supported"
+                        """.Trim())
+                let infoHelp version =
+                    match version with
+                    | 4 ->
+                        succeed 1
+                    | 3 ->
+                        succeed 1
+                    | _ ->
+                        fail <| "Tying to decode info, but version " + (version.ToString()) + "is not supported"
 
-            let info =
-                field "version" int
-                |> andThen infoHelp
+                let info =
+                    field "version" int
+                    |> andThen infoHelp
 
-            let actual =
-                decodeString info """{ "info": 3, "data": 2 }"""
+                let actual =
+                    decodeString info """{ "info": 3, "data": 2 }"""
 
-            Assert.AreEqual(expected, actual)
+                equal expected actual
 
-    describe "Mapping" <| fun _ ->
+        ]
 
-        it "map works" <| fun _ ->
-            let expected = Ok(6)
-            let stringLength =
-                map String.length string
+        testList "Mapping" [
 
-            let actual =
-                decodeString stringLength "\"maxime\""
-            Assert.AreEqual(expected, actual)
+            testCase "map works" <| fun _ ->
+                let expected = Ok(6)
+                let stringLength =
+                    map String.length string
 
-        it "map2 works" <| fun _ ->
-            let expected = Ok({a = 1.; b = 2.} : Record2)
+                let actual =
+                    decodeString stringLength "\"maxime\""
+                equal expected actual
 
-            let decodePoint =
-                map2 Record2.Create
-                    (field "a" float)
-                    (field "b" float)
 
-            let actual =
-                decodeString decodePoint jsonRecord
+            testCase "map2 works" <| fun _ ->
+                let expected = Ok({a = 1.; b = 2.} : Record2)
 
-            Assert.AreEqual(expected, actual)
+                let decodePoint =
+                    map2 Record2.Create
+                        (field "a" float)
+                        (field "b" float)
 
-        it "map3 works" <| fun _ ->
-            let expected = Ok({ a = 1.
-                                b = 2.
-                                c = 3. } : Record3)
+                let actual =
+                    decodeString decodePoint jsonRecord
 
-            let decodePoint =
-                map3 Record3.Create
-                    (field "a" float)
-                    (field "b" float)
-                    (field "c" float)
+                equal expected actual
 
-            let actual =
-                decodeString decodePoint jsonRecord
+            testCase "map3 works" <| fun _ ->
+                let expected = Ok({ a = 1.
+                                    b = 2.
+                                    c = 3. } : Record3)
 
-            Assert.AreEqual(expected, actual)
+                let decodePoint =
+                    map3 Record3.Create
+                        (field "a" float)
+                        (field "b" float)
+                        (field "c" float)
 
-        it "map4 works" <| fun _ ->
-            let expected = Ok({ a = 1.
-                                b = 2.
-                                c = 3.
-                                d = 4. } : Record4)
+                let actual =
+                    decodeString decodePoint jsonRecord
 
-            let decodePoint =
-                map4 Record4.Create
-                    (field "a" float)
-                    (field "b" float)
-                    (field "c" float)
-                    (field "d" float)
+                equal expected actual
 
-            let actual =
-                decodeString decodePoint jsonRecord
+            testCase "map4 works" <| fun _ ->
+                let expected = Ok({ a = 1.
+                                    b = 2.
+                                    c = 3.
+                                    d = 4. } : Record4)
 
-            Assert.AreEqual(expected, actual)
+                let decodePoint =
+                    map4 Record4.Create
+                        (field "a" float)
+                        (field "b" float)
+                        (field "c" float)
+                        (field "d" float)
 
-        it "map5 works" <| fun _ ->
-            let expected = Ok({ a = 1.
-                                b = 2.
-                                c = 3.
-                                d = 4.
-                                e = 5. } : Record5)
+                let actual =
+                    decodeString decodePoint jsonRecord
 
-            let decodePoint =
-                map5 Record5.Create
-                    (field "a" float)
-                    (field "b" float)
-                    (field "c" float)
-                    (field "d" float)
-                    (field "e" float)
+                equal expected actual
 
-            let actual =
-                decodeString decodePoint jsonRecord
+            testCase "map5 works" <| fun _ ->
+                let expected = Ok({ a = 1.
+                                    b = 2.
+                                    c = 3.
+                                    d = 4.
+                                    e = 5. } : Record5)
 
-            Assert.AreEqual(expected, actual)
+                let decodePoint =
+                    map5 Record5.Create
+                        (field "a" float)
+                        (field "b" float)
+                        (field "c" float)
+                        (field "d" float)
+                        (field "e" float)
 
-        it "map6 works" <| fun _ ->
-            let expected = Ok({ a = 1.
-                                b = 2.
-                                c = 3.
-                                d = 4.
-                                e = 5.
-                                f = 6. } : Record6)
+                let actual =
+                    decodeString decodePoint jsonRecord
 
-            let decodePoint =
-                map6 Record6.Create
-                    (field "a" float)
-                    (field "b" float)
-                    (field "c" float)
-                    (field "d" float)
-                    (field "e" float)
-                    (field "f" float)
+                equal expected actual
 
-            let actual =
-                decodeString decodePoint jsonRecord
+            testCase "map6 works" <| fun _ ->
+                let expected = Ok({ a = 1.
+                                    b = 2.
+                                    c = 3.
+                                    d = 4.
+                                    e = 5.
+                                    f = 6. } : Record6)
 
-            Assert.AreEqual(expected, actual)
+                let decodePoint =
+                    map6 Record6.Create
+                        (field "a" float)
+                        (field "b" float)
+                        (field "c" float)
+                        (field "d" float)
+                        (field "e" float)
+                        (field "f" float)
 
-        it "map7 works" <| fun _ ->
-            let expected = Ok({ a = 1.
-                                b = 2.
-                                c = 3.
-                                d = 4.
-                                e = 5.
-                                f = 6.
-                                g = 7. } : Record7)
+                let actual =
+                    decodeString decodePoint jsonRecord
 
-            let decodePoint =
-                map7 Record7.Create
-                    (field "a" float)
-                    (field "b" float)
-                    (field "c" float)
-                    (field "d" float)
-                    (field "e" float)
-                    (field "f" float)
-                    (field "g" float)
+                equal expected actual
 
-            let actual =
-                decodeString decodePoint jsonRecord
+            testCase "map7 works" <| fun _ ->
+                let expected = Ok({ a = 1.
+                                    b = 2.
+                                    c = 3.
+                                    d = 4.
+                                    e = 5.
+                                    f = 6.
+                                    g = 7. } : Record7)
 
-            Assert.AreEqual(expected, actual)
+                let decodePoint =
+                    map7 Record7.Create
+                        (field "a" float)
+                        (field "b" float)
+                        (field "c" float)
+                        (field "d" float)
+                        (field "e" float)
+                        (field "f" float)
+                        (field "g" float)
 
-        it "map8 works" <| fun _ ->
-            let expected = Ok({ a = 1.
-                                b = 2.
-                                c = 3.
-                                d = 4.
-                                e = 5.
-                                f = 6.
-                                g = 7.
-                                h = 8. } : Record8)
+                let actual =
+                    decodeString decodePoint jsonRecord
 
-            let decodePoint =
-                map8 Record8.Create
-                    (field "a" float)
-                    (field "b" float)
-                    (field "c" float)
-                    (field "d" float)
-                    (field "e" float)
-                    (field "f" float)
-                    (field "g" float)
-                    (field "h" float)
+                equal expected actual
 
-            let actual =
-                decodeString decodePoint jsonRecord
+            testCase "map8 works" <| fun _ ->
+                let expected = Ok({ a = 1.
+                                    b = 2.
+                                    c = 3.
+                                    d = 4.
+                                    e = 5.
+                                    f = 6.
+                                    g = 7.
+                                    h = 8. } : Record8)
 
-            Assert.AreEqual(expected, actual)
+                let decodePoint =
+                    map8 Record8.Create
+                        (field "a" float)
+                        (field "b" float)
+                        (field "c" float)
+                        (field "d" float)
+                        (field "e" float)
+                        (field "f" float)
+                        (field "g" float)
+                        (field "h" float)
 
-        it "map2 generate an error if invalid" <| fun _ ->
-            let expected = Error("Expecting a float but instead got: \"invalid_a_field\"")
+                let actual =
+                    decodeString decodePoint jsonRecord
 
-            let decodePoint =
-                map2 Record2.Create
-                    (field "a" float)
-                    (field "b" float)
+                equal expected actual
 
-            let actual =
-                decodeString decodePoint jsonRecordInvalid
+            testCase "map2 generate an error if invalid" <| fun _ ->
+                let expected = Error("Expecting a float but instead got: \"invalid_a_field\"")
 
-            Assert.AreEqual(expected, actual)
+                let decodePoint =
+                    map2 Record2.Create
+                        (field "a" float)
+                        (field "b" float)
 
-    describe "Pipeline" <| fun _ ->
+                let actual =
+                    decodeString decodePoint jsonRecordInvalid
 
-        it "required works" <| fun _ ->
-            let expected =
-                Ok(User.Create 67 "user@mail.com" "" 0)
+                equal expected actual
 
-            let userDecoder =
-                decode User.Create
-                    |> required "id" int
-                    |> required "email" string
-                    |> optional "name" string ""
-                    |> hardcoded 0
+        ]
 
-            let actual =
-                decodeString
-                    userDecoder
-                    """{ "id": 67, "email": "user@mail.com" }"""
+        testList "Pipeline" [
 
-            Assert.AreEqual(expected, actual)
+            testCase "required works" <| fun _ ->
+                let expected =
+                    Ok(User.Create 67 "user@mail.com" "" 0)
+
+                let userDecoder =
+                    decode User.Create
+                        |> required "id" int
+                        |> required "email" string
+                        |> optional "name" string ""
+                        |> hardcoded 0
+
+                let actual =
+                    decodeString
+                        userDecoder
+                        """{ "id": 67, "email": "user@mail.com" }"""
+
+                equal expected actual
+
+        ]
+
+    ]

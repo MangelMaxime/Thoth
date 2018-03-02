@@ -1,61 +1,35 @@
-module Thot.Json.Decode
+module Thot.Json.Net.Decode
 
-open Fable.Core
-open Fable.Core.JsInterop
-open Fable.Import
+open Newtonsoft.Json
+open Newtonsoft.Json.Linq
+open System.IO
 
 module Helpers =
 
-    [<Emit("typeof $0 === 'string'")>]
-    let isString (_ : obj) : bool = jsNative
+    let anyToString (token: JToken) : string =
+        use stream = new StringWriter()
+        use jsonWriter = new JsonTextWriter(
+                                stream,
+                                Formatting = Formatting.Indented,
+                                Indentation = 4 )
 
-    [<Emit("typeof $0 === 'boolean'")>]
-    let isBoolean (_ : obj) : bool = jsNative
-
-    [<Emit("typeof $0 === 'number'")>]
-    let isNumber (_ : obj) : bool = jsNative
-
-    [<Emit("$0 instanceof Array")>]
-    let isArray (_ : obj) : bool = jsNative
-
-    [<Emit("typeof $0 === 'object' && ($0 !== null)")>]
-    let isObject (_ : obj) : bool = jsNative
-
-    [<Emit("Number.isNaN($0)")>]
-    let isNaN (_: obj) : bool = jsNative
-
-    [<Emit("-2147483648 < $0 && $0 < 2147483647 && ($0 | 0) === $0")>]
-    let isValidIntRange (_: obj) : bool = jsNative
-
-    [<Emit("isFinite($0) && !($0 % 1)")>]
-    let isIntFinite (_: obj) : bool = jsNative
-
-    [<Emit("($0 !== undefined)")>]
-    let isDefined (_: obj) : bool = jsNative
-
-    [<Emit("JSON.stringify($0, null, 4) + ''")>]
-    let anyToString (_: obj) : string= jsNative
-
-    [<Emit("typeof $0 === 'function'")>]
-    let isFunction (_: obj) : bool = jsNative
-
-    [<Emit("Object.keys($0)")>]
-    let objectKeys (_: obj) : string list = jsNative
+        token.WriteTo(jsonWriter)
+        stream.ToString()
 
 type PrimitiveError =
     { Msg : string
       Value : obj }
 
 type DecoderError =
-    | BadPrimitive of string * obj
-    | BadPrimitiveExtra of string * obj * string
-    | BadField of string * obj
-    | BadPath of string * obj * string
-    | TooSmallArray of string * obj
+    | BadPrimitive of string * JToken
+    | BadPrimitiveExtra of string * JToken * string
+    | BadField of string * JToken
+    | BadPath of string * JToken * string
+    | TooSmallArray of string * JToken
     | FailMessage of string
     | BadOneOf of string list
 
-type Decoder<'T> = obj -> Result<'T, DecoderError>
+type Decoder<'T> = JToken -> Result<'T, DecoderError>
 
 let inline genericMsg msg value newLine =
     try
@@ -88,13 +62,12 @@ let errorToString =
     | FailMessage msg ->
         "I run into a `fail` decoder: " + msg
 
-let unwrap (decoder : Decoder<'T>) (value : obj) : 'T =
+let unwrap (decoder : Decoder<'T>) (value : JToken) : 'T =
     match decoder value with
     | Ok success ->
         success
     | Error error ->
         failwith (errorToString error)
-
 
 ///////////////
 // Runners ///
@@ -115,7 +88,7 @@ let decodeValue (decoder : Decoder<'T>) =
 let decodeString (decoder : Decoder<'T>) =
     fun value ->
         try
-            let json = JS.JSON.parse value
+            let json = Newtonsoft.Json.Linq.JValue.Parse value
             decodeValue decoder json
         with
             | ex ->
@@ -126,124 +99,134 @@ let decodeString (decoder : Decoder<'T>) =
 ////////////////
 
 let string : Decoder<string> =
-    fun value ->
-        if Helpers.isString value then
-            Ok(unbox<string> value)
+    fun token ->
+        if token.Type = JTokenType.String then
+            Ok(token.Value<string>())
         else
-            BadPrimitive("a string", value) |> Error
+            BadPrimitive("a string", token) |> Error
 
 let int : Decoder<int> =
-    fun value ->
-        if not (Helpers.isNumber value)  then
-            BadPrimitive("an int", value) |> Error
+    fun token ->
+        if token.Type <> JTokenType.Integer then
+            BadPrimitive("an int", token) |> Error
         else
-            if not (Helpers.isValidIntRange value) then
-                BadPrimitiveExtra("an int", value, "Value was either too large or too small for an int") |> Error
-            else
-                Ok(unbox<int> value)
+            try
+                let value = token.Value<int>()
+                Ok(value)
+            with
+                | _ -> BadPrimitiveExtra("an int", token, "Value was either too large or too small for an int") |> Error
 
 let bool : Decoder<bool> =
-    fun value ->
-        if Helpers.isBoolean value then
-            Ok(unbox<bool> value)
+    fun token ->
+        if token.Type = JTokenType.Boolean then
+            Ok(token.Value<bool>())
         else
-            BadPrimitive("a boolean", value) |> Error
+            BadPrimitive("a boolean", token) |> Error
 
 let float : Decoder<float> =
-    fun value ->
-        if Helpers.isNumber value then
-            Ok(unbox<float> value)
+    fun token ->
+        if token.Type = JTokenType.Float then
+            Ok(token.Value<float>())
         else
-            BadPrimitive("a float", value) |> Error
-
+            BadPrimitive("a float", token) |> Error
 
 /////////////////////////
 // Object primitives ///
 ///////////////////////
 
+
 let field (fieldName: string) (decoder : Decoder<'value>) : Decoder<'value> =
-    fun value ->
-        let fieldValue = value?(fieldName)
-        if Helpers.isDefined fieldValue then
-            decoder fieldValue
+    fun token ->
+        let errorMsg = BadField ("an object with a field named `" + fieldName + "`", token) |> Error
+        if token.Type = JTokenType.Object then
+            let fieldValue = token.Item(fieldName)
+            if isNull fieldValue then
+                errorMsg
+            else
+                decoder fieldValue
         else
-            BadField ("an object with a field named `" + fieldName + "`", value)
-            |> Error
+            errorMsg
 
 let at (fieldNames: string list) (decoder : Decoder<'value>) : Decoder<'value> =
-    fun value ->
-        let mutable cValue = value
+    fun token ->
+        let mutable cValue = token
         try
             for fieldName in fieldNames do
-                let currentNode = cValue?(fieldName)
-                if Helpers.isDefined currentNode then
-                    cValue <- currentNode
-                else
+                let currentNode = cValue.Item(fieldName)
+                if isNull currentNode then
                     failwith fieldName
+                else
+                    cValue <- currentNode
             unwrap decoder cValue |> Ok
         with
             | ex ->
                 let msg = "an object with path `" + (String.concat "." fieldNames) + "`"
-                BadPath (msg, value, ex.Message)
+                BadPath (msg, token, ex.Message)
                 |> Error
 
 let index (requestedIndex: int) (decoder : Decoder<'value>) : Decoder<'value> =
-    fun value ->
-        if Helpers.isArray value then
-            let vArray = unbox<obj array> value
-            if requestedIndex < vArray.Length then
+    fun token ->
+        if token.Type = JTokenType.Array then
+            let vArray = token.Value<JArray>()
+            if requestedIndex < vArray.Count then
                 unwrap decoder (vArray.[requestedIndex]) |> Ok
             else
                 let msg =
                     "a longer array. Need index `"
                         + (requestedIndex.ToString())
                         + "` but there are only `"
-                        + (vArray.Length.ToString())
+                        + (vArray.Count.ToString())
                         + "` entries"
 
-                TooSmallArray(msg, value)
+                TooSmallArray(msg, token)
                 |> Error
         else
-            BadPrimitive("an array", value)
+            BadPrimitive("an array", token)
             |> Error
 
 // let nullable (d1: Decoder<'value>) : Resul<'value option, DecoderError> =
 
-//////////////////////
-// Data structure ///
-////////////////////
+// //////////////////////
+// // Data structure ///
+// ////////////////////
 
 let list (decoder : Decoder<'value>) : Decoder<'value list> =
-    fun value ->
-        if Helpers.isArray value then
-            unbox<obj array> value
-            |> Array.map (unwrap decoder)
-            |> Array.toList
+    fun token ->
+        if token.Type = JTokenType.Array then
+            token.Value<JArray>().Values()
+            |> Seq.map (unwrap decoder)
+            |> Seq.toList
             |> Ok
         else
-            BadPrimitive ("a list", value)
+            BadPrimitive ("a list", token)
             |> Error
 
 let array (decoder : Decoder<'value>) : Decoder<'value array> =
-    fun value ->
-        if Helpers.isArray value then
-            unbox<obj array> value
-            |> Array.map (unwrap decoder)
+    fun token ->
+        if token.Type = JTokenType.Array then
+            token.Value<JArray>().Values()
+            |> Seq.map (unwrap decoder)
+            |> Seq.toArray
             |> Ok
         else
-            BadPrimitive ("an array", value)
+            BadPrimitive ("an array", token)
             |> Error
 
 let keyValuePairs (decoder : Decoder<'value>) : Decoder<(string * 'value) list> =
-    fun value ->
-        if not (Helpers.isObject value) || Helpers.isArray value then
-            BadPrimitive ("an object", value)
-            |> Error
-        else
-            value
-            |> Helpers.objectKeys
-            |> List.map (fun key -> (key, value?(key) |> unwrap decoder))
+    fun token ->
+        if token.Type = JTokenType.Object then
+            let value = token.Value<JObject>()
+
+            value.Properties()
+            |> Seq.map (fun prop ->
+                (prop.Name, value.SelectToken(prop.Name) |> unwrap decoder)
+            )
+            |> Seq.toList
             |> Ok
+        else
+            BadPrimitive ("an object", token)
+            |> Error
+
 
 //////////////////////////////
 // Inconsistent Structure ///
@@ -273,11 +256,11 @@ let oneOf (decoders : Decoder<'value> list) : Decoder<'value> =
 ////////////////////
 
 let nil (output : 'a) : Decoder<'a> =
-    fun value ->
-        if isNull value then
+    fun token ->
+        if token.Type = JTokenType.Null then
             Ok output
         else
-            BadPrimitive("null", value) |> Error
+            BadPrimitive("null", token) |> Error
 
 let value v = Ok v
 
@@ -436,7 +419,7 @@ let dict (decoder : Decoder<'value>) : Decoder<Map<string, 'value>> =
 
 let custom d1 d2 = map2 (|>) d1 d2
 
-let hardcoded<'a, 'b, 'c> : 'a -> Decoder<('a -> 'b)> -> 'c -> Result<'b,DecoderError> = succeed >> custom
+let hardcoded<'a, 'b> : 'a -> Decoder<('a -> 'b)> -> JToken -> Result<'b,DecoderError> = succeed >> custom
 
 let required (key : string) (valDecoder : Decoder<'a>) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
     custom (field key valDecoder) decoder
