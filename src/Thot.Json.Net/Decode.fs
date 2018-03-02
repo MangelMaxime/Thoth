@@ -1,4 +1,4 @@
-module Thot.Json.NetCore.Decode
+module Thot.Json.Net.Decode
 
 open Newtonsoft.Json
 open Newtonsoft.Json.Linq

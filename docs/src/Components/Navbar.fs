@@ -77,7 +77,10 @@ module Components.Navbar
                 [ str "Decode" ]
               Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.Encode )
                               Navbar.Item.Props [ Href Route.Json.Encode ] ]
-                [ str "Encode" ] ]
+                [ str "Encode" ]
+              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.Net )
+                              Navbar.Item.Props [ Href Route.Json.Net ] ]
+                [ str ".Net & NetCore" ] ]
 
     let private navbarHttp pageUrl =
         Navbar.Dropdown.div [ ]
@@ -95,11 +98,12 @@ module Components.Navbar
                 [ Navbar.Link.div [ ]
                     [ str "Json" ]
                   navbarJson pageUrl ]
-              Navbar.Item.div [ Navbar.Item.HasDropdown
-                                Navbar.Item.IsHoverable ]
-                [ Navbar.Link.div [ ]
-                    [ str "Http" ]
-                  navbarHttp pageUrl ] ]
+            //   Navbar.Item.div [ Navbar.Item.HasDropdown
+            //                     Navbar.Item.IsHoverable ]
+            //     [ Navbar.Link.div [ ]
+            //         [ str "Http" ]
+            //       navbarHttp pageUrl ]
+                   ]
 
     let private navbarBrand =
         Navbar.Brand.div [ ]

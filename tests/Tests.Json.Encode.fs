@@ -3,7 +3,7 @@ module Tests.Encode
 #if FABLE_COMPILER
 open Thot.Json.Encode
 #else
-open Thot.Json.NetCore.Encode
+open Thot.Json.Net.Encode
 #endif
 open Util.Testing
 

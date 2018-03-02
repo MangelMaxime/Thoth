@@ -14,6 +14,7 @@ module Json =
 
     let [<Literal>] Encode = Host + "json/" + "encode.html"
     let [<Literal>] Decode = Host + "json/" + "decode.html"
+    let [<Literal>] Net = Host + "json/" + "net.html"
 
 [<RequireQualifiedAccess>]
 module Http =

@@ -1,22 +1,19 @@
 source https://www.nuget.org/api/v2
 
-framework: netstandard2.0
+storage:none
 
-nuget Fable.Import.Express
+clitool dotnet-fable
 nuget FSharp.Core redirects:force
 nuget Fable.Core
 nuget Fable.Import.Browser
-clitool dotnet-fable
-nuget Newtonsoft.Json
-
-group Tests
-    source https://www.nuget.org/api/v2
-    storage:none
-    nuget Expecto
+nuget Newtonsoft.Json 10.0.3
+nuget Expecto
 
 group netcorebuild
-    source https://www.nuget.org/api/v2
     storage:none
+    source https://www.nuget.org/api/v2
+    framework: netstandard2.0
+
     nuget NETStandard.Library.NETFramework
     nuget Fake.DotNet.Cli
     nuget Fake.DotNet.Paket
@@ -29,12 +26,12 @@ group netcorebuild
     nuget Fake.Tools.Git
 
 group Docs
-    framework: netstandard2.0
     storage:none
-
     source https://www.nuget.org/api/v2
+    framework: netstandard2.0
 
     clitool dotnet-fable
+    nuget FSharp.Core redirects:force
     nuget Fable.Core
     nuget Fable.Import.Browser
     nuget Fable.React prerelease

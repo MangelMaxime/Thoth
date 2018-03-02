@@ -1,4 +1,5 @@
 group Docs
+  FSharp.Core
   Fable.Core
   Fable.PowerPack
   Fable.React

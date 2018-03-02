@@ -1,6 +1,8 @@
 #r "paket: groupref netcorebuild //"
 #load ".fake/build.fsx/intellisense.fsx"
 
+#nowarn "52"
+
 open System
 open System.IO
 open System.Text.RegularExpressions
@@ -23,11 +25,11 @@ let setCliPath c = { c with DotNetCliPath = "dotnet" }
 
 let srcFiles =
     !! "./src/Thot.Json/Thot.Json.fsproj"
-    ++ "./src/Thot.Json.NetCore/Thot.Json.NetCore.fsproj"
+    ++ "./src/Thot.Json.Net/Thot.Json.Net.fsproj"
     ++ "./src/Thot.Http/Thot.Http.fsproj"
 
 let testsGlob = "tests/**/*.fsproj"
-let docsGlob = "docs/**/*.fsproj"
+let docFile = "./docs/Docs.fsproj"
 
 module Util =
 
@@ -74,6 +76,22 @@ let yarn args =
     else
         ()
 
+let mono workingDir args =
+    let code =
+        ExecProcess
+            (fun info ->
+                { info with
+                    FileName = "mono"
+                    WorkingDirectory = workingDir
+                    Arguments = args
+                }
+            )
+            (TimeSpan.FromMinutes 10.)
+    if code <> 0 then
+        failwithf "Mono exited with code: %i" code
+    else
+        ()
+
 Target.Create "Clean" (fun _ ->
     !! "src/**/bin"
     ++ "src/**/obj"
@@ -91,17 +109,8 @@ Target.Create "YarnInstall"(fun _ ->
 
 Target.Create "DotnetRestore" (fun _ ->
     srcFiles
-    ++ testsGlob
-    ++ docsGlob
     |> Seq.iter (fun proj ->
         DotNetRestore (fun p -> { p with Common = setCliPath p.Common }) proj
-))
-
-Target.Create "DotnetBuild" (fun _ ->
-    srcFiles
-    |> Seq.iter (fun proj ->
-        DotNetCompile (fun p ->
-            { p with Common = setCliPath p.Common }) proj
 ))
 
 
@@ -112,6 +121,11 @@ let dotnet workingDir command args =
         command
         args
     |> ignore
+
+let build project framework =
+    DotNetBuild (fun p ->
+        { p with Common = setCliPath p.Common
+                 Framework = Some framework } ) project
 
 let mocha args =
     yarn (sprintf "run mocha %s" args)
@@ -127,6 +141,17 @@ Target.Create "MochaTest" (fun _ ->
         let projDirOutput = projDir </> "bin"
         mocha projDirOutput
     )
+)
+
+let testNetFrameworkDir = "tests" </> "bin" </> "Release" </> "net461"
+let testNetCoreDir = "tests" </> "bin" </> "Release" </> "netcoreapp2.0"
+
+Target.Create "ExpectoTest" (fun _ ->
+    build "tests/Thot.Tests.fsproj" "netcoreapp2.0"
+    build "tests/Thot.Tests.fsproj" "net461"
+
+    mono testNetFrameworkDir "Thot.Tests.exe"
+    dotnet testNetCoreDir "" "Thot.Tests.dll"
 )
 
 let root = __SOURCE_DIRECTORY__
@@ -181,7 +206,7 @@ Target.Create "Docs.Watch" (fun _ ->
     // Watch mode of node-sass don't trigger a first build
     buildSass ()
 
-    !! docsGlob
+    !! docFile
     |> Seq.iter (fun proj ->
         let projDir = proj |> Path.getDirectory
 
@@ -205,14 +230,14 @@ Target.Create "Docs.Setup" (fun _ ->
     // Copy files from node_modules allow us to manage them via yarn
     Shell.CopyDir "./docs/public/fonts" "./node_modules/font-awesome/fonts" (fun _ -> true)
     Shell.CopyFile "./docs/scss/extra/highlight.js/atom-one-light.css" "./node_modules/highlight.js/styles/atom-one-light.css"
+
+
+    DotNetRestore (fun p -> { p with Common = setCliPath p.Common }) docFile
 )
 
 Target.Create "Docs.Build" (fun _ ->
-    !! docsGlob
+    !! docFile
     |> Seq.iter (fun proj ->
-        printfn "----------------------------------------------"
-        printfn "----------------------------------------------"
-        printfn "----------------------------------------------"
         let projDir = proj |> Path.getDirectory
 
         dotnet projDir "fable" "yarn-run fable-splitter --port free -- -c docs/splitter.config.js -p"
@@ -267,7 +292,8 @@ let pushNuget (releaseNotes: ReleaseNotes.ReleaseNotes) (projFile: string) =
         DotNetPack (fun p ->
             { p with
                 Configuration = Release
-                Common = { p.Common with CustomParams = Some pkgReleaseNotes } } )
+                Common = { p.Common with CustomParams = Some pkgReleaseNotes
+                                         DotNetCliPath = "dotnet" } } )
             projFile
 
         Directory.GetFiles(projDir </> "bin" </> "Release", "*.nupkg")
@@ -293,7 +319,7 @@ let publishBranch = "gh-pages"
 let repoRoot = __SOURCE_DIRECTORY__
 let temp = repoRoot </> "temp"
 
-Target.Create "PublishDocs" (fun _ ->
+Target.Create "Docs.Publish" (fun _ ->
     // Clean the repo before cloning this avoid potential conflicts
     Shell.CleanDir temp
     Repository.cloneSingleBranch "" githubLink publishBranch temp
@@ -307,37 +333,20 @@ Target.Create "PublishDocs" (fun _ ->
     Branches.push temp
 )
 
-// Target "Release" (fun _ ->
-
-//     if Git.Information.getBranchName "" <> "master" then failwith "Not on master"
-
-//     StageAll ""
-//     Git.Commit.Commit "" (sprintf "Bump version to %s" release.NugetVersion)
-//     Branches.push ""
-
-//     Branches.tag "" release.NugetVersion
-//     Branches.pushTag "" "origin" release.NugetVersion
-// )
-
 "Clean"
     ==> "YarnInstall"
     ==> "DotnetRestore"
-    ==> "DotnetBuild"
     ==> "MochaTest"
+    ==> "ExpectoTest"
     ==> "Publish"
-    // ==> "Release"
-
-"Watch"
-    <== [ "DotnetBuild" ]
 
 "Docs.Build"
-    <== [ "DotnetRestore"
-          "Docs.Setup" ]
+    <== [ "Docs.Setup" ]
 
 "Docs.Watch"
     <== [ "Docs.Setup" ]
 
 "Docs.Build"
-    ==> "PublishDocs"
+    ==> "Docs.Publish"
 
-Target.RunOrDefault "DotnetPack"
+Target.RunOrDefault "ExpectoTest"

@@ -1,4 +1,4 @@
-#### NEXT
+#### 1.0.1
 
 * Fix `int` decoder ranger
 * Better error message for an invalid `int` range

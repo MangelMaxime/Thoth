@@ -4,7 +4,7 @@ module Tests.Decode
 open Fable.Core.JsInterop
 open Thot.Json.Decode
 #else
-open Thot.Json.NetCore.Decode
+open Thot.Json.Net.Decode
 #endif
 open Util.Testing
 

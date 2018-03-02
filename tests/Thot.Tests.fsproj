@@ -1,12 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFrameworks>netcoreapp2.0;net461</TargetFrameworks>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../src/Thot.Json/Thot.Json.fsproj" />
-    <ProjectReference Include="../src/Thot.Json.NetCore/Thot.Json.NetCore.fsproj" />
-    <ProjectReference Include="../src/Thot.Http/Thot.Http.fsproj" />
+    <ProjectReference Include="../src/Thot.Json.Net/Thot.Json.Net.fsproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Util.fs" />
