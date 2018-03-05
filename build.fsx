@@ -6,14 +6,12 @@
 open System
 open System.IO
 open System.Text.RegularExpressions
-open Fake.Core.Globbing.Operators
 open Fake.Core
-open Fake.Core.Process
 open Fake.Core.TargetOperators
 open Fake.DotNet.Cli
 open Fake.IO
+open Fake.IO.Globbing.Operators
 open Fake.IO.FileSystemOperators
-open Fake.Core.String
 open Fake.Tools.Git
 
 #if MONO
@@ -63,7 +61,7 @@ module Logger =
 
 let yarn args =
     let code =
-        ExecProcess
+        Process.Exec
             (fun info ->
                 { info with
                     FileName = "yarn"
@@ -78,7 +76,7 @@ let yarn args =
 
 let mono workingDir args =
     let code =
-        ExecProcess
+        Process.Exec
             (fun info ->
                 { info with
                     FileName = "mono"
@@ -160,7 +158,7 @@ let docsContent = docs </> "src" </> "Content"
 let buildMain = docs </> "build" </> "src" </> "Main.js"
 
 let execNPX args =
-    ExecProcess
+    Process.Exec
         (fun info ->
             { info with
                 FileName = "npx"
@@ -171,7 +169,7 @@ let execNPX args =
     |> ignore
 
 let execNPXNoTimeout args =
-    ExecProcess
+    Process.Exec
         (fun info ->
             { info with
                 FileName = "npx"
@@ -193,7 +191,7 @@ Target.Create "Docs.Watch" (fun _ ->
     watcher.EnableRaisingEvents <- true
 
     watcher.Changed.Add(fun _ ->
-        ExecProcess
+        Process.Exec
             (fun info ->
                 { info with
                     FileName = "node"
@@ -287,7 +285,7 @@ let pushNuget (releaseNotes: ReleaseNotes.ReleaseNotes) (projFile: string) =
         (versionRegex, projFile) ||> Util.replaceLines (fun line _ ->
             versionRegex.Replace(line, "<Version>" + releaseNotes.NugetVersion + "</Version>") |> Some)
 
-        let pkgReleaseNotes = sprintf "/p:PackageReleaseNotes=\"%s\"" (toLines releaseNotes.Notes)
+        let pkgReleaseNotes = sprintf "/p:PackageReleaseNotes=\"%s\"" (String.toLines releaseNotes.Notes)
 
         DotNetPack (fun p ->
             { p with

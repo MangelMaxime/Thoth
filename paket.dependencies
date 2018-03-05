@@ -20,7 +20,6 @@ group netcorebuild
     nuget Fake.Core.Target
     nuget Fake.Core.Process
     nuget Fake.Core.String
-    nuget Fake.Core.Globbing
     nuget Fake.Core.ReleaseNotes
     nuget Fake.IO.FileSystem
     nuget Fake.Tools.Git
