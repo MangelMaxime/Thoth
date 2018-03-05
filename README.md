@@ -1,8 +1,11 @@
 # Fable.Thot
 
-In order, to build this repo you need to use [`fake5`](https://fake.build/fake-gettingstarted.html).
+## Step to build the repo
 
-Example: `fake run build.fsx -t MochaTest`
+```shell
+> dotnet restore dotnet-fake.csproj
+> ./fake.sh run build.fsx [-t ExpectoTest]
+```
 
 <!-- ## Status
 

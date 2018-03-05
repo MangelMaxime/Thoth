@@ -1,3 +1,7 @@
+#### 1.1.0
+
+* Make some part of the API private
+
 #### 1.0.1
 
 * Fix `int` decoder ranger

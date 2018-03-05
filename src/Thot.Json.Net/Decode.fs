@@ -16,10 +16,6 @@ module Helpers =
         token.WriteTo(jsonWriter)
         stream.ToString()
 
-type PrimitiveError =
-    { Msg : string
-      Value : obj }
-
 type DecoderError =
     | BadPrimitive of string * JToken
     | BadPrimitiveExtra of string * JToken * string
@@ -31,7 +27,7 @@ type DecoderError =
 
 type Decoder<'T> = JToken -> Result<'T, DecoderError>
 
-let inline genericMsg msg value newLine =
+let private genericMsg msg value newLine =
     try
         "Expecting "
             + msg
@@ -45,7 +41,7 @@ let inline genericMsg msg value newLine =
             + " but decoder failed. Couldn't report given value due to circular structure."
             + (if newLine then "\n" else " ")
 
-let errorToString =
+let private errorToString =
     function
     | BadPrimitive (msg, value) ->
         genericMsg msg value false
