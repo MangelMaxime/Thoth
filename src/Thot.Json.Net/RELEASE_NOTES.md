@@ -1,3 +1,7 @@
+#### 1.0.1
+
+* Generate doc comment when packaging
+
 #### 1.0.0
 
 * Release 1.0.0

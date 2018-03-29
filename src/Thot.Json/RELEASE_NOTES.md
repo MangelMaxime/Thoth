@@ -1,3 +1,7 @@
+#### 1.1.1
+
+* Generate doc comment when packaging
+
 #### 1.1.0
 
 * Make some part of the API private
