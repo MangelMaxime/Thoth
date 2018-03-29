@@ -8,7 +8,7 @@ open System.IO
 open System.Text.RegularExpressions
 open Fake.Core
 open Fake.Core.TargetOperators
-open Fake.DotNet.Cli
+open Fake.DotNet
 open Fake.IO
 open Fake.IO.Globbing.Operators
 open Fake.IO.FileSystemOperators
@@ -18,8 +18,6 @@ open Fake.Tools.Git
 // prevent incorrect output encoding (e.g. https://github.com/fsharp/FAKE/issues/1196)
 System.Console.OutputEncoding <- System.Text.Encoding.UTF8
 #endif
-
-let setCliPath c = { c with DotNetCliPath = "dotnet" }
 
 let srcFiles =
     !! "./src/Thot.Json/Thot.Json.fsproj"
@@ -61,7 +59,7 @@ module Logger =
 
 let yarn args =
     let code =
-        Process.Exec
+        Process.execSimple
             (fun info ->
                 { info with
                     FileName = "yarn"
@@ -76,7 +74,7 @@ let yarn args =
 
 let mono workingDir args =
     let code =
-        Process.Exec
+        Process.execSimple
             (fun info ->
                 { info with
                     FileName = "mono"
@@ -90,7 +88,7 @@ let mono workingDir args =
     else
         ()
 
-Target.Create "Clean" (fun _ ->
+Target.create "Clean" (fun _ ->
     !! "src/**/bin"
     ++ "src/**/obj"
     ++ "docs/**/bin"
@@ -101,19 +99,19 @@ Target.Create "Clean" (fun _ ->
     |> Shell.CleanDirs
 )
 
-Target.Create "YarnInstall"(fun _ ->
+Target.create "YarnInstall"(fun _ ->
     yarn "install"
 )
 
-Target.Create "DotnetRestore" (fun _ ->
+Target.create "DotnetRestore" (fun _ ->
     srcFiles
     |> Seq.iter (fun proj ->
-        DotNetRestore (fun p -> { p with Common = setCliPath p.Common }) proj
+        DotNet.restore id proj
 ))
 
 
 let dotnet workingDir command args =
-    DotNet (fun p ->
+    DotNet.exec (fun p ->
                 { p with WorkingDirectory = workingDir
                          DotNetCliPath = "dotnet" } )
         command
@@ -121,14 +119,13 @@ let dotnet workingDir command args =
     |> ignore
 
 let build project framework =
-    DotNetBuild (fun p ->
-        { p with Common = setCliPath p.Common
-                 Framework = Some framework } ) project
+    DotNet.build (fun p ->
+        { p with Framework = Some framework } ) project
 
 let mocha args =
     yarn (sprintf "run mocha %s" args)
 
-Target.Create "MochaTest" (fun _ ->
+Target.create "MochaTest" (fun _ ->
     !! testsGlob
     |> Seq.iter(fun proj ->
         let projDir = proj |> Path.getDirectory
@@ -144,7 +141,7 @@ Target.Create "MochaTest" (fun _ ->
 let testNetFrameworkDir = "tests" </> "bin" </> "Release" </> "net461"
 let testNetCoreDir = "tests" </> "bin" </> "Release" </> "netcoreapp2.0"
 
-Target.Create "ExpectoTest" (fun _ ->
+Target.create "ExpectoTest" (fun _ ->
     build "tests/Thot.Tests.fsproj" "netcoreapp2.0"
     build "tests/Thot.Tests.fsproj" "net461"
 
@@ -158,7 +155,7 @@ let docsContent = docs </> "src" </> "Content"
 let buildMain = docs </> "build" </> "src" </> "Main.js"
 
 let execNPX args =
-    Process.Exec
+    Process.execSimple
         (fun info ->
             { info with
                 FileName = "npx"
@@ -169,7 +166,7 @@ let execNPX args =
     |> ignore
 
 let execNPXNoTimeout args =
-    Process.Exec
+    Process.execSimple
         (fun info ->
             { info with
                 FileName = "npx"
@@ -185,13 +182,13 @@ let buildSass _ =
 let applyAutoPrefixer _ =
     execNPX " postcss docs/public/main.css --use autoprefixer -o docs/public/main.css"
 
-Target.Create "Docs.Watch" (fun _ ->
+Target.create "Docs.Watch" (fun _ ->
     use watcher = new FileSystemWatcher(docsContent, "*.md")
     watcher.IncludeSubdirectories <- true
     watcher.EnableRaisingEvents <- true
 
     watcher.Changed.Add(fun _ ->
-        Process.Exec
+        Process.execSimple
             (fun info ->
                 { info with
                     FileName = "node"
@@ -221,7 +218,7 @@ Target.Create "Docs.Watch" (fun _ ->
     )
 )
 
-Target.Create "Docs.Setup" (fun _ ->
+Target.create "Docs.Setup" (fun _ ->
     // Make sure directories exist
     Directory.ensure "./docs/scss/extra/highlight.js/"
 
@@ -230,10 +227,10 @@ Target.Create "Docs.Setup" (fun _ ->
     Shell.CopyFile "./docs/scss/extra/highlight.js/atom-one-light.css" "./node_modules/highlight.js/styles/atom-one-light.css"
 
 
-    DotNetRestore (fun p -> { p with Common = setCliPath p.Common }) docFile
+    DotNet.restore id docFile
 )
 
-Target.Create "Docs.Build" (fun _ ->
+Target.create "Docs.Build" (fun _ ->
     !! docFile
     |> Seq.iter (fun proj ->
         let projDir = proj |> Path.getDirectory
@@ -244,7 +241,7 @@ Target.Create "Docs.Build" (fun _ ->
     )
 )
 
-Target.Create "Watch" (fun _ ->
+Target.create "Watch" (fun _ ->
     !! testsGlob
     |> Seq.iter(fun proj ->
         let projDir = proj |> Path.getDirectory
@@ -287,9 +284,9 @@ let pushNuget (releaseNotes: ReleaseNotes.ReleaseNotes) (projFile: string) =
 
         let pkgReleaseNotes = sprintf "/p:PackageReleaseNotes=\"%s\"" (String.toLines releaseNotes.Notes)
 
-        DotNetPack (fun p ->
+        DotNet.pack (fun p ->
             { p with
-                Configuration = Release
+                Configuration = DotNet.Release
                 Common = { p.Common with CustomParams = Some pkgReleaseNotes
                                          DotNetCliPath = "dotnet" } } )
             projFile
@@ -301,12 +298,12 @@ let pushNuget (releaseNotes: ReleaseNotes.ReleaseNotes) (projFile: string) =
             ||> sprintf "push %s -s nuget.org -k %s")
         |> dotnet "" "nuget"
 
-Target.Create "Publish" (fun _ ->
+Target.create "Publish" (fun _ ->
     srcFiles
     |> Seq.iter(fun s ->
         let projFile = s
         let projDir = IO.Path.GetDirectoryName(projFile)
-        let release = projDir </> "RELEASE_NOTES.md" |> ReleaseNotes.LoadReleaseNotes
+        let release = projDir </> "RELEASE_NOTES.md" |> ReleaseNotes.load
         pushNuget release projFile
     )
 )
@@ -317,7 +314,7 @@ let publishBranch = "gh-pages"
 let repoRoot = __SOURCE_DIRECTORY__
 let temp = repoRoot </> "temp"
 
-Target.Create "Docs.Publish" (fun _ ->
+Target.create "Docs.Publish" (fun _ ->
     // Clean the repo before cloning this avoid potential conflicts
     Shell.CleanDir temp
     Repository.cloneSingleBranch "" githubLink publishBranch temp
@@ -326,8 +323,8 @@ Target.Create "Docs.Publish" (fun _ ->
     Shell.CopyRecursive "docs/public" temp true |> printfn "%A"
 
     // Deploy the new site
-    Staging.StageAll temp
-    Commit.Commit temp (sprintf "Update site (%s)" (DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")))
+    Staging.stageAll temp
+    Commit.exec temp (sprintf "Update site (%s)" (DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")))
     Branches.push temp
 )
 
@@ -347,4 +344,4 @@ Target.Create "Docs.Publish" (fun _ ->
 "Docs.Build"
     ==> "Docs.Publish"
 
-Target.RunOrDefault "ExpectoTest"
+Target.runOrDefault "ExpectoTest"
