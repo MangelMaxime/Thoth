@@ -11,15 +11,17 @@ open Microsoft.FSharp.Compiler.SourceCodeServices.BasicPatterns
 module Templates =
     let opening = """module rec JsonCoders
 
-open Thot.Json.Decode
+open Thot.Json
 open {0}
     """
 
     let extension = """type {0} with
     static member Decoder =
-            decode (fun {1} -> {{ {2} }})"""
+            Decode.decode
+                (fun {1} ->
+                    {{ {2} }} : {0} )"""
 
-    let required = """                |> required "{0}" {1}"""
+    let required = """                |> Decode.required "{0}" {1}"""
 
 let (|NonAbbreviatedType|) (t: FSharpType) =
     let rec abbr (t: FSharpType) =
@@ -51,12 +53,17 @@ let parse (checker: FSharpChecker) projFile =
 let getDecoderName (NonAbbreviatedType t) =
     if t.HasTypeDefinition then
         match t.TypeDefinition.TryFullName with
-        | Some "System.Boolean" -> "bool"
-        | Some "System.String" -> "string"
-        | Some "System.Int32" -> "int"
-        | Some "System.Double" -> "float"
-        | _ -> t.TypeDefinition.DisplayName + ".Decoder"
+        | Some "System.Boolean" -> "Decode.bool"
+        | Some "System.String" -> "Decode.string"
+        | Some "System.Int32" -> "Decode.int"
+        | Some "System.Double" -> "Decode.float"
+        | _ ->
+            t.TypeDefinition.DisplayName + ".Decoder"
     else "unknown"
+
+let lower (s: string) =
+    s |> Seq.mapi (fun i c -> match i with | 0 -> (Char.ToLower(c)) | _ -> c)  |> String.Concat
+
 
 let rec printDecls ns extend decls =
     for decl in decls do
@@ -69,8 +76,8 @@ let rec printDecls ns extend decls =
                     |> Seq.toList
                 Console.WriteLine(Templates.extension,
                                     e.DisplayName,
-                                    fields |> List.mapi (fun i _ -> "f" + string i) |> String.concat " ",
-                                    fields |> List.mapi (fun i (n,_) -> sprintf "%s = f%i" n i) |> String.concat "; ")
+                                    fields |> List.map (fun (name,_) -> lower name) |> String.concat " ",
+                                    fields |> List.map (fun (name,_) -> sprintf "%s = %s" name (lower name)) |> String.concat "\n                      ")
                 for (name, decoder) in fields do
                     Console.WriteLine(Templates.required, name, decoder)
                 Console.WriteLine()
