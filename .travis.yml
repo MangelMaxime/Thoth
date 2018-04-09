@@ -16,7 +16,7 @@ os:
   - osx
 
 script:
-  - ./build.sh
+  - ./fake.sh build
 
 matrix:
   allow_failures:

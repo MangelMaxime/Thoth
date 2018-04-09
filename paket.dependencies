@@ -14,6 +14,7 @@ group netcorebuild
     source https://www.nuget.org/api/v2
     framework: netstandard2.0
 
+    clitool dotnet-fake
     nuget NETStandard.Library.NETFramework
     nuget Fake.DotNet.Cli
     nuget Fake.DotNet.Paket

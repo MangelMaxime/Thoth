@@ -1,2 +1,2 @@
-dotnet restore dotnet-fake.csproj
+dotnet restore build.proj
 dotnet fake %*
