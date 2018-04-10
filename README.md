@@ -16,6 +16,7 @@ MacOS/Linux | Windows
 
 ## Nuget
 
-Stable | Prerelease
---- | ---
-[![NuGet Badge](https://buildstats.info/nuget/Thot.Json)](https://www.nuget.org/packages/Thot.Json/) | [![NuGet Badge](https://buildstats.info/nuget/Thot.Json?includePreReleases=true)](https://www.nuget.org/packages/Thot.Json/)
+Package | Stable | Prerelease
+--- | --- | ---
+Thot.Json | [![NuGet Badge](https://buildstats.info/nuget/Thot.Json)](https://www.nuget.org/packages/Thot.Json/) | [![NuGet Badge](https://buildstats.info/nuget/Thot.Json?includePreReleases=true)](https://www.nuget.org/packages/Thot.Json/)
+Thot.Json.Net | [![NuGet Badge](https://buildstats.info/nuget/Thot.Json.Net)](https://www.nuget.org/packages/Thot.Json.Net/) | [![NuGet Badge](https://buildstats.info/nuget/Thot.Json.Net?includePreReleases=true)](https://www.nuget.org/packages/Thot.Json.Net/)
