@@ -104,7 +104,8 @@ Target.create "YarnInstall"(fun _ ->
 )
 
 Target.create "DotnetRestore" (fun _ ->
-    srcFiles
+    srcFiles 
+    ++ testsGlob
     |> Seq.iter (fun proj ->
         DotNet.restore id proj
 ))

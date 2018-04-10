@@ -3,7 +3,6 @@
 ## Step to build the repo
 
 ```shell
-> dotnet restore dotnet-fake.csproj
 > ./fake.sh run build.fsx [-t ExpectoTest]
 ```
 
