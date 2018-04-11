@@ -1,4 +1,4 @@
-# Fable.Thot ![Travis CI state](https://travis-ci.org/MangelMaxime/Thot.svg?branch=master)
+# Fable.Thot [![Build Status](https://travis-ci.org/MangelMaxime/Thot.svg?branch=master)](https://travis-ci.org/MangelMaxime/Thot)
 
 
 Package | Stable | Prerelease
