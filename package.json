@@ -7,9 +7,9 @@
         "server": "cd docs/public && reload -b"
     },
     "devDependencies": {
-        "@babel/core": "^7.0.0-beta.40",
-        "@babel/preset-env": "^7.0.0-beta.40",
-        "autoprefixer": "^8.0.0",
+        "@babel/core": "^7.0.0-beta.44",
+        "@babel/preset-env": "^7.0.0-beta.44",
+        "autoprefixer": "^8.2.0",
         "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
         "bulma": "^0.6.2",
         "fable-splitter": "^0.1.21",
@@ -18,29 +18,24 @@
         "highlight.js": "^9.12.0",
         "markdown-it": "^8.4.1",
         "markdown-it-highlightjs": "^3.0.0",
-        "node-prismjs": "^0.1.1",
-        "node-sass": "^4.7.2",
-        "npx": "^9.7.1",
+        "node-sass": "^4.8.3",
+        "npx": "^10.0.1",
         "postcss-cli": "^5.0.0",
-        "prismjs": "^1.11.0",
         "reload": "^2.2.2",
-        "rollup": "^0.56.2",
+        "rollup": "^0.57.1",
         "rollup-plugin-fable": "^1.1.1",
         "string": "^3.3.3",
-        "xhr2": "^0.1.4"
-    },
-    "dependencies": {
         "babel-core": "^6.26.0",
-        "babel-loader": "^7.1.2",
+        "babel-loader": "^7.1.4",
         "babel-preset-es2015": "^6.24.1",
         "fable-loader": "^1.1.4",
         "handlebars": "^4.0.11",
         "isomorphic-fetch": "^2.2.1",
-        "json-server": "^0.12.1",
-        "mocha": "^5.0.1",
-        "react": "^16.2.0",
-        "react-dom": "^16.2.0",
-        "xmlhttprequest": "^1.8.0"
+        "mocha": "^5.0.5",
+        "react": "^16.3.1",
+        "react-dom": "^16.3.1"
+    },
+    "dependencies": {
     },
     "browserslist": [
         "last 2 version"

@@ -13,6 +13,7 @@ open Fake.IO
 open Fake.IO.Globbing.Operators
 open Fake.IO.FileSystemOperators
 open Fake.Tools.Git
+open Fake.Core.Environment
 
 #if MONO
 // prevent incorrect output encoding (e.g. https://github.com/fsharp/FAKE/issues/1196)
@@ -57,20 +58,24 @@ module Logger =
     let error str = Printf.kprintf (fun s -> use c = consoleColor ConsoleColor.Red in printf "%s" s) str
     let errorfn str = Printf.kprintf (fun s -> use c = consoleColor ConsoleColor.Red in printfn "%s" s) str
 
-let yarn args =
-    let code =
-        Process.execSimple
-            (fun info ->
-                { info with
-                    FileName = "yarn"
-                    Arguments = args
-                }
-            )
-            (TimeSpan.FromMinutes 10.)
-    if code <> 0 then
-        failwithf "Yarn exited with code: %i" code
-    else
-        ()
+let platformTool tool =
+    Process.tryFindFileOnPath tool
+    |> function Some t -> t | _ -> failwithf "%s not found" tool
+
+let run (cmd:string) dir args  =
+    if Process.execSimple (fun info ->
+        { info with
+            FileName = cmd
+            WorkingDirectory =
+                if not (String.IsNullOrWhiteSpace dir) then dir else info.WorkingDirectory
+            Arguments = args
+        }
+    ) TimeSpan.MaxValue <> 0 then
+        failwithf "Error while running '%s' with args: %s " cmd args
+
+let yarnTool = platformTool "yarn"
+
+let yarn = run yarnTool "./"
 
 let mono workingDir args =
     let code =
@@ -104,7 +109,7 @@ Target.create "YarnInstall"(fun _ ->
 )
 
 Target.create "DotnetRestore" (fun _ ->
-    srcFiles 
+    srcFiles
     ++ testsGlob
     |> Seq.iter (fun proj ->
         DotNet.restore id proj
@@ -123,9 +128,6 @@ let build project framework =
     DotNet.build (fun p ->
         { p with Framework = Some framework } ) project
 
-let mocha args =
-    yarn (sprintf "run mocha %s" args)
-
 Target.create "MochaTest" (fun _ ->
     !! testsGlob
     |> Seq.iter(fun proj ->
@@ -135,7 +137,7 @@ Target.create "MochaTest" (fun _ ->
 
         //Run mocha tests
         let projDirOutput = projDir </> "bin"
-        mocha projDirOutput
+        yarn ("run mocha " + projDirOutput)
     )
 )
 
@@ -146,7 +148,10 @@ Target.create "ExpectoTest" (fun _ ->
     build "tests/Thot.Tests.fsproj" "netcoreapp2.0"
     build "tests/Thot.Tests.fsproj" "net461"
 
-    mono testNetFrameworkDir "Thot.Tests.exe"
+    if isUnix then
+        mono testNetFrameworkDir "Thot.Tests.exe"
+    else
+        run (testNetFrameworkDir </> "Thot.Tests.exe") "" ""
     dotnet testNetCoreDir "" "Thot.Tests.dll"
 )
 

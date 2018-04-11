@@ -10,10 +10,9 @@ export default {
     output: {
         file: resolve('./bin/tests.bundle.js'),
         format: 'cjs', // 'amd', 'cjs', 'es', 'iife', 'umd',
-        external: ['xmlhttprequest'],
         name: 'FableREPL'
     },
     plugins: [
         fable({})
-    ],
+    ]
 };

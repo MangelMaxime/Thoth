@@ -6,7 +6,7 @@ clitool dotnet-fable
 nuget FSharp.Core redirects:force
 nuget Fable.Core
 nuget Fable.Import.Browser
-nuget Newtonsoft.Json 10.0.3
+nuget Newtonsoft.Json 11.0.1
 nuget Expecto
 
 group netcorebuild
