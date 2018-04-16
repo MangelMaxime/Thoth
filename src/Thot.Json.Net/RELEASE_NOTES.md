@@ -1,3 +1,7 @@
+#### 1.0.2
+
+* Thot.Json library is being deprecated please use Thoth.Json
+
 #### 1.0.1
 
 * Generate doc comment when packaging

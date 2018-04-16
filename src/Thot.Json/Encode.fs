@@ -1,6 +1,7 @@
 module Thot.Json.Encode
 
 open Fable.Core.JsInterop
+open System
 
 type Replacer = string -> obj -> obj
 
@@ -155,6 +156,7 @@ let dict (values : Map<string, Value>) : Value =
 ///
 ///**Exceptions**
 ///
+[<Obsolete("Thot.Json library is being deprecated please use Thoth.Json")>]
 let encode (space: int) (value: Value) : string =
     FFI.stringify value None space
 
