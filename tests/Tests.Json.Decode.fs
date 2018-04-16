@@ -198,17 +198,29 @@ let tests : Test =
                 equal expected actual
 
             testCase "an invalid int [invalid range: too big] output an error" <| fun _ ->
+                #if FABLE_COMPILER
+                let expected = Error("Expecting an int but instead got: 9007199254740992\nReason: Value was either too large or too small for an int")
+                let actual =
+                    decodeString int "9007199254740992"
+                #else
                 let expected = Error("Expecting an int but instead got: 2147483648\nReason: Value was either too large or too small for an int")
                 let actual =
                     decodeString int "2147483648"
+                #endif
 
                 equal expected actual
 
             testCase "an invalid int [invalid range: too small] output an error" <| fun _ ->
+                #if FABLE_COMPILER
+                let expected = Error("Expecting an int but instead got: -9007199254740992\nReason: Value was either too large or too small for an int")
+                let actual =
+                    decodeString int "-9007199254740992"
+                #else            
                 let expected = Error("Expecting an int but instead got: -2147483649\nReason: Value was either too large or too small for an int")
                 let actual =
                     decodeString int "-2147483649"
-
+                #endif
+                
                 equal expected actual
         ]
 

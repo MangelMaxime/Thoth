@@ -24,7 +24,7 @@ module Helpers =
     [<Emit("Number.isNaN($0)")>]
     let isNaN (_: obj) : bool = jsNative
 
-    [<Emit("-2147483648 < $0 && $0 < 2147483647 && ($0 | 0) === $0")>]
+    [<Emit("-9007199254740991 < $0 && $0 < 9007199254740991 && ($0 | 0) === $0")>]
     let isValidIntRange (_: obj) : bool = jsNative
 
     [<Emit("isFinite($0) && !($0 % 1)")>]
