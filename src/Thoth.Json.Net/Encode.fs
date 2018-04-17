@@ -1,4 +1,4 @@
-module Thot.Json.Net.Encode
+module Thoth.Json.Net.Encode
 
 open Newtonsoft.Json
 open Newtonsoft.Json.Linq
@@ -146,7 +146,6 @@ let dict (values : Map<string, JToken>) =
 ///
 ///**Exceptions**
 ///
-[<Obsolete("Thot.Json library is being deprecated please use Thoth.Json")>]
 let encode (space: int) (token: JToken) : string =
     let format = if space = 0 then Formatting.None else Formatting.Indented
     use stream = new StringWriter()

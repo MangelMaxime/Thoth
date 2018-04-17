@@ -7,7 +7,7 @@ Module for turning F# values into Json values.
 ## How to use it ?
 
 ```fsharp
-    open Thot.Json.Encode
+    open Thoth.Json.Encode
 
     let person =
         object

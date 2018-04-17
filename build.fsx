@@ -21,9 +21,9 @@ System.Console.OutputEncoding <- System.Text.Encoding.UTF8
 #endif
 
 let srcFiles =
-    !! "./src/Thot.Json/Thot.Json.fsproj"
-    ++ "./src/Thot.Json.Net/Thot.Json.Net.fsproj"
-    ++ "./src/Thot.Http/Thot.Http.fsproj"
+    !! "./src/Thoth.Json/Thoth.Json.fsproj"
+    ++ "./src/Thoth.Json.Net/Thoth.Json.Net.fsproj"
+    ++ "./src/Thoth.Http/Thoth.Http.fsproj"
 
 let testsGlob = "tests/**/*.fsproj"
 let docFile = "./docs/Docs.fsproj"
@@ -145,14 +145,15 @@ let testNetFrameworkDir = "tests" </> "bin" </> "Release" </> "net461"
 let testNetCoreDir = "tests" </> "bin" </> "Release" </> "netcoreapp2.0"
 
 Target.create "ExpectoTest" (fun _ ->
-    build "tests/Thot.Tests.fsproj" "netcoreapp2.0"
-    build "tests/Thot.Tests.fsproj" "net461"
+    build "tests/Thoth.Tests.fsproj" "netcoreapp2.0"
+    build "tests/Thoth.Tests.fsproj" "net461"
 
     if isUnix then
-        mono testNetFrameworkDir "Thot.Tests.exe"
+        mono testNetFrameworkDir "Thoth.Tests.exe"
     else
-        run (testNetFrameworkDir </> "Thot.Tests.exe") "" ""
-    dotnet testNetCoreDir "" "Thot.Tests.dll"
+        run (testNetFrameworkDir </> "Thoth.Tests.exe") "" ""
+
+    dotnet testNetCoreDir "" "Thoth.Tests.dll"
 )
 
 let root = __SOURCE_DIRECTORY__
@@ -315,7 +316,7 @@ Target.create "Publish" (fun _ ->
 )
 
 // Where to push generated documentation
-let githubLink = "git@github.com:MangelMaxime/thot.git"
+let githubLink = "git@github.com:MangelMaxime/Thoth.git"
 let publishBranch = "gh-pages"
 let repoRoot = __SOURCE_DIRECTORY__
 let temp = repoRoot </> "temp"

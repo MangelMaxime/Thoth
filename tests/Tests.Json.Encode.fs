@@ -1,14 +1,14 @@
 module Tests.Encode
 
 #if FABLE_COMPILER
-open Thot.Json.Encode
+open Thoth.Json.Encode
 #else
-open Thot.Json.Net.Encode
+open Thoth.Json.Net.Encode
 #endif
 open Util.Testing
 
 let tests : Test =
-    testList "Thot.Json.Encode" [
+    testList "Thoth.Json.Encode" [
 
         testList "Basic" [
 

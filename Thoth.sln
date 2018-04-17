@@ -5,11 +5,11 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C5B6DED9-9CE7-402D-B6F2-DA946F6D9C43}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Thot.Json", "src\Thot.Json\Thot.Json.fsproj", "{6F956482-DD7C-40C6-991A-308CB2965EB4}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Thoth.Json", "src\Thoth.Json\Thoth.Json.fsproj", "{6F956482-DD7C-40C6-991A-308CB2965EB4}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Thot.Http", "src\Thot.Http\Thot.Http.fsproj", "{F195BF30-EEA8-4927-9C1C-1367A73C3946}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Thoth.Http", "src\Thoth.Http\Thoth.Http.fsproj", "{F195BF30-EEA8-4927-9C1C-1367A73C3946}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Thot.Tests", "tests\Thot.Tests.fsproj", "{9F842A21-2D07-40FC-B752-04E016D727F9}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Thoth.Tests", "tests\Thoth.Tests.fsproj", "{9F842A21-2D07-40FC-B752-04E016D727F9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

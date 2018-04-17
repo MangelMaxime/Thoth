@@ -2,9 +2,9 @@ module Tests.Decode
 
 #if FABLE_COMPILER
 open Fable.Core.JsInterop
-open Thot.Json.Decode
+open Thoth.Json.Decode
 #else
-open Thot.Json.Net.Decode
+open Thoth.Json.Net.Decode
 #endif
 open Util.Testing
 
@@ -139,7 +139,7 @@ let jsonRecordInvalid =
          "h": "invalid_a_field" }"""
 
 let tests : Test =
-    testList "Thot.Json.Decode" [
+    testList "Thoth.Json.Decode" [
 
         #if FABLE_COMPILER
 

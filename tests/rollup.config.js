@@ -6,7 +6,7 @@ function resolve(filePath) {
 }
 
 export default {
-    input: resolve('./Thot.Tests.fsproj'),
+    input: resolve('./Thoth.Tests.fsproj'),
     output: {
         file: resolve('./bin/tests.bundle.js'),
         format: 'cjs', // 'amd', 'cjs', 'es', 'iife', 'umd',

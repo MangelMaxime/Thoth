@@ -2,16 +2,16 @@
 
 You can share your decoders and encoders **between your client and server**.
 
-In order to use Thot.Json API on .Net or NetCore you need to use `Thot.Json.Net` package.
+In order to use Thoth.Json API on .Net or NetCore you need to use `Thoth.Json.Net` package.
 
 ## Code sample
 
 ```fsharp
 // By adding this condition, you can share you code between your client and server
 #if FABLE_COMPILER
-open Thot.Json
+open Thoth.Json
 #else
-open Thot.Json.Net
+open Thoth.Json.Net
 #endif
 
 type User =

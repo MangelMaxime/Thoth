@@ -20,7 +20,7 @@ module Renderer.Page
                 [ Container.container [ ]
                     [ contentFromMarkdown
                         """
-**Thot** by [Maxime Mangel](https://twitter.com/MangelMaxime)
+**Thoth** by [Maxime Mangel](https://twitter.com/MangelMaxime)
 
 Powered by [Fulma](https://mangelmaxime.github.io/Fulma/) and [Fable static-page-generator](https://github.com/fable-compiler/static-page-generator).
                         """ ]
@@ -31,8 +31,8 @@ Powered by [Fulma](https://mangelmaxime.github.io/Fulma/) and [Fable static-page
     let render (config: PageConfig) =
         let title =
             match config.Title with
-            | Some title -> "Thot: " + title
-            | None -> "Thot"
+            | Some title -> "Thoth: " + title
+            | None -> "Thoth"
 
         // Local ref to host in order to access the string length
         let host = Route.Host

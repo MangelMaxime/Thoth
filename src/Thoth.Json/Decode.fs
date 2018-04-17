@@ -1,4 +1,4 @@
-module Thot.Json.Decode
+module Thoth.Json.Decode
 
 open Fable.Core
 open Fable.Core.JsInterop
@@ -96,7 +96,6 @@ let unwrap (decoder : Decoder<'T>) (value : obj) : 'T =
 // Runners ///
 /////////////
 
-[<Obsolete("Thot.Json library is being deprecated please use Thoth.Json")>]
 let decodeValue (decoder : Decoder<'T>) =
     fun value ->
         try
@@ -109,7 +108,6 @@ let decodeValue (decoder : Decoder<'T>) =
             | ex ->
                 Error ex.Message
 
-[<Obsolete("Thot.Json library is being deprecated please use Thoth.Json")>]
 let decodeString (decoder : Decoder<'T>) =
     fun value ->
         try
@@ -442,7 +440,6 @@ let required (key : string) (valDecoder : Decoder<'a>) (decoder : Decoder<'a -> 
 let requiredAt (path : string list) (valDecoder : Decoder<'a>) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
     custom (at path valDecoder) decoder
 
-[<Obsolete("Thot.Json library is being deprecated please use Thoth.Json")>]
 let decode output value = succeed output value
 
 /// Convert a `Decoder<Result<x, 'a>>` into a `Decoder<'a>`

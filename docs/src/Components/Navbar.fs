@@ -26,7 +26,7 @@ module Components.Navbar
             else
                 "is-hidden-mobile"
 
-        [ Navbar.Item.a [ props "Github" "https://github.com/MangelMaxime/thot"
+        [ Navbar.Item.a [ props "Github" "https://github.com/MangelMaxime/Thoth"
                           Navbar.Item.CustomClass visibility ]
             [ Icon.faIcon [ ]
                 [ Fa.icon Fa.I.Github
@@ -38,7 +38,7 @@ module Components.Navbar
                   Fa.faLg ] ]
         ] |> ofList
 
-    let tweetUrl = "https://twitter.com/intent/tweet?via=MangelMaxime&text=Thot%20is%20a%20set%20of%20several%20libraries%20for%20working%20with%20@FableCompiler%20applications"
+    let tweetUrl = "https://twitter.com/intent/tweet?via=MangelMaxime&text=Thoth%20is%20a%20set%20of%20several%20libraries%20for%20working%20with%20@FableCompiler%20applications"
 
     let private viewButton =
         Navbar.Item.div [ ]
@@ -55,7 +55,7 @@ module Components.Navbar
                     ]
                   Control.p [ ]
                     [ Button.a [ Button.CustomClass "github"
-                                 Button.Props [ Href "https://github.com/MangelMaxime/thot" ] ]
+                                 Button.Props [ Href "https://github.com/MangelMaxime/Thoth" ] ]
                         [ Icon.faIcon [ ]
                             [ Fa.icon Fa.I.Github
                               Fa.faLg ]
@@ -109,7 +109,7 @@ module Components.Navbar
         Navbar.Brand.div [ ]
             [ Navbar.Item.a [ Navbar.Item.Props [ Href Route.Index ] ]
                 [ Heading.p [ Heading.Is4 ]
-                    [ str "Thot" ] ]
+                    [ str "Thoth" ] ]
               viewSimpleIcon true
               Navbar.burger [ ]
                 [ span [ ] [ ]

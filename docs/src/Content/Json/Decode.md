@@ -31,7 +31,7 @@ There are 4 primitives decoders:
 - `bool : Decoder<Bool>`
 
 ```fsharp
-open Thot.Json.Decode
+open Thoth.Json.Decode
 
 > decodeString string "\"maxime\""
 val it : Result<string, string> = Ok "maxime"
@@ -56,7 +56,7 @@ There are special decoders for the following collections.
 - `array : Decoder<'value> -> Decoder<'value array>`
 
 ```fsharp
-open Thot.Json.Decode
+open Thoth.Json.Decode
 
 > decodeString (array int) "[1, 2, 3]"
 val it : Result<int [], string> =  Ok [|1, 2, 3|]
@@ -75,7 +75,7 @@ In order to decode objects, you can use:
     - Decode a JSON object, requiring certain path.
 
 ```fsharp
-open Thot.Json.Decode
+open Thoth.Json.Decode
 
 > decodeString (field "x" int) """{"x": 10, "y": 21}"""
 val it : Result<int, string> = Ok 10
@@ -94,7 +94,7 @@ To get data from several fields and apply them into a record you will need to us
 like `map2`, `map3`, ..., `map8`.
 
 ```fsharp
-open Thot.Json.Decode
+open Thoth.Json.Decode
 
 type Point =
     { X : int
@@ -116,7 +116,7 @@ val it : Result<Point, string> = Ok { X = 10; Y = 21 }
 When working with larger object or if you prefer to use the `(|>)` operator, you can use pipeline helpers.
 
 ```fsharp
-open Thot.Json.Decode
+open Thoth.Json.Decode
 
 type Point =
     { X : int

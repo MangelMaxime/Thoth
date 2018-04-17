@@ -4,7 +4,7 @@ module Route
 #if DEBUG
 let [<Literal>] Host = "/"
 #else
-let [<Literal>] Host = "https://mangelmaxime.github.io/Thot/"
+let [<Literal>] Host = "https://mangelmaxime.github.io/Thoth/"
 #endif
 
 let [<Literal>] Index = Host + "index.html"
