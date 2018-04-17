@@ -96,6 +96,8 @@ let mono workingDir args =
 Target.create "Clean" (fun _ ->
     !! "src/**/bin"
     ++ "src/**/obj"
+    ++ "tests/**/bin"
+    ++ "tests/**/obj"
     ++ "docs/**/bin"
     ++ "docs/**/obj"
     ++ "docs/**/build"
