@@ -11,6 +11,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Thoth.Http", "src\Thoth.Htt
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Thoth.Tests", "tests\Thoth.Tests.fsproj", "{9F842A21-2D07-40FC-B752-04E016D727F9}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Docs", "docs\Docs.fsproj", "{B0476CA0-CC34-47A4-B9CA-ADD61E807AFA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -60,6 +62,18 @@ Global
 		{9F842A21-2D07-40FC-B752-04E016D727F9}.Release|x64.Build.0 = Release|x64
 		{9F842A21-2D07-40FC-B752-04E016D727F9}.Release|x86.ActiveCfg = Release|x86
 		{9F842A21-2D07-40FC-B752-04E016D727F9}.Release|x86.Build.0 = Release|x86
+		{B0476CA0-CC34-47A4-B9CA-ADD61E807AFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0476CA0-CC34-47A4-B9CA-ADD61E807AFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0476CA0-CC34-47A4-B9CA-ADD61E807AFA}.Debug|x64.ActiveCfg = Debug|x64
+		{B0476CA0-CC34-47A4-B9CA-ADD61E807AFA}.Debug|x64.Build.0 = Debug|x64
+		{B0476CA0-CC34-47A4-B9CA-ADD61E807AFA}.Debug|x86.ActiveCfg = Debug|x86
+		{B0476CA0-CC34-47A4-B9CA-ADD61E807AFA}.Debug|x86.Build.0 = Debug|x86
+		{B0476CA0-CC34-47A4-B9CA-ADD61E807AFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0476CA0-CC34-47A4-B9CA-ADD61E807AFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0476CA0-CC34-47A4-B9CA-ADD61E807AFA}.Release|x64.ActiveCfg = Release|x64
+		{B0476CA0-CC34-47A4-B9CA-ADD61E807AFA}.Release|x64.Build.0 = Release|x64
+		{B0476CA0-CC34-47A4-B9CA-ADD61E807AFA}.Release|x86.ActiveCfg = Release|x86
+		{B0476CA0-CC34-47A4-B9CA-ADD61E807AFA}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{6F956482-DD7C-40C6-991A-308CB2965EB4} = {C5B6DED9-9CE7-402D-B6F2-DA946F6D9C43}
