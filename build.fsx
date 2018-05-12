@@ -45,19 +45,6 @@ module Util =
                 | None -> line
                 | Some newLine -> newLine)
 
-// Module to print colored message in the console
-module Logger =
-    let consoleColor (fc : ConsoleColor) =
-        let current = Console.ForegroundColor
-        Console.ForegroundColor <- fc
-        { new IDisposable with
-              member x.Dispose() = Console.ForegroundColor <- current }
-
-    let warn str = Printf.kprintf (fun s -> use c = consoleColor ConsoleColor.DarkYellow in printf "%s" s) str
-    let warnfn str = Printf.kprintf (fun s -> use c = consoleColor ConsoleColor.DarkYellow in printfn "%s" s) str
-    let error str = Printf.kprintf (fun s -> use c = consoleColor ConsoleColor.Red in printf "%s" s) str
-    let errorfn str = Printf.kprintf (fun s -> use c = consoleColor ConsoleColor.Red in printfn "%s" s) str
-
 let platformTool tool =
     Process.tryFindFileOnPath tool
     |> function Some t -> t | _ -> failwithf "%s not found" tool
@@ -135,7 +122,7 @@ Target.create "MochaTest" (fun _ ->
     |> Seq.iter(fun proj ->
         let projDir = proj |> Path.getDirectory
         //Compile to JS
-        dotnet projDir "fable" "yarn-run rollup --port free -- -c tests/rollup.config.js"
+        dotnet __SOURCE_DIRECTORY__ "fable" "yarn-run rollup --port free -- -c tests/rollup.config.js"
 
         //Run mocha tests
         let projDirOutput = projDir </> "bin"
@@ -211,11 +198,9 @@ Target.create "Docs.Watch" (fun _ ->
     buildSass ()
 
     !! docFile
-    |> Seq.iter (fun proj ->
-        let projDir = proj |> Path.getDirectory
-
+    |> Seq.iter (fun _ ->
         [ async {
-            dotnet projDir "fable" "yarn-run fable-splitter --port free -- -c docs/splitter.config.js -w"
+            dotnet __SOURCE_DIRECTORY__ "fable" "yarn-run fable-splitter --port free -- -c docs/splitter.config.js -w"
           }
           async {
             execNPXNoTimeout "node-sass --output-style compressed --watch --output docs/public/ docs/scss/main.scss"
@@ -263,7 +248,8 @@ let needsPublishing (versionRegex: Regex) (releaseNotes: ReleaseNotes.ReleaseNot
     printfn "Project: %s" projFile
     if releaseNotes.NugetVersion.ToUpper().EndsWith("NEXT")
     then
-        Logger.warnfn "Version in Release Notes ends with NEXT, don't publish yet."
+
+        Trace.logToConsole ("Version in Release Notes ends with NEXT, don't publish yet.", Trace.Warning)
         false
     else
         File.ReadLines(projFile)
@@ -275,7 +261,7 @@ let needsPublishing (versionRegex: Regex) (releaseNotes: ReleaseNotes.ReleaseNot
             | Some m ->
                 let sameVersion = m.Groups.[1].Value = releaseNotes.NugetVersion
                 if sameVersion then
-                    Logger.warnfn "Already version %s, no need to publish." releaseNotes.NugetVersion
+                    Trace.logToConsole (sprintf "Already version %s, no need to publish." releaseNotes.NugetVersion, Trace.Warning)
                 not sameVersion
 
 let pushNuget (releaseNotes: ReleaseNotes.ReleaseNotes) (projFile: string) =

@@ -15,6 +15,7 @@ group netcorebuild
     framework: netstandard2.0
 
     clitool dotnet-fake
+    clitool dotnet-fable
     nuget NETStandard.Library.NETFramework
     nuget Fake.DotNet.Cli
     nuget Fake.DotNet.Paket
@@ -30,7 +31,6 @@ group Docs
     source https://www.nuget.org/api/v2
     framework: netstandard2.0
 
-    clitool dotnet-fable
     nuget FSharp.Core redirects:force
     nuget Fable.Core
     nuget Fable.Import.Browser
@@ -38,3 +38,24 @@ group Docs
     nuget Fable.PowerPack
     nuget Fable.Import.Node
     nuget Fulma prerelease
+
+group Generator
+    framework: netcoreapp2.0
+    content: none
+    source https://www.nuget.org/api/v2
+
+    nuget Dotnet.ProjInfo
+    nuget FSharp.Compiler.Service
+
+group VSCode.Generator
+    framework: netstandard2.0
+    content: none
+    source https://www.nuget.org/api/v2
+
+    nuget Fable.Core
+    nuget Fable.Import.Node
+    nuget Fable.Import.Browser
+    nuget Fable.PowerPack
+    nuget FSharp.Core redirects:force
+
+    github fable-compiler/ts2fable-exports VSCode.fs

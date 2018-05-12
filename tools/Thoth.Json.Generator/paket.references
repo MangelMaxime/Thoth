@@ -1,0 +1,3 @@
+group Generator
+    Dotnet.ProjInfo
+    FSharp.Compiler.Service

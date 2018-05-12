@@ -1,8 +1,7 @@
 group Docs
-  FSharp.Core
-  Fable.Core
-  Fable.PowerPack
-  Fable.React
-  Fable.Import.Node
-  Fulma
-  dotnet-fable
+    FSharp.Core
+    Fable.Core
+    Fable.PowerPack
+    Fable.React
+    Fable.Import.Node
+    Fulma

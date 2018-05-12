@@ -1,0 +1,8 @@
+group VSCode.Generator
+    FSharp.Core
+    Fable.Core
+    Fable.Import.Node
+    Fable.Import.Browser
+    Fable.PowerPack
+
+    File: VSCode.fs
