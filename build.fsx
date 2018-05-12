@@ -13,7 +13,6 @@ open Fake.IO
 open Fake.IO.Globbing.Operators
 open Fake.IO.FileSystemOperators
 open Fake.Tools.Git
-open Fake.Core.Environment
 
 #if MONO
 // prevent incorrect output encoding (e.g. https://github.com/fsharp/FAKE/issues/1196)
@@ -90,7 +89,7 @@ Target.create "Clean" (fun _ ->
     ++ "docs/**/build"
     ++ "docs/scss/extra"
     ++ "docs/public"
-    |> Shell.CleanDirs
+    |> Shell.cleanDirs
 )
 
 Target.create "YarnInstall"(fun _ ->
@@ -137,7 +136,7 @@ Target.create "ExpectoTest" (fun _ ->
     build "tests/Thoth.Tests.fsproj" "netcoreapp2.0"
     build "tests/Thoth.Tests.fsproj" "net461"
 
-    if isUnix then
+    if Environment.isUnix then
         mono testNetFrameworkDir "Thoth.Tests.exe"
     else
         run (testNetFrameworkDir </> "Thoth.Tests.exe") "" ""
@@ -217,8 +216,8 @@ Target.create "Docs.Setup" (fun _ ->
     Directory.ensure "./docs/scss/extra/highlight.js/"
 
     // Copy files from node_modules allow us to manage them via yarn
-    Shell.CopyDir "./docs/public/fonts" "./node_modules/font-awesome/fonts" (fun _ -> true)
-    Shell.CopyFile "./docs/scss/extra/highlight.js/atom-one-light.css" "./node_modules/highlight.js/styles/atom-one-light.css"
+    Shell.copyDir "./docs/public/fonts" "./node_modules/font-awesome/fonts" (fun _ -> true)
+    Shell.copyFile "./docs/scss/extra/highlight.js/atom-one-light.css" "./node_modules/highlight.js/styles/atom-one-light.css"
 
 
     DotNet.restore id docFile
@@ -311,11 +310,11 @@ let temp = repoRoot </> "temp"
 
 Target.create "Docs.Publish" (fun _ ->
     // Clean the repo before cloning this avoid potential conflicts
-    Shell.CleanDir temp
+    Shell.cleanDir temp
     Repository.cloneSingleBranch "" githubLink publishBranch temp
 
     // Copy new files
-    Shell.CopyRecursive "docs/public" temp true |> printfn "%A"
+    Shell.copyRecursive "docs/public" temp true |> printfn "%A"
 
     // Deploy the new site
     Staging.stageAll temp
