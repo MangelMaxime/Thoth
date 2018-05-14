@@ -322,6 +322,20 @@ Target.create "Docs.Publish" (fun _ ->
     Branches.push temp
 )
 
+////////// Thoth.Json.Generator //////////
+
+Target.create "Generator.Build" (fun _ ->
+    !! "./tools/Thoth.Json.Generator/**/bin"
+    ++ "./tools/Thoth.Json.Generator/**/obj"
+    |> Shell.cleanDirs
+
+    DotNet.build
+        (fun p ->
+            { p with Configuration = DotNet.Release }
+        )
+        "tools/Thoth.Json.Generator/Thoth.Json.Generator.fsproj"
+)
+
 "Clean"
     ==> "YarnInstall"
     ==> "DotnetRestore"

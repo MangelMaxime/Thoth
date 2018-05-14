@@ -2,7 +2,6 @@
 
 OS=${OS:-"unknown"}
 
-echo $OSTYPE
 if [ "$OS" != "Windows_NT" ]
 then
   # Allows NETFramework like net45 to be built using dotnet core tooling with mono
