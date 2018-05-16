@@ -8,6 +8,8 @@ nuget Fable.Core
 nuget Fable.Import.Browser
 nuget Newtonsoft.Json 11.0.1
 nuget Expecto
+nuget Fable.Elmish
+nuget Fable.PowerPack
 
 group netcorebuild
     storage:none
