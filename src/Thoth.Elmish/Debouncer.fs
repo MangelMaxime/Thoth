@@ -1,5 +1,6 @@
 namespace Thoth.Elmish
 
+[<RequireQualifiedAccess>]
 module Debouncer =
 
     open System
@@ -9,25 +10,23 @@ module Debouncer =
 
     type Id = string
 
-    type DebouncerState =
-        { Delay : TimeSpan
-          PendingMessages : Map<Id, int> }
+    type State =
+        { PendingMessages : Map<Id, int> }
 
-    let create delay =
-        { Delay = delay
-          PendingMessages = Map.empty }
+    let create () =
+        { PendingMessages = Map.empty }
 
     type SelfMessage<'AppMsg> =
         | Timeout of id:Id * appMsg:'AppMsg
         | OnError of exn
 
-    let bounce (id : Id) (msgToSend: 'a) (currentState : DebouncerState) =
+    let bounce (delay : TimeSpan) (id: Id) (msgToSend: 'a) (currentState : State) =
         let counterInc =
             Option.map ((+) 1) >> Option.defaultValue 1
 
         let delayedCmd _ =
             promise {
-                do! Promise.sleep (int currentState.Delay.TotalMilliseconds)
+                do! Promise.sleep (int delay.TotalMilliseconds)
                 return (id, msgToSend)
             }
 
@@ -39,7 +38,7 @@ module Debouncer =
 
         updatedState, Cmd.ofPromise delayedCmd () Timeout OnError
 
-    let update (selfMessage : SelfMessage<_>) (currentState : DebouncerState) =
+    let update (selfMessage : SelfMessage<_>) (currentState : State) =
         match selfMessage with
         | OnError error ->
             Browser.console.error error.Message
