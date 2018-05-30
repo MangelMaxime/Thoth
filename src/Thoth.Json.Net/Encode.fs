@@ -148,7 +148,7 @@ let dict (values : Map<string, JToken>) =
 ///
 let encode (space: int) (token: JToken) : string =
     let format = if space = 0 then Formatting.None else Formatting.Indented
-    use stream = new StringWriter()
+    use stream = new StringWriter(NewLine = "\n")
     use jsonWriter = new JsonTextWriter(
                             stream,
                             Formatting = format,
