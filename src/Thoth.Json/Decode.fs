@@ -3,27 +3,22 @@ module Thoth.Json.Decode
 open Fable.Core
 open Fable.Core.JsInterop
 open Fable.Import
-open System
 
 module Helpers =
+    [<Emit("typeof $0")>]
+    let jsTypeof (_ : obj) : string = jsNative
 
-    [<Emit("typeof $0 === 'string'")>]
-    let isString (_ : obj) : bool = jsNative
+    let inline isString (o: obj) : bool = o :? string
 
-    [<Emit("typeof $0 === 'boolean'")>]
-    let isBoolean (_ : obj) : bool = jsNative
+    let inline isBoolean (o: obj) : bool = o :? bool
 
-    [<Emit("typeof $0 === 'number'")>]
-    let isNumber (_ : obj) : bool = jsNative
+    let inline isNumber (o: obj) : bool = jsTypeof o = "number"
 
-    [<Emit("$0 instanceof Array")>]
-    let isArray (_ : obj) : bool = jsNative
+    let inline isArray (o: obj) : bool = JS.Array.isArray(o)
 
-    [<Emit("typeof $0 === 'object' && ($0 !== null)")>]
-    let isObject (_ : obj) : bool = jsNative
+    let inline isObject (o: obj) : bool = o <> null && jsTypeof o = "object"
 
-    [<Emit("Number.isNaN($0)")>]
-    let isNaN (_: obj) : bool = jsNative
+    let inline isNaN (o: obj) : bool = JS.Number.isNaN(!!o)
 
     [<Emit("-2147483648 < $0 && $0 < 2147483647 && ($0 | 0) === $0")>]
     let isValidIntRange (_: obj) : bool = jsNative
@@ -37,11 +32,9 @@ module Helpers =
     [<Emit("JSON.stringify($0, null, 4) + ''")>]
     let anyToString (_: obj) : string= jsNative
 
-    [<Emit("typeof $0 === 'function'")>]
-    let isFunction (_: obj) : bool = jsNative
+    let inline isFunction (o: obj) : bool = jsTypeof o = "function"
 
-    [<Emit("Object.keys($0)")>]
-    let objectKeys (_: obj) : string list = jsNative
+    let inline objectKeys (o: obj) : string seq = upcast JS.Object.keys(o)
 
 type DecoderError =
     | BadPrimitive of string * obj
@@ -238,7 +231,8 @@ let keyValuePairs (decoder : Decoder<'value>) : Decoder<(string * 'value) list> 
         else
             value
             |> Helpers.objectKeys
-            |> List.map (fun key -> (key, value?(key) |> unwrap decoder))
+            |> Seq.map (fun key -> (key, value?(key) |> unwrap decoder))
+            |> Seq.toList
             |> Ok
 
 //////////////////////////////
