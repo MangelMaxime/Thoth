@@ -8,7 +8,7 @@ open System.IO
 module Helpers =
 
     let anyToString (token: JToken) : string =
-        use stream = new StringWriter()
+        use stream = new StringWriter(NewLine = "\n")
         use jsonWriter = new JsonTextWriter(
                                 stream,
                                 Formatting = Formatting.Indented,
