@@ -1,4 +1,7 @@
-# Thoth [![Build Status](https://travis-ci.org/MangelMaxime/Thoth.svg?branch=master)](https://travis-ci.org/MangelMaxime/Thoth)
+# Thoth
+
+[![Build status](https://ci.appveyor.com/api/projects/status/9h237aiio64ky8kb/branch/master?svg=true)](https://ci.appveyor.com/project/MangelMaxime/thoth/branch/master)
+[![Build Status](https://travis-ci.org/MangelMaxime/Thoth.svg?branch=master)](https://travis-ci.org/MangelMaxime/Thoth)
 
 
 Package | Stable | Prerelease
