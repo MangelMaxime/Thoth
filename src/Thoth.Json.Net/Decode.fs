@@ -124,6 +124,8 @@ let float : Decoder<float> =
     fun token ->
         if token.Type = JTokenType.Float then
             Ok(token.Value<float>())
+        else if token.Type = JTokenType.Integer then
+            Ok(token.Value<float>())
         else
             BadPrimitive("a float", token) |> Error
 
