@@ -137,7 +137,7 @@ Target.create "MochaTest" (fun _ ->
     |> Seq.iter(fun proj ->
         let projDir = proj |> Path.getDirectory
         //Compile to JS
-        dotnet projDir "fable" "yarn-run rollup --port free -- -c tests/rollup.config.js"
+        dotnet projDir "fable" "fable-splitter -- -c tests/splitter.config.js"
 
         //Run mocha tests
         let projDirOutput = projDir </> "bin"

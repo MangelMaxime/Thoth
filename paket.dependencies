@@ -2,11 +2,11 @@ source https://www.nuget.org/api/v2
 
 storage:none
 
-clitool dotnet-fable
+clitool dotnet-fable 2.0.0-alpha-006
 nuget FSharp.Core redirects:force
-nuget Fable.Core
+nuget Fable.Core prerelease
 nuget Fable.Import.Browser
-nuget Newtonsoft.Json 11.0.1
+nuget Newtonsoft.Json 11.0.2
 nuget Expecto
 nuget Fable.Elmish
 nuget Fable.PowerPack
@@ -32,9 +32,9 @@ group Docs
     source https://www.nuget.org/api/v2
     framework: netstandard2.0
 
-    clitool dotnet-fable
+    clitool dotnet-fable prerelease
     nuget FSharp.Core redirects:force
-    nuget Fable.Core
+    nuget Fable.Core prerelease
     nuget Fable.Import.Browser
     nuget Fable.React prerelease
     nuget Fable.PowerPack
