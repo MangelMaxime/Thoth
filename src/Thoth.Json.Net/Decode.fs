@@ -476,3 +476,11 @@ let optional key valDecoder fallback decoder =
 
 let optionalAt path valDecoder fallback decoder =
     custom (optionalDecoder (at path value) valDecoder fallback) decoder
+
+type Auto =
+    static member Generate<'T> (): Decoder<'T> =
+        let serializer = JsonSerializer()
+        for conv in Converters.converters do
+            serializer.Converters.Add(conv)
+        fun token ->
+            token.ToObject<'T>(serializer) |> Ok

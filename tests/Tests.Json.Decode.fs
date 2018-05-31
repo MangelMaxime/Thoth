@@ -787,12 +787,8 @@ Expecting an object with a field named `version` but instead got:
                       e = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
                     } |> Encode.encodeAuto 4
                 // printfn "AUTO ENCODED %s" json
-                #if FABLE_COMPILER
                 let decoder = Auto.Generate<Record9>()
                 let result = decodeString decoder json
-                #else
-                let result = decodeStringAuto<Record9> json
-                #endif
                 match result with
                 | Error er -> failwith er
                 | Ok r2 ->
