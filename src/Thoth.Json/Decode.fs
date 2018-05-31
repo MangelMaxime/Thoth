@@ -468,3 +468,61 @@ let optional key valDecoder fallback decoder =
 
 let optionalAt path valDecoder fallback decoder =
     custom (optionalDecoder (at path value) valDecoder fallback) decoder
+
+//////////////////
+// Reflection ///
+////////////////
+
+open Microsoft.FSharp.Reflection
+
+let rec private autoDecodeRecordsAndUnions (t: System.Type): Decoder<obj> =
+    if FSharpType.IsRecord(t) then
+        let fieldDecoders =
+            FSharpType.GetRecordFields(t)
+            |> Array.map (fun fi -> fi.Name, autoDecoder fi.PropertyType)
+        fun (value: obj) ->
+            if not (Helpers.isObject value) || Helpers.isArray value then
+                BadPrimitive ("an object", value)
+                |> Error
+            else
+                (Ok(obj()), fieldDecoders) ||> Seq.fold (fun acc (name, decoder) ->
+                    match acc with
+                    | Error _ -> acc
+                    | Ok result ->
+                        field name decoder value
+                        |> Result.map (fun v -> result?(name) <- v; result)
+                    )
+    elif FSharpType.IsUnion(t) then
+        // TODO: Validate union, decode fields
+        unbox >> Ok
+    else
+        failwith "Class types cannot be automatically deserialized"
+
+and private autoDecoder (t: System.Type): Decoder<obj> =
+    if t.IsArray then
+        let decoder = t.GetElementType() |> autoDecoder
+        array decoder |> unbox
+    elif t.IsGenericType then
+        let fullname = t.GetGenericTypeDefinition().FullName
+        if fullname = typedefof<obj list>.FullName
+        then t.GenericTypeArguments.[0] |> autoDecoder |> list |> unbox
+        // TODO: This only works for maps with strings as keys
+        // TODO: Maps with encodeAuto are actually serizalized as an array of key-value pairs
+        elif fullname = typedefof< Map<string, obj> >.FullName
+        then t.GenericTypeArguments.[1] |> autoDecoder |> dict |> unbox
+        else autoDecodeRecordsAndUnions t
+    else
+        let fullname = t.FullName
+        if fullname = typeof<int>.FullName
+        then unbox int
+        elif fullname = typeof<float>.FullName
+        then unbox float
+        elif fullname = typeof<string>.FullName
+        then unbox string
+        elif fullname = typeof<bool>.FullName
+        then unbox bool
+        else autoDecodeRecordsAndUnions t
+
+type Auto =
+    static member Generate<'T> ([<Inject>] ?resolver: ITypeResolver<'T>): Decoder<'T> =
+        resolver.Value.GetTypeInfo() |> autoDecoder |> unbox
