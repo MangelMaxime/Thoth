@@ -2,8 +2,10 @@ module Tests.Decode
 
 #if FABLE_COMPILER
 open Fable.Core.JsInterop
+open Thoth.Json
 open Thoth.Json.Decode
 #else
+open Thoth.Json.Net
 open Thoth.Json.Net.Decode
 #endif
 open Util.Testing
@@ -339,6 +341,17 @@ Expecting an array but instead got: 1
                     decodeString (list int) "[1, 2, 3]"
 
                 equal expected actual
+
+            testCase "nested lists work" <| fun _ ->
+                [ [ "maxime2" ] ]
+                |> List.map (fun d ->
+                    d
+                    |> List.map Encode.string
+                    |> Encode.list)
+                |> Encode.list
+                |> Encode.encode 4
+                |> decodeString (list (list string))
+                |> function Ok v -> equal [["maxime2"]] v | Error er -> failwith er
 
             testCase "an invalid list output an error" <| fun _ ->
                 let expected = Error("Expecting a list but instead got: 1")
@@ -775,7 +788,7 @@ Expecting an object with a field named `version` but instead got:
                       e = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
                     }
                 let json = Thoth.Json.Encode.encodeAuto 4 r1
-                printfn "AUTO ENCODED: %s" json
+                // printfn "AUTO ENCODED: %s" json
                 let decoder = Thoth.Json.Decode.Auto.Generate<Record9>()
                 match decodeString decoder json with
                 | Error er -> failwith er
