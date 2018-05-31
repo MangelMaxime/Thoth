@@ -124,10 +124,9 @@ let dotnet workingDir command args =
         args
     |> ignore
 
-let build project framework customParams =
+let build project framework =
     DotNet.build (fun p ->
-        { p with Framework = Some framework
-                 Common = { p.Common with CustomParams = Some customParams } } ) project
+        { p with Framework = Some framework } ) project
 
 Target.create "MochaTest" (fun _ ->
     !! testsGlob
@@ -146,8 +145,8 @@ let testNetFrameworkDir = "tests" </> "bin" </> "Release" </> "net461"
 let testNetCoreDir = "tests" </> "bin" </> "Release" </> "netcoreapp2.0"
 
 Target.create "ExpectoTest" (fun _ ->
-    build "tests/Thoth.Tests.fsproj" "netcoreapp2.0" "/p:TestRunner=expecto"
-    build "tests/Thoth.Tests.fsproj" "net461" "/p:TestRunner=expecto"
+    build "tests/Thoth.Tests.fsproj" "netcoreapp2.0"
+    build "tests/Thoth.Tests.fsproj" "net461"
 
     if Environment.isUnix then
         mono testNetFrameworkDir "Thoth.Tests.exe"
