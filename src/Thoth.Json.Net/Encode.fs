@@ -2,7 +2,6 @@ module Thoth.Json.Net.Encode
 
 open Newtonsoft.Json
 open Newtonsoft.Json.Linq
-open System
 open System.IO
 
 type Replacer = string -> obj -> obj
@@ -156,6 +155,13 @@ let encode (space: int) (token: JToken) : string =
 
     token.WriteTo(jsonWriter)
     stream.ToString()
+
+let encodeAuto (space: int) (value: obj) : string =
+    // TODO: Can we set indentation space?
+    let format = if space = 0 then Formatting.None else Formatting.Indented
+    let settings = JsonSerializerSettings(Converters = Converters.converters,
+                                          Formatting = format)
+    JsonConvert.SerializeObject(value, settings)
 
 ///**Description**
 /// Encode an option
