@@ -151,6 +151,18 @@ let dict (values : Map<string, Value>) : Value =
 let encode (space: int) (value: Value) : string =
     JS.JSON.stringify(value, !!null, space)
 
+let encodeAuto (space: int) (value: obj) : string =
+    JS.JSON.stringify(value, (fun _ v ->
+        // TODO: DateTime(Offset), long
+        match v with
+        | :? string -> v
+        | :? System.Collections.IEnumerable ->
+            if JS.Array.isArray(v)
+            then v
+            else JS.Array.from(v :?> JS.Iterable<obj>) |> box
+        | _ -> v
+    ), space)
+
 ///**Description**
 /// Encode an option
 ///**Parameters**

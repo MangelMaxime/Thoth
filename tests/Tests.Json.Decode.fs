@@ -106,6 +106,14 @@ type Record8 =
           g = g
           h = h }
 
+type MyUnion = Foo of int
+
+type Record9 =
+    { a: int
+      b: string
+      c: bool list
+      d: MyUnion }
+
 type User =
     { Id : int
       Name : string
@@ -754,4 +762,24 @@ Expecting an object with a field named `version` but instead got:
 
         ]
 
+        #if FABLE_COMPILER
+        testList "Auto" [
+            testCase "Auto.Generate works" <| fun _ ->
+                let r1 =
+                    { a = 5
+                      b = "bar"
+                      c = [false; true; false]
+                      d = Foo 14 }
+                let json = Thoth.Json.Encode.encodeAuto 4 r1
+                // printfn "AUTO ENCODED: %s" json
+                let decoder = Thoth.Json.Decode.Auto.Generate<Record9>()
+                match decodeString decoder json with
+                | Ok r2 ->
+                    equal 5 r2.a
+                    equal "bar" r2.b
+                    equal [false; true; false] r2.c
+                    equal (Foo 14) r2.d
+                | Error _ -> failwith "Cannot read with auto-generated decoder"
+        ]
+        #endif
     ]
