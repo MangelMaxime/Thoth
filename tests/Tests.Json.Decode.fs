@@ -777,20 +777,23 @@ Expecting an object with a field named `version` but instead got:
 
         ]
 
-        #if FABLE_COMPILER
         testList "Auto" [
             testCase "Auto.Generate works" <| fun _ ->
-                let r1 =
+                let json =
                     { a = 5
                       b = "bar"
                       c = [false; true; false]
                       d = Foo 14
                       e = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
-                    }
-                let json = Thoth.Json.Encode.encodeAuto 4 r1
-                // printfn "AUTO ENCODED: %s" json
-                let decoder = Thoth.Json.Decode.Auto.Generate<Record9>()
-                match decodeString decoder json with
+                    } |> Encode.encodeAuto 4
+                // printfn "AUTO ENCODED %s" json
+                #if FABLE_COMPILER
+                let decoder = Auto.Generate<Record9>()
+                let result = decodeString decoder json
+                #else
+                let result = decodeStringAuto<Record9> json
+                #endif
+                match result with
                 | Error er -> failwith er
                 | Ok r2 ->
                     equal 5 r2.a
@@ -800,5 +803,4 @@ Expecting an object with a field named `version` but instead got:
                     equal -1.5 (Map.find "ah" r2.e).a
                     equal 2.   (Map.find "oh" r2.e).b
         ]
-        #endif
     ]

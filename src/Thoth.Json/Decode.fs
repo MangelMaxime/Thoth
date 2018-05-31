@@ -235,7 +235,7 @@ let keyValuePairs (decoder : Decoder<'value>) : Decoder<(string * 'value) list> 
             |> Seq.toList
             |> Ok
 
-let tuple2 (decoder1: Decoder<'T1>) (decoder2: Decoder<'T2>) =
+let tuple2 (decoder1: Decoder<'T1>) (decoder2: Decoder<'T2>) : Decoder<'T1 * 'T2> =
     fun value ->
         if Helpers.isArray value then
             let value = unbox<obj array> value
@@ -486,13 +486,12 @@ let optionalAt path valDecoder fallback decoder =
 
 open Microsoft.FSharp.Reflection
 
-let private boxDecoder (d: Decoder<'T>): Decoder<obj> =
-    // d >> Result.map box
-    fun v -> match d v with Ok v -> Ok(box v) | Error er -> Error er
+// As generics are erased by Fable, let's just do an unsafe cast for performance
+let inline private boxDecoder (d: Decoder<'T>): Decoder<obj> =
+    !!d // d >> Result.map box
 
-let private unboxDecoder (d: Decoder<obj>): Decoder<'T> =
-    // d >> Result.map unbox
-    fun v -> match d v with Ok v -> Ok(unbox v) | Error er -> Error er
+let inline private unboxDecoder (d: Decoder<obj>): Decoder<'T> =
+    !!d // d >> Result.map unbox
 
 let rec private autoDecodeRecordsAndUnions (t: System.Type): Decoder<obj> =
     if FSharpType.IsRecord(t) then
@@ -521,17 +520,20 @@ let rec private autoDecodeRecordsAndUnions (t: System.Type): Decoder<obj> =
             |> Map
         fun (value: obj) ->
             let uci, values = FSharpValue.GetUnionFields(value, t)
-            match Map.tryFind uci.Name casesMap with
-            | None -> FailMessage("Cannot find tag " + uci.Name) |> Error
-            | Some decoders ->
-                (values, decoders, Ok [])
-                |||> Seq.foldBack2 (fun value decoder acc ->
-                    match acc with
-                    | Error _ -> acc
-                    | Ok result -> decoder value |> Result.map (fun v -> v::result))
-                |> function
-                    | Error er -> Error er
-                    | Ok values -> FSharpValue.MakeUnion(uci, List.toArray values) |> Ok
+            if Helpers.isString(value) then
+                FSharpValue.MakeUnion(uci, [||]) |> Ok
+            else
+                match Map.tryFind uci.Name casesMap with
+                | None -> FailMessage("Cannot find tag " + uci.Name) |> Error
+                | Some decoders ->
+                    (values, decoders, Ok [])
+                    |||> Seq.foldBack2 (fun value decoder acc ->
+                        match acc with
+                        | Error _ -> acc
+                        | Ok result -> decoder value |> Result.map (fun v -> v::result))
+                    |> function
+                        | Error er -> Error er
+                        | Ok values -> FSharpValue.MakeUnion(uci, List.toArray values) |> Ok
     else
         failwith "Class types cannot be automatically deserialized"
 
@@ -543,7 +545,6 @@ and private autoDecoder (t: System.Type): Decoder<obj> =
         let fullname = t.GetGenericTypeDefinition().FullName
         if fullname = typedefof<obj list>.FullName
         then t.GenericTypeArguments.[0] |> autoDecoder |> list |> boxDecoder
-        // TODO: This only works for maps with strings as keys
         elif fullname = typedefof< Map<string, obj> >.FullName
         then
             let decoder = t.GenericTypeArguments.[1] |> autoDecoder

@@ -2,7 +2,6 @@ module Thoth.Json.Net.Decode
 
 open Newtonsoft.Json
 open Newtonsoft.Json.Linq
-open System
 open System.IO
 
 module Helpers =
@@ -90,6 +89,13 @@ let decodeString (decoder : Decoder<'T>) =
         with
             | ex ->
                 Error("Given an invalid JSON: " + ex.Message)
+
+let decodeStringAuto<'T> (json: string): Result<'T, string> =
+    try
+        let settings = JsonSerializerSettings(Converters = Converters.converters)
+        JsonConvert.DeserializeObject<'T>(json, settings) |> Ok
+    with ex ->
+        Error("Given an invalid JSON: " + ex.Message)
 
 //////////////////
 // Primitives ///
@@ -226,6 +232,16 @@ let keyValuePairs (decoder : Decoder<'value>) : Decoder<(string * 'value) list> 
             BadPrimitive ("an object", token)
             |> Error
 
+let tuple2 (decoder1: Decoder<'T1>) (decoder2: Decoder<'T2>) : Decoder<'T1 * 'T2> =
+    fun token ->
+        if token.Type = JTokenType.Array then
+            let values = token.Value<JArray>().Values() |> Seq.toArray
+            let a = unwrap decoder1 values.[0]
+            let b = unwrap decoder2 values.[1]
+            Ok(a, b)
+        else
+            BadPrimitive ("a tuple", token)
+            |> Error
 
 //////////////////////////////
 // Inconsistent Structure ///
