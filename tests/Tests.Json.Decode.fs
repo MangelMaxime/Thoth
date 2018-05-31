@@ -112,7 +112,9 @@ type Record9 =
     { a: int
       b: string
       c: bool list
-      d: MyUnion }
+      d: MyUnion
+      e: Map<string, Record2>
+    }
 
 type User =
     { Id : int
@@ -769,17 +771,21 @@ Expecting an object with a field named `version` but instead got:
                     { a = 5
                       b = "bar"
                       c = [false; true; false]
-                      d = Foo 14 }
+                      d = Foo 14
+                      e = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
+                    }
                 let json = Thoth.Json.Encode.encodeAuto 4 r1
-                // printfn "AUTO ENCODED: %s" json
+                printfn "AUTO ENCODED: %s" json
                 let decoder = Thoth.Json.Decode.Auto.Generate<Record9>()
                 match decodeString decoder json with
+                | Error er -> failwith er
                 | Ok r2 ->
                     equal 5 r2.a
                     equal "bar" r2.b
                     equal [false; true; false] r2.c
                     equal (Foo 14) r2.d
-                | Error _ -> failwith "Cannot read with auto-generated decoder"
+                    equal -1.5 (Map.find "ah" r2.e).a
+                    equal 2.   (Map.find "oh" r2.e).b
         ]
         #endif
     ]

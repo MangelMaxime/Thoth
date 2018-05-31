@@ -235,6 +235,17 @@ let keyValuePairs (decoder : Decoder<'value>) : Decoder<(string * 'value) list> 
             |> Seq.toList
             |> Ok
 
+let tuple2 (decoder1: Decoder<'T1>) (decoder2: Decoder<'T2>) =
+    fun value ->
+        if Helpers.isArray value then
+            let value = unbox<obj array> value
+            let a = unwrap decoder1 value.[0]
+            let b = unwrap decoder2 value.[1]
+            Ok(a, b)
+        else
+            BadPrimitive ("a tuple", value)
+            |> Error
+
 //////////////////////////////
 // Inconsistent Structure ///
 ////////////////////////////
@@ -475,6 +486,14 @@ let optionalAt path valDecoder fallback decoder =
 
 open Microsoft.FSharp.Reflection
 
+let private boxDecoder (d: Decoder<'T>): Decoder<obj> =
+    // d >> Result.map box
+    fun v -> match d v with Ok v -> Ok(box v) | Error er -> Error er
+
+let private unboxDecoder (d: Decoder<obj>): Decoder<'T> =
+    // d >> Result.map unbox
+    fun v -> match d v with Ok v -> Ok(unbox v) | Error er -> Error er
+
 let rec private autoDecodeRecordsAndUnions (t: System.Type): Decoder<obj> =
     if FSharpType.IsRecord(t) then
         let fieldDecoders =
@@ -482,47 +501,66 @@ let rec private autoDecodeRecordsAndUnions (t: System.Type): Decoder<obj> =
             |> Array.map (fun fi -> fi.Name, autoDecoder fi.PropertyType)
         fun (value: obj) ->
             if not (Helpers.isObject value) || Helpers.isArray value then
-                BadPrimitive ("an object", value)
-                |> Error
+                BadPrimitive ("an object", value) |> Error
             else
-                (Ok(obj()), fieldDecoders) ||> Seq.fold (fun acc (name, decoder) ->
+                (fieldDecoders, Ok [])
+                ||> Seq.foldBack (fun (name, decoder) acc ->
                     match acc with
                     | Error _ -> acc
                     | Ok result ->
                         field name decoder value
-                        |> Result.map (fun v -> result?(name) <- v; result)
-                    )
+                        |> Result.map (fun v -> v::result))
+                |> function
+                    | Error er -> Error er
+                    | Ok values -> FSharpValue.MakeRecord(t, List.toArray values) |> Ok
     elif FSharpType.IsUnion(t) then
-        // TODO: Validate union, decode fields
-        unbox >> Ok
+        let casesMap =
+            FSharpType.GetUnionCases(t)
+            |> Seq.map (fun uci ->
+                uci.Name, uci.GetFields() |> Array.map (fun fi -> autoDecoder fi.PropertyType))
+            |> Map
+        fun (value: obj) ->
+            let uci, values = FSharpValue.GetUnionFields(value, t)
+            match Map.tryFind uci.Name casesMap with
+            | None -> FailMessage("Cannot find tag " + uci.Name) |> Error
+            | Some decoders ->
+                (values, decoders, Ok [])
+                |||> Seq.foldBack2 (fun value decoder acc ->
+                    match acc with
+                    | Error _ -> acc
+                    | Ok result -> decoder value |> Result.map (fun v -> v::result))
+                |> function
+                    | Error er -> Error er
+                    | Ok values -> FSharpValue.MakeUnion(uci, List.toArray values) |> Ok
     else
         failwith "Class types cannot be automatically deserialized"
 
 and private autoDecoder (t: System.Type): Decoder<obj> =
     if t.IsArray then
         let decoder = t.GetElementType() |> autoDecoder
-        array decoder |> unbox
+        array decoder |> boxDecoder
     elif t.IsGenericType then
         let fullname = t.GetGenericTypeDefinition().FullName
         if fullname = typedefof<obj list>.FullName
-        then t.GenericTypeArguments.[0] |> autoDecoder |> list |> unbox
+        then t.GenericTypeArguments.[0] |> autoDecoder |> list |> boxDecoder
         // TODO: This only works for maps with strings as keys
-        // TODO: Maps with encodeAuto are actually serizalized as an array of key-value pairs
         elif fullname = typedefof< Map<string, obj> >.FullName
-        then t.GenericTypeArguments.[1] |> autoDecoder |> dict |> unbox
+        then
+            let decoder = t.GenericTypeArguments.[1] |> autoDecoder
+            (array (tuple2 string decoder) >> Result.map Map) |> boxDecoder
         else autoDecodeRecordsAndUnions t
     else
         let fullname = t.FullName
         if fullname = typeof<int>.FullName
-        then unbox int
+        then boxDecoder int
         elif fullname = typeof<float>.FullName
-        then unbox float
+        then boxDecoder float
         elif fullname = typeof<string>.FullName
-        then unbox string
+        then boxDecoder string
         elif fullname = typeof<bool>.FullName
-        then unbox bool
+        then boxDecoder bool
         else autoDecodeRecordsAndUnions t
 
 type Auto =
     static member Generate<'T> ([<Inject>] ?resolver: ITypeResolver<'T>): Decoder<'T> =
-        resolver.Value.GetTypeInfo() |> autoDecoder |> unbox
+        resolver.Value.GetTypeInfo() |> autoDecoder |> unboxDecoder
