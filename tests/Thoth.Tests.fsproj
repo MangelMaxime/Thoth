@@ -3,18 +3,10 @@
     <TargetFrameworks>netcoreapp2.0;net461</TargetFrameworks>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
-  <Choose>
-    <When Condition="'$(TestRunner)' == 'expecto'">
-        <ItemGroup>
-            <ProjectReference Include="../src/Thoth.Json.Net/Thoth.Json.Net.fsproj" />
-        </ItemGroup>
-    </When>
-    <Otherwise>
-        <ItemGroup>
-            <ProjectReference Include="../src/Thoth.Json/Thoth.Json.fsproj" />
-        </ItemGroup>
-    </Otherwise>
-  </Choose>
+  <ItemGroup>
+    <ProjectReference Include="../src/Thoth.Json.Net/Thoth.Json.Net.fsproj" />
+    <ProjectReference Include="../src/Thoth.Json/Thoth.Json.fsproj" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="Util.fs" />
     <Compile Include="Tests.Json.Decode.fs" />
