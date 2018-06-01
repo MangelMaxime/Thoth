@@ -97,6 +97,12 @@ let decodeStringAuto<'T> (json: string): Result<'T, string> =
     with ex ->
         Error("Given an invalid JSON: " + ex.Message)
 
+let decodeStringWithConverter<'T> (converter: JsonConverter) (json: string): Result<'T, string> =
+    try
+        JsonConvert.DeserializeObject<'T>(json, converter) |> Ok
+    with ex ->
+        Error("Given an invalid JSON: " + ex.Message)
+
 //////////////////
 // Primitives ///
 ////////////////
