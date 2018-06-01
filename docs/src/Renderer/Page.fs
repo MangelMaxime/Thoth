@@ -4,7 +4,6 @@ module Renderer.Page
     open Helpers
     open Fable.Core.JsInterop
     open Fulma
-    open Fulma.Layouts
     open Fable.Helpers.React
     open Fable.Helpers.React.Props
 

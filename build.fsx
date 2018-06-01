@@ -102,6 +102,9 @@ Target.create "Clean" (fun _ ->
     ++ "docs/**/build"
     ++ "docs/scss/extra"
     ++ "docs/public"
+    ++ "demos/**/bin"
+    ++ "demos/**/obj"
+    ++ "demos/Thoth.Elmish.Demo/output"
     |> Shell.cleanDirs
 )
 
@@ -229,11 +232,13 @@ Target.create "Docs.Watch" (fun _ ->
 Target.create "Docs.Setup" (fun _ ->
     // Make sure directories exist
     Directory.ensure "./docs/scss/extra/highlight.js/"
+    Directory.ensure "./docs/public/demos/"
 
     // Copy files from node_modules allow us to manage them via yarn
     Shell.copyDir "./docs/public/fonts" "./node_modules/font-awesome/fonts" (fun _ -> true)
     Shell.copyFile "./docs/scss/extra/highlight.js/atom-one-light.css" "./node_modules/highlight.js/styles/atom-one-light.css"
-
+    // Copy demos file
+    Shell.copyFile "./docs/public/demos" "./demos/Thoth.Elmish.Demo/output/demo.js"
 
     DotNet.restore id docFile
 )
@@ -256,6 +261,12 @@ Target.create "Watch" (fun _ ->
         //Compile to JS
         dotnet projDir "fable" "yarn-run rollup --port free -- -c tests/rollup.config.js -w"
     )
+)
+
+Target.create "Build.Demos" (fun _ ->
+    dotnet
+        ("demos" </> "Thoth.Elmish.Demo")
+        "fable" "webpack --port free -- -p"
 )
 
 let needsPublishing (versionRegex: Regex) (releaseNotes: ReleaseNotes.ReleaseNotes) projFile =
@@ -342,6 +353,9 @@ Target.create "Docs.Publish" (fun _ ->
     ==> "MochaTest"
     ==> "ExpectoTest"
     ==> "Publish"
+
+"Build.Demos"
+    ==> "Docs.Setup"
 
 "Docs.Build"
     <== [ "Docs.Setup" ]

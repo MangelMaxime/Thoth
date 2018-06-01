@@ -262,3 +262,5 @@ docs/scss/extra/
 temp/
 
 \.DS_Store
+
+demos/Thoth\.Elmish\.Demo/output/

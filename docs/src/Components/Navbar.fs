@@ -1,14 +1,10 @@
 [<RequireQualifiedAccess>]
 module Components.Navbar
 
-    open Fulma.Components
     open Fable.Helpers.React
     open Fable.Helpers.React.Props
     open Fulma
-    open Fulma.Layouts
-    open Fulma.Elements
-    open Fulma.Elements.Form
-    open Fulma.Extra.FontAwesome
+    open Fulma.FontAwesome
 
     let private shadow =
         div [ ClassName "bd-special-shadow"
@@ -82,14 +78,11 @@ module Components.Navbar
                               Navbar.Item.Props [ Href Route.Json.Net ] ]
                 [ str ".Net & NetCore" ] ]
 
-    let private navbarHttp pageUrl =
+    let private navbarElmish pageUrl =
         Navbar.Dropdown.div [ ]
-            [ Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Http.Basic)
-                              Navbar.Item.Props [ Href Route.Http.Basic ] ]
-                [ str "Basic" ]
-              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Http.Elmish)
-                              Navbar.Item.Props [ Href Route.Http.Basic ] ]
-                [ str "Elmish usage" ] ]
+            [ Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Elmish.Debouncer)
+                              Navbar.Item.Props [ Href Route.Elmish.Debouncer ] ]
+                [ str "Debouncer" ] ]
 
     let private navbarMenu pageUrl =
         Navbar.menu [ Navbar.Menu.Props [ Id "navMenu" ] ]
@@ -98,11 +91,11 @@ module Components.Navbar
                 [ Navbar.Link.div [ ]
                     [ str "Json" ]
                   navbarJson pageUrl ]
-            //   Navbar.Item.div [ Navbar.Item.HasDropdown
-            //                     Navbar.Item.IsHoverable ]
-            //     [ Navbar.Link.div [ ]
-            //         [ str "Http" ]
-            //       navbarHttp pageUrl ]
+              Navbar.Item.div [ Navbar.Item.HasDropdown
+                                Navbar.Item.IsHoverable ]
+                [ Navbar.Link.div [ ]
+                    [ str "Elmish" ]
+                  navbarElmish pageUrl ]
                    ]
 
     let private navbarBrand =

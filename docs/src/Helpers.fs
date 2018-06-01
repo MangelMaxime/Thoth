@@ -59,7 +59,7 @@ module Helpers
     open Fable.Core
     open Fable.Helpers.React
     open Fable.Helpers.React.Props
-    open Fulma.Elements
+    open Fulma
 
     [<Pojo>]
     type DangerousInnerHtml =

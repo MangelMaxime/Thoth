@@ -17,7 +17,6 @@ module Json =
     let [<Literal>] Net = Host + "json/" + "net.html"
 
 [<RequireQualifiedAccess>]
-module Http =
+module Elmish =
 
-    let [<Literal>] Basic = Host + "http/" + "basic.html"
-    let [<Literal>] Elmish = Host + "http/" + "elmish.html"
+    let [<Literal>] Debouncer = Host + "elmish/" + "debouncer.html"
