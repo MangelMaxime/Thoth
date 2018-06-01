@@ -176,6 +176,13 @@ let tests : Test =
 
                 equal expected actual
 
+            testCase "a float from int works" <| fun _ ->
+                let expected = Ok(1.0)
+                let actual =
+                    decodeString float "1"
+
+                equal expected actual
+
             testCase "a bool works" <| fun _ ->
                 let expected = Ok(true)
                 let actual =
