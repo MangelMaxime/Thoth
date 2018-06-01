@@ -1,0 +1,11 @@
+group Demos
+    Fable.Core
+    Fable.Elmish
+    Fable.Elmish.React
+    Fable.Elmish.Browser
+    Fable.Elmish.Debugger
+    Fable.Elmish.HMR
+    Fable.PowerPack
+    Fable.React
+    Fulma
+    dotnet-fable

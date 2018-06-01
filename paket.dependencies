@@ -40,3 +40,19 @@ group Docs
     nuget Fable.PowerPack
     nuget Fable.Import.Node
     nuget Fulma prerelease
+
+group Demos
+    storage:none
+    source https://www.nuget.org/api/v2
+    framework: netstandard2.0
+
+    clitool dotnet-fable
+    nuget Fable.Core
+    nuget Fable.Elmish
+    nuget Fable.Elmish.React
+    nuget Fable.Elmish.Browser
+    nuget Fable.Elmish.Debugger
+    nuget Fable.Elmish.HMR
+    nuget Fable.PowerPack
+    nuget Fable.React
+    nuget Fulma
