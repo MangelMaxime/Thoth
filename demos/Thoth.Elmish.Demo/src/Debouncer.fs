@@ -5,16 +5,19 @@ module Demos.Debouncer
 
 open Elmish
 open Fable.Helpers.React
-open Fable.Helpers.React.Props
 open Fulma
 open Thoth.Elmish
 open System
 
+type State =
+    | Initial
+    | IsTyping
+    | StoppedTyping
+
 type Model =
     { Debouncer : Debouncer.State
       UserInput : string
-      ShowMessage : bool
-      IsTyping : bool  }
+      State : State  }
 
 type Msg =
     | DebouncerSelfMsg of Debouncer.SelfMessage<Msg>
@@ -25,8 +28,7 @@ type Msg =
 let private init _ =
     { Debouncer = Debouncer.create()
       UserInput = ""
-      ShowMessage = false
-      IsTyping = false }, Cmd.none
+      State = State.Initial }, Cmd.none
 
 let private update msg model =
     match msg with
@@ -36,7 +38,7 @@ let private update msg model =
             |> Debouncer.bounce (TimeSpan.FromSeconds 1.5) "user_input" EndOfInput
 
         { model with UserInput = newValue
-                     IsTyping = true
+                     State = State.IsTyping
                      Debouncer = debouncerModel }, Cmd.batch [ Cmd.map DebouncerSelfMsg debouncerCmd ]
 
     | DebouncerSelfMsg debouncerMsg ->
@@ -46,34 +48,29 @@ let private update msg model =
     | EndOfInput ->
         let (debouncerModel, debouncerCmd) =
             model.Debouncer
-            |> Debouncer.bounce (TimeSpan.FromSeconds 3.) "reset_demo" Reset
+            |> Debouncer.bounce (TimeSpan.FromSeconds 2.5) "reset_demo" Reset
 
-        { model with ShowMessage = true
+        { model with State = State.StoppedTyping
                      Debouncer = debouncerModel }, Cmd.batch [ Cmd.map DebouncerSelfMsg debouncerCmd ]
 
     | Reset ->
         { model with UserInput = ""
-                     IsTyping = false
-                     ShowMessage = false }, Cmd.none
+                     State = State.Initial }, Cmd.none
 
 let private view model dispatch =
     let instruction =
-        if model.IsTyping then
-            str "Waiting for more keystrokes... "
-          else
-            str "Type here, I will detect when you stop typing"
+        match model.State with
+        | State.Initial -> "Type here, I will detect when you stop typing"
+        | State.IsTyping -> "Waiting for more keystrokes... "
+        | State.StoppedTyping -> "You stop typing. I will soon reset the demo"
 
-    let message =
-        if model.ShowMessage then
-            str "You stop typing. Making now the request" |> Some
-        else
-            None
-
-    div [ ]
-        [ instruction
-          Input.text [ Input.OnChange (fun ev -> dispatch (ChangeValue ev.Value))
-                       Input.Value model.UserInput ]
-          ofOption message ]
+    Field.div [ ]
+        [ Label.label [ ]
+            [ str instruction ]
+          Control.div [ ]
+            [ Input.text [ Input.OnChange (fun ev -> dispatch (ChangeValue ev.Value))
+                           Input.Value model.UserInput
+                           Input.Disabled (model.State = State.StoppedTyping) ] ] ]
 
 open Elmish.React
 open Elmish.Debug
