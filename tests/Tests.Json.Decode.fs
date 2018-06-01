@@ -113,9 +113,10 @@ type MyUnion = Foo of int
 type Record9 =
     { a: int
       b: string
-      c: bool list
+      c: (bool * int) list
       d: MyUnion
       e: Map<string, Record2>
+      f: System.DateTime
     }
 
 type User =
@@ -782,9 +783,10 @@ Expecting an object with a field named `version` but instead got:
                 let json =
                     { a = 5
                       b = "bar"
-                      c = [false; true; false]
+                      c = [false, 3; true, 5; false, 10]
                       d = Foo 14
                       e = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
+                      f = System.DateTime.Now
                     } |> Encode.encodeAuto 4
                 // printfn "AUTO ENCODED %s" json
                 let decoder = Auto.Generate<Record9>()
@@ -794,7 +796,7 @@ Expecting an object with a field named `version` but instead got:
                 | Ok r2 ->
                     equal 5 r2.a
                     equal "bar" r2.b
-                    equal [false; true; false] r2.c
+                    equal [false, 3; true, 5; false, 10] r2.c
                     equal (Foo 14) r2.d
                     equal -1.5 (Map.find "ah" r2.e).a
                     equal 2.   (Map.find "oh" r2.e).b

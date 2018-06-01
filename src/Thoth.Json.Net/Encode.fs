@@ -163,6 +163,13 @@ let encodeAuto (space: int) (value: obj) : string =
                                           Formatting = format)
     JsonConvert.SerializeObject(value, settings)
 
+let encodeWithConverter<'T> (converter: JsonConverter) (space: int) (value: obj) : string =
+    // TODO: Can we set indentation space?
+    let format = if space = 0 then Formatting.None else Formatting.Indented
+    let settings = JsonSerializerSettings(Converters = [|converter|],
+                                          Formatting = format)
+    JsonConvert.SerializeObject(value, settings)
+
 ///**Description**
 /// Encode an option
 ///**Parameters**

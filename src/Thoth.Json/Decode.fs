@@ -131,6 +131,22 @@ let int : Decoder<int> =
             else
                 Ok(unbox<int> value)
 
+let int64 : Decoder<int64> =
+    fun value ->
+        if Helpers.isNumber value
+        then unbox<int> value |> int64 |> Ok
+        elif Helpers.isString value
+        then unbox<string> value |> int64 |> Ok
+        else BadPrimitive("an int64", value) |> Error
+
+let uint64 : Decoder<uint64> =
+    fun value ->
+        if Helpers.isNumber value
+        then unbox<int> value |> uint64 |> Ok
+        elif Helpers.isString value
+        then unbox<string> value |> uint64 |> Ok
+        else BadPrimitive("an uint64", value) |> Error
+
 let bool : Decoder<bool> =
     fun value ->
         if Helpers.isBoolean value then
@@ -145,6 +161,17 @@ let float : Decoder<float> =
         else
             BadPrimitive("a float", value) |> Error
 
+let datetime : Decoder<System.DateTime> =
+    fun value ->
+        if Helpers.isString value
+        then System.DateTime.Parse(unbox<string> value) |> Ok
+        else BadPrimitive("a date", value) |> Error
+
+let datetimeOffset : Decoder<System.DateTimeOffset> =
+    fun value ->
+        if Helpers.isString value
+        then System.DateTimeOffset.Parse(unbox<string> value) |> Ok
+        else BadPrimitive("a date with offset", value) |> Error
 
 /////////////////////////
 // Object primitives ///
@@ -493,25 +520,36 @@ let inline private boxDecoder (d: Decoder<'T>): Decoder<obj> =
 let inline private unboxDecoder (d: Decoder<obj>): Decoder<'T> =
     !!d // d >> Result.map unbox
 
+let private object (decoders: (string * Decoder<obj>)[]) (value: obj) =
+    if not (Helpers.isObject value) || Helpers.isArray value then
+        BadPrimitive ("an object", value) |> Error
+    else
+        (decoders, Ok []) ||> Array.foldBack (fun (name, decoder) acc ->
+            match acc with
+            | Error _ -> acc
+            | Ok result ->
+                field name decoder value
+                |> Result.map (fun v -> v::result))
+
+let private mixedArray msg (decoders: Decoder<obj>[]) (values: obj[]): Result<obj list, DecoderError> =
+    if decoders.Length <> values.Length then
+        sprintf "Expected %i %s but got %i" decoders.Length msg values.Length
+        |> FailMessage |> Error
+    else
+        (values, decoders, Ok [])
+        |||> Array.foldBack2 (fun value decoder acc ->
+            match acc with
+            | Error _ -> acc
+            | Ok result -> decoder value |> Result.map (fun v -> v::result))
+
 let rec private autoDecodeRecordsAndUnions (t: System.Type): Decoder<obj> =
     if FSharpType.IsRecord(t) then
-        let fieldDecoders =
+        let decoders =
             FSharpType.GetRecordFields(t)
             |> Array.map (fun fi -> fi.Name, autoDecoder fi.PropertyType)
-        fun (value: obj) ->
-            if not (Helpers.isObject value) || Helpers.isArray value then
-                BadPrimitive ("an object", value) |> Error
-            else
-                (fieldDecoders, Ok [])
-                ||> Seq.foldBack (fun (name, decoder) acc ->
-                    match acc with
-                    | Error _ -> acc
-                    | Ok result ->
-                        field name decoder value
-                        |> Result.map (fun v -> v::result))
-                |> function
-                    | Error er -> Error er
-                    | Ok values -> FSharpValue.MakeRecord(t, List.toArray values) |> Ok
+        fun value ->
+            object decoders value
+            |> Result.map (fun xs -> FSharpValue.MakeRecord(t, List.toArray xs))
     elif FSharpType.IsUnion(t) then
         let casesMap =
             FSharpType.GetUnionCases(t)
@@ -526,14 +564,8 @@ let rec private autoDecodeRecordsAndUnions (t: System.Type): Decoder<obj> =
                 match Map.tryFind uci.Name casesMap with
                 | None -> FailMessage("Cannot find tag " + uci.Name) |> Error
                 | Some decoders ->
-                    (values, decoders, Ok [])
-                    |||> Seq.foldBack2 (fun value decoder acc ->
-                        match acc with
-                        | Error _ -> acc
-                        | Ok result -> decoder value |> Result.map (fun v -> v::result))
-                    |> function
-                        | Error er -> Error er
-                        | Ok values -> FSharpValue.MakeUnion(uci, List.toArray values) |> Ok
+                    mixedArray "union fields" decoders values
+                    |> Result.map (fun values -> FSharpValue.MakeUnion(uci, List.toArray values))
     else
         failwith "Class types cannot be automatically deserialized"
 
@@ -542,14 +574,22 @@ and private autoDecoder (t: System.Type): Decoder<obj> =
         let decoder = t.GetElementType() |> autoDecoder
         array decoder |> boxDecoder
     elif t.IsGenericType then
-        let fullname = t.GetGenericTypeDefinition().FullName
-        if fullname = typedefof<obj list>.FullName
-        then t.GenericTypeArguments.[0] |> autoDecoder |> list |> boxDecoder
-        elif fullname = typedefof< Map<string, obj> >.FullName
-        then
-            let decoder = t.GenericTypeArguments.[1] |> autoDecoder
-            (array (tuple2 string decoder) >> Result.map Map) |> boxDecoder
-        else autoDecodeRecordsAndUnions t
+        if FSharpType.IsTuple(t) then
+            let decoders = FSharpType.GetTupleElements(t) |> Array.map autoDecoder
+            fun value ->
+                if Helpers.isArray value then
+                    mixedArray "tuple elements" decoders (unbox value)
+                    |> Result.map (fun xs -> FSharpValue.MakeTuple(List.toArray xs, t))
+                else BadPrimitive ("an array", value) |> Error
+        else
+            let fullname = t.GetGenericTypeDefinition().FullName
+            if fullname = typedefof<obj list>.FullName
+            then t.GenericTypeArguments.[0] |> autoDecoder |> list |> boxDecoder
+            elif fullname = typedefof< Map<string, obj> >.FullName
+            then
+                let decoder = t.GenericTypeArguments.[1] |> autoDecoder
+                (array (tuple2 string decoder) >> Result.map Map) |> boxDecoder
+            else autoDecodeRecordsAndUnions t
     else
         let fullname = t.FullName
         if fullname = typeof<int>.FullName
@@ -560,6 +600,14 @@ and private autoDecoder (t: System.Type): Decoder<obj> =
         then boxDecoder string
         elif fullname = typeof<bool>.FullName
         then boxDecoder bool
+        elif fullname = typeof<int64>.FullName
+        then boxDecoder int64
+        elif fullname = typeof<uint64>.FullName
+        then boxDecoder uint64
+        elif fullname = typeof<System.DateTime>.FullName
+        then boxDecoder datetime
+        elif fullname = typeof<System.DateTimeOffset>.FullName
+        then boxDecoder datetimeOffset
         else autoDecodeRecordsAndUnions t
 
 type Auto =

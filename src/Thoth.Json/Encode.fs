@@ -154,13 +154,13 @@ let encode (space: int) (value: Value) : string =
 let encodeAuto (space: int) (value: obj) : string =
     JS.JSON.stringify(value, (fun _ v ->
         match v with
-        // | :? System.DateTime as d -> d.ToString("O") |> box
-        // // Fable compiles both DateTime and DateTimeOffset as JS Date
-        // // | :? System.DateTimeOffset as d -> d.ToString("O") |> box
+        | :? System.DateTime as d -> d.ToString("O") |> box
+        // Fable compiles both DateTime and DateTimeOffset as JS Date
+        // | :? System.DateTimeOffset as d -> d.ToString("O") |> box
 
-        // // In Fable, int64 is a special class not a JS number
-        // | :? int64 as i -> i.ToString() |> box
-        // // | :? uint64 as i -> i.ToString() |> box
+        // In Fable, int64 is a special class not a JS number
+        | :? int64 as i -> i.ToString() |> box
+        // | :? uint64 as i -> i.ToString() |> box
 
         // Match string before so it's not considered an IEnumerable
         | :? string -> v
