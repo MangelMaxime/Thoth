@@ -266,7 +266,13 @@ Target.create "Watch" (fun _ ->
 Target.create "Build.Demos" (fun _ ->
     dotnet
         ("demos" </> "Thoth.Elmish.Demo")
-        "fable" "webpack --port free -- -p"
+        "restore"
+        ""
+
+    dotnet
+        ("demos" </> "Thoth.Elmish.Demo")
+        "fable"
+        "webpack --port free -- -p"
 )
 
 let needsPublishing (versionRegex: Regex) (releaseNotes: ReleaseNotes.ReleaseNotes) projFile =

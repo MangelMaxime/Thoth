@@ -23,6 +23,10 @@ The following demo works like that:
     </div>
 </div>
 
+<div class="has-text-centered">
+
+*[View the code](https://github.com/MangelMaxime/Thoth/blob/master/demos/Thoth.Elmish.Demo/src/Debouncer.fs)*
+</div>
 
 <script type="text/javascript" src="../demos/demo.js"></script>
 <script type="text/javascript">
@@ -30,7 +34,6 @@ The following demo works like that:
 </script>
 
 ## How to use ?
-
 
 1. Store the `Debouncer` instance in your model
 ```fs
