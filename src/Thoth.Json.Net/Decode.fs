@@ -90,19 +90,6 @@ let decodeString (decoder : Decoder<'T>) =
             | ex ->
                 Error("Given an invalid JSON: " + ex.Message)
 
-let decodeStringAuto<'T> (json: string): Result<'T, string> =
-    try
-        let settings = JsonSerializerSettings(Converters = Converters.converters)
-        JsonConvert.DeserializeObject<'T>(json, settings) |> Ok
-    with ex ->
-        Error("Given an invalid JSON: " + ex.Message)
-
-let decodeStringWithConverter<'T> (converter: JsonConverter) (json: string): Result<'T, string> =
-    try
-        JsonConvert.DeserializeObject<'T>(json, converter) |> Ok
-    with ex ->
-        Error("Given an invalid JSON: " + ex.Message)
-
 //////////////////
 // Primitives ///
 ////////////////
@@ -484,9 +471,17 @@ let optionalAt path valDecoder fallback decoder =
     custom (optionalDecoder (at path value) valDecoder fallback) decoder
 
 type Auto =
-    static member Generate<'T> (): Decoder<'T> =
+    static member GenerateDecoder<'T> (): Decoder<'T> =
         let serializer = JsonSerializer()
         for conv in Converters.converters do
             serializer.Converters.Add(conv)
         fun token ->
             token.ToObject<'T>(serializer) |> Ok
+
+    static member DecodeString<'T>(json: string): 'T =
+        let settings = JsonSerializerSettings(Converters = Converters.converters)
+        JsonConvert.DeserializeObject<'T>(json, settings)
+
+    static member DecodeString(json: string, t: System.Type): obj =
+        let settings = JsonSerializerSettings(Converters = Converters.converters)
+        JsonConvert.DeserializeObject(json, t, settings)

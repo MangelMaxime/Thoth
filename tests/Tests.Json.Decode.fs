@@ -789,16 +789,12 @@ Expecting an object with a field named `version` but instead got:
                       f = System.DateTime.Now
                     } |> Encode.encodeAuto 4
                 // printfn "AUTO ENCODED %s" json
-                let decoder = Auto.Generate<Record9>()
-                let result = decodeString decoder json
-                match result with
-                | Error er -> failwith er
-                | Ok r2 ->
-                    equal 5 r2.a
-                    equal "bar" r2.b
-                    equal [false, 3; true, 5; false, 10] r2.c
-                    equal (Foo 14) r2.d
-                    equal -1.5 (Map.find "ah" r2.e).a
-                    equal 2.   (Map.find "oh" r2.e).b
+                let r2 = Auto.DecodeString<Record9>(json)
+                equal 5 r2.a
+                equal "bar" r2.b
+                equal [false, 3; true, 5; false, 10] r2.c
+                equal (Foo 14) r2.d
+                equal -1.5 (Map.find "ah" r2.e).a
+                equal 2.   (Map.find "oh" r2.e).b
         ]
     ]
