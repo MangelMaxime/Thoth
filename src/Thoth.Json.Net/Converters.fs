@@ -116,6 +116,14 @@ let converters =
 type CacheConverter(converters: JsonConverter[]) =
     inherit JsonConverter()
     let cache = ConcurrentDictionary<Type, JsonConverter>()
+    static let mutable singleton: CacheConverter option = None
+    static member Singleton =
+        match singleton with
+        | Some x -> x
+        | None ->
+            let x = CacheConverter(converters)
+            singleton <- Some x
+            x
     override __.CanConvert(t) =
         let conv =
             cache.GetOrAdd(t, fun t ->

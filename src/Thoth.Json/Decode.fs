@@ -611,5 +611,22 @@ and private autoDecoder (t: System.Type): Decoder<obj> =
         else autoDecodeRecordsAndUnions t
 
 type Auto =
-    static member Generate<'T> ([<Inject>] ?resolver: ITypeResolver<'T>): Decoder<'T> =
-        resolver.Value.GetTypeInfo() |> autoDecoder |> unboxDecoder
+    static member GenerateDecoder<'T>([<Inject>] ?resolver: ITypeResolver<'T>): Decoder<'T> =
+        resolver.Value.ResolveType() |> autoDecoder |> unboxDecoder
+
+    static member GenerateDecoder(t: System.Type): Decoder<obj> =
+        autoDecoder t
+
+    static member DecodeString<'T>(json: string, [<Inject>] ?resolver: ITypeResolver<'T>): 'T =
+        // TODO: Cache decoder?
+        let decoder = Auto.GenerateDecoder(?resolver=resolver)
+        match decodeString decoder json with
+        | Ok x -> x
+        | Error msg -> failwith msg
+
+    static member DecodeString(json: string, t: System.Type): obj =
+        // TODO: Cache decoder?
+        let decoder = Auto.GenerateDecoder(t)
+        match decodeString decoder json with
+        | Ok x -> x
+        | Error msg -> failwith msg
