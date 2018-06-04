@@ -1,0 +1,131 @@
+<!doctype html>
+<html class="has-navbar-fixed-top">
+
+<head>
+    <title>Thoth</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /> <link rel="stylesheet" type="text/css" href="https://mangelmaxime.github.io/Thoth/main.css"/>
+</head>
+
+<body>
+    <nav class="navbar is-fixed-top is-primary"><div class="bd-special-shadow" style="opacity:1;transform:scaleY(1)"></div><div class="container"><div class="navbar-brand"><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/index.html"><p class="title is-4">Thoth</p></a><a class="navbar-item is-hidden-desktop" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span></a><a class="navbar-item twitter is-hidden-desktop" href="https://twitter.com/MangelMaxime"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span></a><div class="navbar-burger"><span></span><span></span><span></span></div></div><div class="navbar-menu" id="navMenu"><div class="navbar-item is-hoverable has-dropdown"><div class="navbar-link">Json</div><div class="navbar-dropdown"><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/decode.html">Decode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/encode.html">Encode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/net.html">.Net &amp; NetCore</a></div></div><div class="navbar-item is-hoverable has-dropdown"><div class="navbar-link">Elmish</div><div class="navbar-dropdown"><a class="navbar-item is-active" href="https://mangelmaxime.github.io/Thoth/elmish/debouncer.html">Debouncer</a></div></div></div><div class="navbar-end"><a class="navbar-item is-hidden-mobile" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span></a><a class="navbar-item twitter is-hidden-mobile" href="https://twitter.com/MangelMaxime"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span></a><div class="navbar-item"><div class="field is-grouped"><p class="control"><a class="button twitter" href="https://twitter.com/intent/tweet?via=MangelMaxime&amp;text=Thoth%20is%20a%20set%20of%20several%20libraries%20for%20working%20with%20@FableCompiler%20applications" target="_blank"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span><span>Tweet</span></a></p><p class="control"><a class="button github" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span><span>Github</span></a></p></div></div></div></div></nav>
+    <div class="container">
+        <div class="content" style="margin: 1rem 0 0">
+            <h1><a href="#debouncer" aria-hidden="true"><span class="anchor" id="debouncer"></span>&#128279;</a> Debouncer</h1>
+<h2><a href="#kezako" aria-hidden="true"><span class="anchor" id="kezako"></span>&#128279;</a> Kezako ?</h2>
+<blockquote>
+<p>Debouncing enforces that a function not be called again until a certain amount of time has passed without it being called. As in &quot;execute this function only if 100 milliseconds have passed without it being called.&quot;</p>
+<p>Perhaps a function is called 1,000 times in a quick burst, dispersed over 3 seconds, then stops being called. If you have debounced it at 100 milliseconds, the function will only fire once, at 3.1 seconds, once the burst is over. Each time the function is called during the burst it resets the debouncing timer.</p>
+<p><a href="https://css-tricks.com/the-difference-between-throttling-and-debouncing/">Source</a></p>
+</blockquote>
+<h2><a href="#demo" aria-hidden="true"><span class="anchor" id="demo"></span>&#128279;</a> Demo</h2>
+<p>The following demo works like that:</p>
+<ol>
+<li>Ask the user to type something</li>
+<li>User <strong>is typing</strong></li>
+<li>When user <strong>stop typing</strong>, <strong>disable</strong> the input and <strong>inform</strong> the user.</li>
+<li>After a <strong>short period</strong> of time, <strong>reset</strong> the demo.</li>
+</ol>
+<div class="columns">
+    <div class="column is-4 is-offset-4">
+        <div id="debouncer_demo"></div>
+    </div>
+</div>
+<script type="text/javascript" src="/demos/demo.js"></script>
+<script type="text/javascript">
+    Demos.DebouncerDemo("debouncer_demo");
+</script>
+<h2><a href="#how-to-use" aria-hidden="true"><span class="anchor" id="how-to-use"></span>&#128279;</a> How to use ?</h2>
+<ol>
+<li>Store the <code>Debouncer</code> instance in your model</li>
+</ol>
+<pre><code class="hljs language-fs"><span class="hljs-comment">// Model definition</span>
+<span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-title">Model</span> </span>=
+    { State : State
+      <span class="hljs-comment">// ...</span>
+    }
+
+<span class="hljs-comment">// Model initialization</span>
+<span class="hljs-keyword">let</span> init () =
+    { Debouncer = Debouncer.create()
+      <span class="hljs-comment">// ...</span>
+    }
+</code></pre>
+<ol start="2">
+<li>Register the message dedicated to the <code>Debouncer</code></li>
+</ol>
+<pre><code class="hljs language-fs"><span class="hljs-comment">// Msg definition</span>
+<span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-title">Msg</span> </span>=
+    | DebouncerSelfMsg <span class="hljs-keyword">of</span> Debouncer.SelfMessage&lt;Msg&gt; <span class="hljs-comment">// This is the message used by the Debouncer</span>
+    | ChangeValue <span class="hljs-keyword">of</span> string <span class="hljs-comment">// Message trigger each time the user type in the input</span>
+    | EndOfInput <span class="hljs-comment">// Message we want to debounce</span>
+</code></pre>
+<ol start="3">
+<li>Handle <code>DebouncerSelfMsg</code> in your update function</li>
+</ol>
+<pre><code class="hljs language-fs"><span class="hljs-keyword">let</span> <span class="hljs-keyword">private</span> msg model =
+    <span class="hljs-keyword">match</span> msg <span class="hljs-keyword">with</span>
+    | DebouncerSelfMsg debouncerMsg -&gt;
+        <span class="hljs-keyword">let</span> (debouncerModel, debouncerCmd) = Debouncer.update debouncerMsg model.Debouncer
+        { model <span class="hljs-keyword">with</span> Debouncer = debouncerModel }, debouncerCmd
+</code></pre>
+<p><em>Please note we don't need to use <code>Cmd.map</code> over <code>debouncerCmd</code> because it return a <code>Msg</code> directly</em></p>
+<ol start="4">
+<li>Bounce <code>EndOfInput</code> each time the user type something in the input</li>
+</ol>
+<pre><code class="hljs language-fs"><span class="hljs-keyword">let</span> <span class="hljs-keyword">private</span> msg model =
+    <span class="hljs-keyword">match</span> msg <span class="hljs-keyword">with</span>
+    | ChangeValue newValue -&gt;
+        <span class="hljs-keyword">let</span> (debouncerModel, debouncerCmd) =
+            model.Debouncer
+            |&gt; Debouncer.bounce (TimeSpan.FromSeconds <span class="hljs-number">1.5</span>) <span class="hljs-string">"user_input"</span> EndOfInput
+
+        { model <span class="hljs-keyword">with</span> UserInput = newValue
+                     State = State.IsTyping
+                     Debouncer = debouncerModel }, Cmd.batch [ Cmd.map DebouncerSelfMsg debouncerCmd ]
+</code></pre>
+<p><code>Debouncer.bounce</code> parameters:</p>
+<pre><code class="hljs language-fs"><span class="hljs-keyword">val</span> bounce:
+   delay       : TimeSpan        -&gt; <span class="hljs-comment">// Delay before trying to send `msgToSend`</span>
+   id          : Debouncer.Id    -&gt; <span class="hljs-comment">// Id used to identify the message in the debouncer. This is useful if you want to debounce differement message</span>
+   msgToSend   : <span class="hljs-symbol">'a</span>              -&gt; <span class="hljs-comment">// The `Msg` to sent</span>
+   currentState: Debouncer.State    <span class="hljs-comment">// Current debouncer state</span>
+              -&gt; Debouncer.State * Cmd&lt;Debouncer.SelfMessage&lt;<span class="hljs-symbol">'a</span>&gt;&gt;
+</code></pre>
+
+        </div>
+    </div>
+    <div><br/><div class="footer has-text-centered"><div class="container"><div class="content"><p><strong>Thoth</strong> by <a href="https://twitter.com/MangelMaxime">Maxime Mangel</a></p>
+<p>Powered by <a href="https://mangelmaxime.github.io/Fulma/">Fulma</a> and <a href="https://github.com/fable-compiler/static-page-generator">Fable static-page-generator</a>.</p>
+</div></div></div></div>
+    <script type="text/javascript">
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Get all "navbar-burger" elements
+            var $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+
+            // Check if there are any navbar burgers
+            if ($navbarBurgers.length > 0) {
+
+                // Add a click event on each of them
+                $navbarBurgers.forEach(function ($el) {
+                    $el.addEventListener('click', function () {
+
+                        var $target = document.getElementById("navMenu");
+
+                        // Toggle the class on both the "navbar-burger" and the "navbar-menu"
+                        $el.classList.toggle('is-active');
+                        $target.classList.toggle('is-active');
+
+                    });
+                });
+            }
+
+        });
+
+    </script>
+</body>
+
+</html>
