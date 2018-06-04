@@ -9,3 +9,4 @@ group Demos
     Fable.React
     Fulma
     dotnet-fable
+    Thoth.Elmish

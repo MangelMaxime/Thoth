@@ -4,9 +4,6 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/Thoth.Elmish/Thoth.Elmish.fsproj" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="src/Debouncer.fs" />
     <Compile Include="src/App.fs" />
   </ItemGroup>

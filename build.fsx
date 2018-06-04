@@ -102,8 +102,8 @@ Target.create "Clean" (fun _ ->
     ++ "docs/**/build"
     ++ "docs/scss/extra"
     ++ "docs/public"
-    ++ "demos/**/bin"
-    ++ "demos/**/obj"
+    ++ "demos/Thoth.Elmish.Demo/bin"
+    ++ "demos/Thoth.Elmish.Demo/obj"
     ++ "demos/Thoth.Elmish.Demo/output"
     |> Shell.cleanDirs
 )

@@ -17,7 +17,7 @@ type State =
 type Model =
     { Debouncer : Debouncer.State
       UserInput : string
-      State : State  }
+      State : State }
 
 type Msg =
     | DebouncerSelfMsg of Debouncer.SelfMessage<Msg>
