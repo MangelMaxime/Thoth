@@ -131,6 +131,10 @@ type User =
           Email = email
           Followers = followers }
 
+type MyList<'T> =
+| Nil
+| Cons of 'T * MyList<'T>
+
 let jsonRecord =
     """{ "a": 1.0,
          "b": 2.0,
@@ -779,7 +783,7 @@ Expecting an object with a field named `version` but instead got:
         ]
 
         testList "Auto" [
-            testCase "Auto.Generate works" <| fun _ ->
+            testCase "Auto.DecodeString works" <| fun _ ->
                 let json =
                     { a = 5
                       b = "bar"
@@ -796,5 +800,22 @@ Expecting an object with a field named `version` but instead got:
                 equal (Foo 14) r2.d
                 equal -1.5 (Map.find "ah" r2.e).a
                 equal 2.   (Map.find "oh" r2.e).b
+
+            testCase "Auto serialization works with recursive types" <| fun _ ->
+                let len xs =
+                    let rec lenInner acc = function
+                        | Cons(_,rest) -> lenInner (acc + 1) rest
+                        | Nil -> acc
+                    lenInner 0 xs
+                let li = Cons(1, Cons(2, Cons(3, Nil)))
+                let json = Encode.encodeAuto 4 li
+                // printfn "AUTO ENCODED MYLIST %s" json
+                let li2 = Auto.DecodeString(json, typeof< MyList<int> >) :?> MyList<int>
+                len li2 |> equal 3
+                match li with
+                | Cons(i1, Cons(i2, Cons(i3, Nil))) -> i1 + i2 + i3
+                | Cons(i,_) -> i
+                | Nil -> 0
+                |> equal 6
         ]
     ]

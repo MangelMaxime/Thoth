@@ -544,30 +544,26 @@ let private mixedArray msg (decoders: Decoder<obj>[]) (values: obj[]): Result<ob
 
 let rec private autoDecodeRecordsAndUnions (t: System.Type): Decoder<obj> =
     if FSharpType.IsRecord(t) then
-        let decoders =
-            FSharpType.GetRecordFields(t)
-            |> Array.map (fun fi -> fi.Name, autoDecoder fi.PropertyType)
         fun value ->
+            let decoders =
+                FSharpType.GetRecordFields(t)
+                |> Array.map (fun fi -> fi.Name, autoDecoder fi.PropertyType)
             object decoders value
             |> Result.map (fun xs -> FSharpValue.MakeRecord(t, List.toArray xs))
     elif FSharpType.IsUnion(t) then
-        let casesMap =
-            FSharpType.GetUnionCases(t)
-            |> Seq.map (fun uci ->
-                uci.Name, uci.GetFields() |> Array.map (fun fi -> autoDecoder fi.PropertyType))
-            |> Map
         fun (value: obj) ->
             let uci, values = FSharpValue.GetUnionFields(value, t)
             if Helpers.isString(value) then
                 FSharpValue.MakeUnion(uci, [||]) |> Ok
             else
-                match Map.tryFind uci.Name casesMap with
+                match FSharpType.GetUnionCases(t) |> Array.tryFind (fun x -> x.Name = uci.Name) with
                 | None -> FailMessage("Cannot find tag " + uci.Name) |> Error
-                | Some decoders ->
+                | Some uci ->
+                    let decoders = uci.GetFields() |> Array.map (fun fi -> autoDecoder fi.PropertyType)
                     mixedArray "union fields" decoders values
                     |> Result.map (fun values -> FSharpValue.MakeUnion(uci, List.toArray values))
     else
-        failwith "Class types cannot be automatically deserialized"
+        failwithf "Class types cannot be automatically deserialized: %s" t.FullName
 
 and private autoDecoder (t: System.Type): Decoder<obj> =
     if t.IsArray then
@@ -618,14 +614,12 @@ type Auto =
         autoDecoder t
 
     static member DecodeString<'T>(json: string, [<Inject>] ?resolver: ITypeResolver<'T>): 'T =
-        // TODO: Cache decoder?
         let decoder = Auto.GenerateDecoder(?resolver=resolver)
         match decodeString decoder json with
         | Ok x -> x
         | Error msg -> failwith msg
 
     static member DecodeString(json: string, t: System.Type): obj =
-        // TODO: Cache decoder?
         let decoder = Auto.GenerateDecoder(t)
         match decodeString decoder json with
         | Ok x -> x
