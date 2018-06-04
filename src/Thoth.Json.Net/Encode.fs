@@ -159,14 +159,7 @@ let encode (space: int) (token: JToken) : string =
 let encodeAuto (space: int) (value: obj) : string =
     // TODO: Can we set indentation space?
     let format = if space = 0 then Formatting.None else Formatting.Indented
-    let settings = JsonSerializerSettings(Converters = Converters.converters,
-                                          Formatting = format)
-    JsonConvert.SerializeObject(value, settings)
-
-let encodeWithConverter<'T> (converter: JsonConverter) (space: int) (value: obj) : string =
-    // TODO: Can we set indentation space?
-    let format = if space = 0 then Formatting.None else Formatting.Indented
-    let settings = JsonSerializerSettings(Converters = [|converter|],
+    let settings = JsonSerializerSettings(Converters = [|Converters.CacheConverter.Singleton|],
                                           Formatting = format)
     JsonConvert.SerializeObject(value, settings)
 

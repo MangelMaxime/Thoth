@@ -473,15 +473,14 @@ let optionalAt path valDecoder fallback decoder =
 type Auto =
     static member GenerateDecoder<'T> (): Decoder<'T> =
         let serializer = JsonSerializer()
-        for conv in Converters.converters do
-            serializer.Converters.Add(conv)
+        serializer.Converters.Add(Converters.CacheConverter.Singleton)
         fun token ->
             token.ToObject<'T>(serializer) |> Ok
 
     static member DecodeString<'T>(json: string): 'T =
-        let settings = JsonSerializerSettings(Converters = Converters.converters)
+        let settings = JsonSerializerSettings(Converters = [|Converters.CacheConverter.Singleton|])
         JsonConvert.DeserializeObject<'T>(json, settings)
 
     static member DecodeString(json: string, t: System.Type): obj =
-        let settings = JsonSerializerSettings(Converters = Converters.converters)
+        let settings = JsonSerializerSettings(Converters = [|Converters.CacheConverter.Singleton|])
         JsonConvert.DeserializeObject(json, t, settings)
