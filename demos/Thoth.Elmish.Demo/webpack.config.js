@@ -80,7 +80,6 @@ module.exports = {
             {
                 test: /\.s?[ac]ss$/,
                 use: [
-                    isProduction ? MiniCssExtractPlugin.loader : 'style-loader',
                     'css-loader',
                     'sass-loader',
                 ],

@@ -13,8 +13,8 @@
 The following demo works like that:
 
 1. Ask the user to type something
-2. User is typing
-3. When user **stop** typing, disable the input and inform the user.
+2. User **is typing**
+3. When user **stop typing**, **disable** the input and **inform** the user.
 4. After a **short period** of time, **reset** the demo.
 
 <div class="columns">
@@ -31,3 +31,65 @@ The following demo works like that:
 
 ## How to use ?
 
+
+1. Store the `Debouncer` instance in your model
+```fs
+// Model definition
+type Model =
+    { State : State
+      // ...
+    }
+
+// Model initialization
+let init () =
+    { Debouncer = Debouncer.create()
+      // ...
+    }
+```
+
+2. Register the message dedicated to the `Debouncer`
+
+```fs
+// Msg definition
+type Msg =
+    | DebouncerSelfMsg of Debouncer.SelfMessage<Msg> // This is the message used by the Debouncer
+    | ChangeValue of string // Message trigger each time the user type in the input
+    | EndOfInput // Message we want to debounce
+```
+
+3. Handle `DebouncerSelfMsg` in your update function
+
+```fs
+let private msg model =
+    match msg with
+    | DebouncerSelfMsg debouncerMsg ->
+        let (debouncerModel, debouncerCmd) = Debouncer.update debouncerMsg model.Debouncer
+        { model with Debouncer = debouncerModel }, debouncerCmd
+```
+
+*Please note we don't need to use `Cmd.map` over `debouncerCmd` because it return a `Msg` directly*
+
+4. Bounce `EndOfInput` each time the user type something in the input
+
+```fs
+let private msg model =
+    match msg with
+    | ChangeValue newValue ->
+        let (debouncerModel, debouncerCmd) =
+            model.Debouncer
+            |> Debouncer.bounce (TimeSpan.FromSeconds 1.5) "user_input" EndOfInput
+
+        { model with UserInput = newValue
+                     State = State.IsTyping
+                     Debouncer = debouncerModel }, Cmd.batch [ Cmd.map DebouncerSelfMsg debouncerCmd ]
+```
+
+`Debouncer.bounce` parameters:
+```fs
+val bounce:
+   delay       : TimeSpan        -> // Delay before trying to send `msgToSend`
+   id          : Debouncer.Id    -> // Id used to identify the message in the debouncer. This is useful if you want to debounce differement message
+   msgToSend   : 'a              -> // The `Msg` to sent
+   currentState: Debouncer.State    // Current debouncer state
+              -> Debouncer.State * Cmd<Debouncer.SelfMessage<'a>>
+```
