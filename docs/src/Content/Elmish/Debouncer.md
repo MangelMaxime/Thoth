@@ -24,7 +24,7 @@ The following demo works like that:
 </div>
 
 
-<script type="text/javascript" src="/demos/demo.js"></script>
+<script type="text/javascript" src="../demos/demo.js"></script>
 <script type="text/javascript">
     Demos.DebouncerDemo("debouncer_demo");
 </script>
