@@ -817,5 +817,13 @@ Expecting an object with a field named `version` but instead got:
                 | Cons(i,_) -> i
                 | Nil -> 0
                 |> equal 6
+
+            testCase "Auto.DecodeString works with camelCase" <| fun _ ->
+                let json = """{ "id" : 0, "name": "maxime", "email": "mail@domain.com", "followers": 0 }"""
+                let user = Auto.DecodeString<User>(json, isCamelCase=true)
+                equal "maxime" user.Name
+                equal 0 user.Id
+                equal 0 user.Followers
+                equal "mail@domain.com" user.Email
         ]
     ]
