@@ -528,6 +528,7 @@ let private object (decoders: (string * Decoder<obj>)[]) (value: obj) =
             match acc with
             | Error _ -> acc
             | Ok result ->
+                // TODO!!! Optional types shouldn't be required
                 field name decoder value
                 |> Result.map (fun v -> v::result))
 
@@ -552,12 +553,15 @@ let rec private autoDecodeRecordsAndUnions (t: System.Type): Decoder<obj> =
             |> Result.map (fun xs -> FSharpValue.MakeRecord(t, List.toArray xs))
     elif FSharpType.IsUnion(t) then
         fun (value: obj) ->
-            let uci, values = FSharpValue.GetUnionFields(value, t)
             if Helpers.isString(value) then
-                FSharpValue.MakeUnion(uci, [||]) |> Ok
+                let name = unbox<string> value
+                match FSharpType.GetUnionCases(t) |> Array.tryFind (fun x -> x.Name = name) with
+                | None -> FailMessage("Cannot find case " + name + " in " + t.FullName) |> Error
+                | Some uci -> FSharpValue.MakeUnion(uci, [||]) |> Ok
             else
+                let uci, values = FSharpValue.GetUnionFields(value, t)
                 match FSharpType.GetUnionCases(t) |> Array.tryFind (fun x -> x.Name = uci.Name) with
-                | None -> FailMessage("Cannot find tag " + uci.Name) |> Error
+                | None -> FailMessage("Cannot find case " + uci.Name + " in " + t.FullName) |> Error
                 | Some uci ->
                     let decoders = uci.GetFields() |> Array.map (fun fi -> autoDecoder fi.PropertyType)
                     mixedArray "union fields" decoders values
@@ -604,6 +608,14 @@ and private autoDecoder (t: System.Type): Decoder<obj> =
         then boxDecoder datetime
         elif fullname = typeof<System.DateTimeOffset>.FullName
         then boxDecoder datetimeOffset
+        // Fable compiles decimals as floats
+        elif fullname = typeof<decimal>.FullName
+        then boxDecoder float
+        // Fable compiles Guids as strings
+        elif fullname = typeof<System.Guid>.FullName
+        then boxDecoder string
+        elif fullname = typeof<obj>.FullName
+        then Ok
         else autoDecodeRecordsAndUnions t
 
 type Auto =
