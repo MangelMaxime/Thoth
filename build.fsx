@@ -13,6 +13,7 @@ open Fake.IO
 open Fake.IO.Globbing.Operators
 open Fake.IO.FileSystemOperators
 open Fake.Tools.Git
+open Fake.JavaScript
 
 #if MONO
 // prevent incorrect output encoding (e.g. https://github.com/fsharp/FAKE/issues/1196)
@@ -109,7 +110,8 @@ Target.create "Clean" (fun _ ->
 )
 
 Target.create "YarnInstall"(fun _ ->
-    yarn "install"
+    Yarn.install (fun o -> { o with WorkingDirectory = "./" })
+    //yarn "install"
 )
 
 Target.create "DotnetRestore" (fun _ ->
@@ -264,6 +266,8 @@ Target.create "Watch" (fun _ ->
 )
 
 Target.create "Build.Demos" (fun _ ->
+    Yarn.install (fun o -> { o with WorkingDirectory = "./demos/Thoth.Elmish.Demo/" })
+
     dotnet
         ("demos" </> "Thoth.Elmish.Demo")
         "restore"
