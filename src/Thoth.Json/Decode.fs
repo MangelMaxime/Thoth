@@ -543,9 +543,6 @@ let private mixedArray msg (decoders: Decoder<obj>[]) (values: obj[]): Result<ob
             | Error _ -> acc
             | Ok result -> decoder value |> Result.map (fun v -> v::result))
 
-let inline private lowerCase (s: string) =
-    s |> Seq.mapi (fun i c -> match i with | 0 -> (System.Char.ToLower c) | _ -> c)  |> System.String.Concat
-
 let rec private autoDecodeRecordsAndUnions (t: System.Type) (isCamelCase : bool) : Decoder<obj> =
     if FSharpType.IsRecord(t) then
         fun value ->
@@ -554,7 +551,7 @@ let rec private autoDecodeRecordsAndUnions (t: System.Type) (isCamelCase : bool)
                 |> Array.map (fun fi ->
                     let name =
                         if isCamelCase then
-                            lowerCase fi.Name
+                            fi.Name.[..0].ToLowerInvariant() + fi.Name.[1..]
                         else
                             fi.Name
                     name, autoDecoder isCamelCase fi.PropertyType)
