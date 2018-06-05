@@ -26,6 +26,7 @@ group netcorebuild
     nuget Fake.Core.ReleaseNotes
     nuget Fake.IO.FileSystem
     nuget Fake.Tools.Git
+    nuget Fake.JavaScript.Yarn
 
 group Docs
     storage:none
