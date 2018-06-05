@@ -474,13 +474,22 @@ type Auto =
     static member GenerateDecoder<'T> (?isCamelCase : bool): Decoder<'T> =
         let serializer = JsonSerializer()
         serializer.Converters.Add(Converters.CacheConverter.Singleton)
+        if defaultArg isCamelCase false then
+            serializer.ContractResolver <- new Serialization.CamelCasePropertyNamesContractResolver()
+
         fun token ->
             token.ToObject<'T>(serializer) |> Ok
 
     static member DecodeString<'T>(json: string, ?isCamelCase : bool): 'T =
         let settings = JsonSerializerSettings(Converters = [|Converters.CacheConverter.Singleton|])
+        if defaultArg isCamelCase false then
+            settings.ContractResolver <- new Serialization.CamelCasePropertyNamesContractResolver()
+
         JsonConvert.DeserializeObject<'T>(json, settings)
 
     static member DecodeString(json: string, t: System.Type, ?isCamelCase : bool): obj =
         let settings = JsonSerializerSettings(Converters = [|Converters.CacheConverter.Singleton|])
+        if defaultArg isCamelCase false then
+            settings.ContractResolver <- new Serialization.CamelCasePropertyNamesContractResolver()
+
         JsonConvert.DeserializeObject(json, t, settings)
