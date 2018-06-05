@@ -110,7 +110,7 @@ Target.create "Clean" (fun _ ->
 )
 
 Target.create "YarnInstall"(fun _ ->
-    Yarn.install (fun o -> { o with WorkingDirectory = "./" })
+    Yarn.install id
 )
 
 Target.create "DotnetRestore" (fun _ ->
