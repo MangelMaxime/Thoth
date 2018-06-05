@@ -471,16 +471,16 @@ let optionalAt path valDecoder fallback decoder =
     custom (optionalDecoder (at path value) valDecoder fallback) decoder
 
 type Auto =
-    static member GenerateDecoder<'T> (): Decoder<'T> =
+    static member GenerateDecoder<'T> (?isCamelCase : bool): Decoder<'T> =
         let serializer = JsonSerializer()
         serializer.Converters.Add(Converters.CacheConverter.Singleton)
         fun token ->
             token.ToObject<'T>(serializer) |> Ok
 
-    static member DecodeString<'T>(json: string): 'T =
+    static member DecodeString<'T>(json: string, ?isCamelCase : bool): 'T =
         let settings = JsonSerializerSettings(Converters = [|Converters.CacheConverter.Singleton|])
         JsonConvert.DeserializeObject<'T>(json, settings)
 
-    static member DecodeString(json: string, t: System.Type): obj =
+    static member DecodeString(json: string, t: System.Type, ?isCamelCase : bool): obj =
         let settings = JsonSerializerSettings(Converters = [|Converters.CacheConverter.Singleton|])
         JsonConvert.DeserializeObject(json, t, settings)
