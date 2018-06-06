@@ -170,7 +170,7 @@ let execNPX args =
     Process.execSimple
         (fun info ->
             { info with
-                FileName = "npx"
+                FileName = "C:/Users/selketjah/AppData/Local/Yarn/bin/npx.cmd"
                 Arguments = args
             }
         )
@@ -189,7 +189,8 @@ let execNPXNoTimeout args =
     |> ignore
 
 let buildSass _ =
-    execNPX "node-sass --output-style compressed --output docs/public/ docs/scss/main.scss"
+    Yarn.exec "run npx node-sass --output-style compressed --output docs/public/ docs/scss/main.scss" id
+    //execNPX "node-sass --output-style compressed --output docs/public/ docs/scss/main.scss"
 
 let applyAutoPrefixer _ =
     execNPX " postcss docs/public/main.css --use autoprefixer -o docs/public/main.css"
