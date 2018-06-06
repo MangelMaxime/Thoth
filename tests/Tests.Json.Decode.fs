@@ -168,8 +168,8 @@ let tests : Test =
                 a?child <- b
                 b?child <- a
 
-                let expected : Result<float, string>= Error "Error at path: `.`\nExpecting a float but decoder failed. Couldn\'t report given value due to circular structure. "
-                let actual = decodeValue "" float b
+                let expected : Result<float, string>= Error "Error at: `$`\nExpecting a float but decoder failed. Couldn\'t report given value due to circular structure. "
+                let actual = decodeValue "$" float b
 
                 equal expected actual
 
@@ -208,7 +208,7 @@ let tests : Test =
                 equal expected actual
 
             testCase "an invalid bool output an error" <| fun _ ->
-                let expected = Error("Error at path: `.`\nExpecting a boolean but instead got: 2")
+                let expected = Error("Error at: `$`\nExpecting a boolean but instead got: 2")
                 let actual =
                     decodeString bool "2"
 
@@ -222,14 +222,14 @@ let tests : Test =
                 equal expected actual
 
             testCase "an invalid int [invalid range: too big] output an error" <| fun _ ->
-                let expected = Error("Error at path: `.`\nExpecting an int but instead got: 2147483648\nReason: Value was either too large or too small for an int")
+                let expected = Error("Error at: `$`\nExpecting an int but instead got: 2147483648\nReason: Value was either too large or too small for an int")
                 let actual =
                     decodeString int "2147483648"
 
                 equal expected actual
 
             testCase "an invalid int [invalid range: too small] output an error" <| fun _ ->
-                let expected = Error("Error at path: `.`\nExpecting an int but instead got: -2147483649\nReason: Value was either too large or too small for an int")
+                let expected = Error("Error at: `$`\nExpecting an int but instead got: -2147483649\nReason: Value was either too large or too small for an int")
                 let actual =
                     decodeString int "-2147483649"
 
@@ -252,7 +252,7 @@ let tests : Test =
                 let expected =
                     Error(
                         """
-Error at path: `.height`
+Error at: `$.height`
 Expecting an object with a field named `height` but instead got:
 {
     "name": "maxime",
@@ -280,7 +280,7 @@ Expecting an object with a field named `height` but instead got:
                 let expected =
                     Error(
                         """
-Error at path: `.user.firstname`
+Error at: `$.user.firstname`
 Expecting an object with path `user.firstname` but instead got:
 {
     "user": {
@@ -310,7 +310,7 @@ Node `firstname` is unkown.
                 let expected =
                     Error(
                         """
-Error at path: `.[5]`
+Error at: `$.[5]`
 Expecting a longer array. Need index `5` but there are only `3` entries.
 [
     "maxime",
@@ -329,7 +329,7 @@ Expecting a longer array. Need index `5` but there are only `3` entries.
                 let expected =
                     Error(
                         """
-Error at path: `.[5]`
+Error at: `$.[5]`
 Expecting an array but instead got: 1
                         """.Trim())
 
@@ -363,7 +363,7 @@ Expecting an array but instead got: 1
                 |> function Ok v -> equal [["maxime2"]] v | Error er -> failwith er
 
             testCase "an invalid list output an error" <| fun _ ->
-                let expected = Error("Expecting a list but instead got: 1")
+                let expected = Error("Error at: `$`\nExpecting a list but instead got: 1")
 
                 let actual =
                     decodeString (list int) "1"
@@ -384,7 +384,7 @@ Expecting an array but instead got: 1
                 equal expected actual
 
             testCase "an invalid array output an error" <| fun _ ->
-                let expected = Error("Error at path: `.`\nExpecting an array but instead got: 1")
+                let expected = Error("Error at: `$`\nExpecting an array but instead got: 1")
 
                 let actual =
                     decodeString (array int) "1"
@@ -440,7 +440,7 @@ Expecting an array but instead got: 1
                 equal expected actual
 
             testCase "an invalid dict output an error" <| fun _ ->
-                let expected = Error("Error at path: `.`\nExpecting an object but instead got: 1")
+                let expected = Error("Error at: `$`\nExpecting an object but instead got: 1")
 
                 let actual =
                     decodeString (dict int) "1"
@@ -467,12 +467,11 @@ Expecting an array but instead got: 1
                 let expected =
                     Error (
                         """
-Error at path: `.`
 I run into the following problems:
 
-Error at path: `.`
+Error at: `$`
 Expecting a string but instead got: 1
-Error at path: `.`
+Error at: `$.test`
 Expecting an object with a field named `test` but instead got:
 1
                         """.Trim())
@@ -544,7 +543,7 @@ Expecting an object with a field named `test` but instead got:
 
             testCase "fail works" <| fun _ ->
                 let msg = "Failing because it's fun"
-                let expected = Error("Error at path: `.`\nI run into a `fail` decoder: " + msg)
+                let expected = Error("Error at: `$`\nI run into a `fail` decoder: " + msg)
                 let actual =
                     decodeString (fail msg) "true"
 
@@ -561,7 +560,7 @@ Expecting an object with a field named `test` but instead got:
                     | _ ->
                         fail <| "Trying to decode info, but version " + (version.ToString()) + "is not supported"
 
-                let info =
+                let info : Decoder<int> =
                     field "version" int
                     |> andThen infoHelp
 
@@ -584,11 +583,11 @@ Expecting an object with a field named `version` but instead got:
                 let infoHelp version : Decoder<int> =
                     match version with
                     | 4 ->
-                        succeed 1 
+                        succeed 1
                     | 3 ->
                         succeed 1
                     | _ ->
-                        fail <| "Tying to decode info, but version " + (version.ToString()) + "is not supported"
+                        fail <| "Trying to decode info, but version " + (version.ToString()) + "is not supported"
 
                 let info =
                     field "version" int
@@ -753,7 +752,7 @@ Expecting an object with a field named `version` but instead got:
                 equal expected actual
 
             testCase "map2 generate an error if invalid" <| fun _ ->
-                let expected = Error("Error at path: `.a`\nExpecting a float but instead got: \"invalid_a_field\"")
+                let expected = Error("Error at: `$.a`\nExpecting a float but instead got: \"invalid_a_field\"")
 
                 let decodePoint =
                     map2 Record2.Create

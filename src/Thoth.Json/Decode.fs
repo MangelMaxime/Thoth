@@ -80,12 +80,13 @@ let private errorToString (path : string, error) =
             "I run into the following problems:\n\n" + String.concat "\n" messages
         | FailMessage msg ->
             "I run into a `fail` decoder: " + msg
-    let path =
-        if path.[..0] = "." then
-            path
-        else
-            "." + path        
-    "Error at path: `" + path + "`\n" + reason
+
+    match error with
+    | BadOneOf _ ->
+        // Don't need to show the path here because each error case will show it's own path
+        reason
+    | _ ->
+        "Error at: `" + path + "`\n" + reason
 
 let unwrap (path : string) (decoder : Decoder<'T>) (value : obj) : 'T =
     match decoder path value with
@@ -114,7 +115,7 @@ let decodeString (decoder : Decoder<'T>) =
     fun value ->
         try
             let json = JS.JSON.parse value
-            decodeValue "" decoder json
+            decodeValue "$" decoder json
         with
             | ex ->
                 Error("Given an invalid JSON: " + ex.Message)
@@ -217,7 +218,7 @@ let at (fieldNames: string list) (decoder : Decoder<'value>) : Decoder<'value> =
 
 let index (requestedIndex: int) (decoder : Decoder<'value>) : Decoder<'value> =
     fun path value ->
-        let currentPath = path + "[" + (Operators.string requestedIndex) + "]"
+        let currentPath = path + ".[" + (Operators.string requestedIndex) + "]"
         if Helpers.isArray value then
             let vArray = unbox<obj array> value
             if requestedIndex < vArray.Length then
@@ -333,7 +334,8 @@ let fail (msg: string) : Decoder<'a> =
 let andThen (cb: 'a -> Decoder<'b>) (decoder : Decoder<'a>) : Decoder<'b> =
     fun path value ->
         match decodeValue path decoder value with
-        | Error error -> failwith error
+        | Error error ->
+            failwith error
         | Ok result ->
             cb result path value
 
