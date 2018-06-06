@@ -844,7 +844,6 @@ NUGET
       Fable.React (>= 3.1)
 
 GROUP netcorebuild
-STORAGE: NONE
 RESTRICTION: == netstandard2.0
 NUGET
   remote: https://www.nuget.org/api/v2

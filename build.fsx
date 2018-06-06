@@ -1,5 +1,8 @@
 #r "paket: groupref netcorebuild //"
 #load ".fake/build.fsx/intellisense.fsx"
+#if !FAKE
+  #r "./packages/netcorebuild/NETStandard.Library.NETFramework/build/net461/lib/netstandard.dll"
+#endif
 
 #nowarn "52"
 
