@@ -73,10 +73,6 @@ let run (cmd:string) dir args  =
     ) TimeSpan.MaxValue <> 0 then
         failwithf "Error while running '%s' with args: %s " cmd args
 
-let yarnTool = platformTool "yarn"
-
-let yarn = run yarnTool "./"
-
 let mono workingDir args =
     let code =
         Process.execSimple
@@ -143,7 +139,6 @@ Target.create "MochaTest" (fun _ ->
         //Run mocha tests
         let projDirOutput = projDir </> "bin"
         Yarn.exec ("run mocha " + projDirOutput) id
-        //yarn ("run mocha " + projDirOutput)
     )
 )
 
