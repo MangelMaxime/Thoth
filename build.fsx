@@ -142,7 +142,8 @@ Target.create "MochaTest" (fun _ ->
 
         //Run mocha tests
         let projDirOutput = projDir </> "bin"
-        yarn ("run mocha " + projDirOutput)
+        Yarn.exec ("run mocha " + projDirOutput) id
+        //yarn ("run mocha " + projDirOutput)
     )
 )
 
@@ -166,27 +167,16 @@ let docs = root </> "docs"
 let docsContent = docs </> "src" </> "Content"
 let buildMain = docs </> "build" </> "src" </> "Main.js"
 
-let execNPX args =
-    Process.execSimple
-        (fun info ->
-            { info with
-                FileName = "C:/Users/selketjah/AppData/Local/Yarn/bin/npx.cmd"
-                Arguments = args
-            }
-        )
-        (TimeSpan.FromSeconds 30.)
-    |> ignore
-
-let execNPXNoTimeout args =
-    Process.execSimple
-        (fun info ->
-            { info with
-                FileName = "npx"
-                Arguments = args
-            }
-        )
-        (TimeSpan.FromHours 2.)
-    |> ignore
+// let execNPXNoTimeout args =
+//     Process.execSimple
+//         (fun info ->
+//             { info with
+//                 FileName = "npx"
+//                 Arguments = args
+//             }
+//         )
+//         (TimeSpan.FromHours 2.)
+//     |> ignore
 
 let buildSass _ =
     Yarn.exec "run npx node-sass --output-style compressed --output docs/public/ docs/scss/main.scss" id
@@ -221,7 +211,8 @@ Target.create "Docs.Watch" (fun _ ->
             dotnet projDir "fable" "yarn-run fable-splitter --port free -- -c docs/splitter.config.js -w"
           }
           async {
-            execNPXNoTimeout "node-sass --output-style compressed --watch --output docs/public/ docs/scss/main.scss"
+            Yarn.exec "run npx node-sass --output-style compressed --watch --output docs/public/ docs/scss/main.scss" id
+            //execNPXNoTimeout "node-sass --output-style compressed --watch --output docs/public/ docs/scss/main.scss"
           }
         ]
         |> Async.Parallel
