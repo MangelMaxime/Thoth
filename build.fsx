@@ -190,10 +190,9 @@ let execNPXNoTimeout args =
 
 let buildSass _ =
     Yarn.exec "run npx node-sass --output-style compressed --output docs/public/ docs/scss/main.scss" id
-    //execNPX "node-sass --output-style compressed --output docs/public/ docs/scss/main.scss"
 
 let applyAutoPrefixer _ =
-    execNPX " postcss docs/public/main.css --use autoprefixer -o docs/public/main.css"
+    Yarn.exec "run npx postcss docs/public/main.css --use autoprefixer -o docs/public/main.css" id
 
 Target.create "Docs.Watch" (fun _ ->
     use watcher = new FileSystemWatcher(docsContent, "*.md")
