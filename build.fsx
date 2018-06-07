@@ -73,10 +73,6 @@ let run (cmd:string) dir args  =
     ) TimeSpan.MaxValue <> 0 then
         failwithf "Error while running '%s' with args: %s " cmd args
 
-let yarnTool = platformTool "yarn"
-
-let yarn = run yarnTool "./"
-
 let mono workingDir args =
     let code =
         Process.execSimple
@@ -142,7 +138,7 @@ Target.create "MochaTest" (fun _ ->
 
         //Run mocha tests
         let projDirOutput = projDir </> "bin"
-        yarn ("run mocha " + projDirOutput)
+        Yarn.exec ("run mocha " + projDirOutput) id
     )
 )
 
@@ -166,33 +162,22 @@ let docs = root </> "docs"
 let docsContent = docs </> "src" </> "Content"
 let buildMain = docs </> "build" </> "src" </> "Main.js"
 
-let execNPX args =
-    Process.execSimple
-        (fun info ->
-            { info with
-                FileName = "npx"
-                Arguments = args
-            }
-        )
-        (TimeSpan.FromSeconds 30.)
-    |> ignore
-
-let execNPXNoTimeout args =
-    Process.execSimple
-        (fun info ->
-            { info with
-                FileName = "npx"
-                Arguments = args
-            }
-        )
-        (TimeSpan.FromHours 2.)
-    |> ignore
+// let execNPXNoTimeout args =
+//     Process.execSimple
+//         (fun info ->
+//             { info with
+//                 FileName = "npx"
+//                 Arguments = args
+//             }
+//         )
+//         (TimeSpan.FromHours 2.)
+//     |> ignore
 
 let buildSass _ =
-    execNPX "node-sass --output-style compressed --output docs/public/ docs/scss/main.scss"
+    Yarn.exec "run npx node-sass --output-style compressed --output docs/public/ docs/scss/main.scss" id
 
 let applyAutoPrefixer _ =
-    execNPX " postcss docs/public/main.css --use autoprefixer -o docs/public/main.css"
+    Yarn.exec "run npx postcss docs/public/main.css --use autoprefixer -o docs/public/main.css" id
 
 Target.create "Docs.Watch" (fun _ ->
     use watcher = new FileSystemWatcher(docsContent, "*.md")
@@ -221,7 +206,8 @@ Target.create "Docs.Watch" (fun _ ->
             dotnet projDir "fable" "yarn-run fable-splitter --port free -- -c docs/splitter.config.js -w"
           }
           async {
-            execNPXNoTimeout "node-sass --output-style compressed --watch --output docs/public/ docs/scss/main.scss"
+            Yarn.exec "run npx node-sass --output-style compressed --watch --output docs/public/ docs/scss/main.scss" id
+            //execNPXNoTimeout "node-sass --output-style compressed --watch --output docs/public/ docs/scss/main.scss"
           }
         ]
         |> Async.Parallel
