@@ -2,7 +2,6 @@ module Thoth.Json.Net.Decode
 
 open Newtonsoft.Json
 open Newtonsoft.Json.Linq
-open System
 open System.IO
 
 module Helpers =
@@ -226,6 +225,16 @@ let keyValuePairs (decoder : Decoder<'value>) : Decoder<(string * 'value) list> 
             BadPrimitive ("an object", token)
             |> Error
 
+let tuple2 (decoder1: Decoder<'T1>) (decoder2: Decoder<'T2>) : Decoder<'T1 * 'T2> =
+    fun token ->
+        if token.Type = JTokenType.Array then
+            let values = token.Value<JArray>().Values() |> Seq.toArray
+            let a = unwrap decoder1 values.[0]
+            let b = unwrap decoder2 values.[1]
+            Ok(a, b)
+        else
+            BadPrimitive ("a tuple", token)
+            |> Error
 
 //////////////////////////////
 // Inconsistent Structure ///
@@ -460,3 +469,27 @@ let optional key valDecoder fallback decoder =
 
 let optionalAt path valDecoder fallback decoder =
     custom (optionalDecoder (at path value) valDecoder fallback) decoder
+
+type Auto =
+    static member GenerateDecoder<'T> (?isCamelCase : bool): Decoder<'T> =
+        let serializer = JsonSerializer()
+        serializer.Converters.Add(Converters.CacheConverter.Singleton)
+        if defaultArg isCamelCase false then
+            serializer.ContractResolver <- new Serialization.CamelCasePropertyNamesContractResolver()
+
+        fun token ->
+            token.ToObject<'T>(serializer) |> Ok
+
+    static member DecodeString<'T>(json: string, ?isCamelCase : bool): 'T =
+        let settings = JsonSerializerSettings(Converters = [|Converters.CacheConverter.Singleton|])
+        if defaultArg isCamelCase false then
+            settings.ContractResolver <- new Serialization.CamelCasePropertyNamesContractResolver()
+
+        JsonConvert.DeserializeObject<'T>(json, settings)
+
+    static member DecodeString(json: string, t: System.Type, ?isCamelCase : bool): obj =
+        let settings = JsonSerializerSettings(Converters = [|Converters.CacheConverter.Singleton|])
+        if defaultArg isCamelCase false then
+            settings.ContractResolver <- new Serialization.CamelCasePropertyNamesContractResolver()
+
+        JsonConvert.DeserializeObject(json, t, settings)

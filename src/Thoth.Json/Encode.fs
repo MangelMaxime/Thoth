@@ -1,25 +1,13 @@
 module Thoth.Json.Encode
 
+open Fable.Import
 open Fable.Core.JsInterop
-open System
 
 type Replacer = string -> obj -> obj
 
 /// **Description**
 /// Represents a JavaScript value
-type Value = Value
-
-module private FFI =
-
-    let identity (_:'a) : Value = importMember "./Encode.js"
-
-    let encodeNull : Value =  importMember "./Encode.js"
-
-    let encodeObject (_ : (string * Value) list) : Value = importMember "./Encode.js"
-
-    let stringify (_: obj) (_: Replacer option) (_: int) = importMember "./Encode.js"
-
-    let encodeList (_ : Value list) : Value =  importMember "./Encode.js"
+type Value = interface end
 
 ///**Description**
 /// Encode a string
@@ -32,8 +20,8 @@ module private FFI =
 ///
 ///**Exceptions**
 ///
-let string (value : string) : Value =
-    FFI.identity value
+let inline string (value : string) : Value =
+    !!value
 
 ///**Description**
 /// Encode an int
@@ -46,8 +34,8 @@ let string (value : string) : Value =
 ///
 ///**Exceptions**
 ///
-let int (value : int) : Value =
-    FFI.identity value
+let inline int (value : int) : Value =
+    !!value
 
 ///**Description**
 /// Encode a Float. `Infinity` and `NaN` are encoded as `null`.
@@ -60,8 +48,8 @@ let int (value : int) : Value =
 ///
 ///**Exceptions**
 ///
-let float (value : float) : Value =
-    FFI.identity value
+let inline float (value : float) : Value =
+    !!value
 
 ///**Description**
 /// Encode null
@@ -74,7 +62,7 @@ let float (value : float) : Value =
 ///**Exceptions**
 ///
 let nil : Value =
-    FFI.encodeNull
+    !!null
 
 ///**Description**
 /// Encode a bool
@@ -86,8 +74,8 @@ let nil : Value =
 ///
 ///**Exceptions**
 ///
-let bool (value : bool) : Value =
-    FFI.identity value
+let inline bool (value : bool) : Value =
+    !!value
 
 ///**Description**
 /// Encode an object
@@ -100,8 +88,11 @@ let bool (value : bool) : Value =
 ///
 ///**Exceptions**
 ///
-let object (values : (string * Value) list) : Value =
-    FFI.encodeObject values
+let object (values : (string * Value) seq) : Value =
+    let o = obj()
+    for (key, value) in values do
+        o?(key) <- value
+    !!o
 
 ///**Description**
 /// Encode an array
@@ -114,8 +105,8 @@ let object (values : (string * Value) list) : Value =
 ///
 ///**Exceptions**
 ///
-let array (values : array<Value>) : Value =
-    FFI.identity values
+let inline array (values : array<Value>) : Value =
+    !!values
 
 ///**Description**
 /// Encode a list
@@ -127,8 +118,9 @@ let array (values : array<Value>) : Value =
 ///
 ///**Exceptions**
 ///
-let list (values : Value list) : Value =
-    FFI.encodeList values
+let inline list (values : Value list) : Value =
+    // Don't use List.toArray as it may create a typed array
+    !!(JS.Array.from(box values :?> JS.Iterable<Value>))
 
 ///**Description**
 /// Encode a dictionary
@@ -157,7 +149,27 @@ let dict (values : Map<string, Value>) : Value =
 ///**Exceptions**
 ///
 let encode (space: int) (value: Value) : string =
-    FFI.stringify value None space
+    JS.JSON.stringify(value, !!null, space)
+
+let encodeAuto (space: int) (value: obj) : string =
+    JS.JSON.stringify(value, (fun _ v ->
+        match v with
+        | :? System.DateTime as d -> d.ToString("O") |> box
+        // Fable compiles both DateTime and DateTimeOffset as JS Date
+        // | :? System.DateTimeOffset as d -> d.ToString("O") |> box
+
+        // In Fable, int64 is a special class not a JS number
+        | :? int64 as i -> i.ToString() |> box
+        // | :? uint64 as i -> i.ToString() |> box
+
+        // Match string before so it's not considered an IEnumerable
+        | :? string -> v
+        | :? System.Collections.IEnumerable ->
+            if JS.Array.isArray(v)
+            then v
+            else JS.Array.from(v :?> JS.Iterable<obj>) |> box
+        | _ -> v
+    ), space)
 
 ///**Description**
 /// Encode an option

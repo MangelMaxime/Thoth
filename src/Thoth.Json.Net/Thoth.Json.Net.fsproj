@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Description>Elm inspire encoder and decoder for JSON targetting .Net and NetCore runtime</Description>
+        <Description>Elm-inspired encoder and decoder for JSON targetting .Net and NetCore runtime</Description>
         <PackageProjectUrl>https://github.com/MangelMaxime/Thoth</PackageProjectUrl>
         <PackageLicenseUrl>https://github.com/MangelMaxime/Thoth/blob/master/LICENSE.md</PackageLicenseUrl>
         <RepositoryUrl>https://github.com/MangelMaxime/Thoth</RepositoryUrl>
@@ -14,6 +14,7 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
     <ItemGroup>
+        <Compile Include="Converters.fs" />
         <Compile Include="Decode.fs" />
         <Compile Include="Encode.fs" />
     </ItemGroup>

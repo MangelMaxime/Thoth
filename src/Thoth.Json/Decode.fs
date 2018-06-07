@@ -3,27 +3,22 @@ module Thoth.Json.Decode
 open Fable.Core
 open Fable.Core.JsInterop
 open Fable.Import
-open System
 
 module Helpers =
+    [<Emit("typeof $0")>]
+    let jsTypeof (_ : obj) : string = jsNative
 
-    [<Emit("typeof $0 === 'string'")>]
-    let isString (_ : obj) : bool = jsNative
+    let inline isString (o: obj) : bool = o :? string
 
-    [<Emit("typeof $0 === 'boolean'")>]
-    let isBoolean (_ : obj) : bool = jsNative
+    let inline isBoolean (o: obj) : bool = o :? bool
 
-    [<Emit("typeof $0 === 'number'")>]
-    let isNumber (_ : obj) : bool = jsNative
+    let inline isNumber (o: obj) : bool = jsTypeof o = "number"
 
-    [<Emit("$0 instanceof Array")>]
-    let isArray (_ : obj) : bool = jsNative
+    let inline isArray (o: obj) : bool = JS.Array.isArray(o)
 
-    [<Emit("typeof $0 === 'object' && ($0 !== null)")>]
-    let isObject (_ : obj) : bool = jsNative
+    let inline isObject (o: obj) : bool = not (isNull o) && jsTypeof o = "object"
 
-    [<Emit("Number.isNaN($0)")>]
-    let isNaN (_: obj) : bool = jsNative
+    let inline isNaN (o: obj) : bool = JS.Number.isNaN(!!o)
 
     [<Emit("-2147483648 < $0 && $0 < 2147483647 && ($0 | 0) === $0")>]
     let isValidIntRange (_: obj) : bool = jsNative
@@ -37,11 +32,9 @@ module Helpers =
     [<Emit("JSON.stringify($0, null, 4) + ''")>]
     let anyToString (_: obj) : string= jsNative
 
-    [<Emit("typeof $0 === 'function'")>]
-    let isFunction (_: obj) : bool = jsNative
+    let inline isFunction (o: obj) : bool = jsTypeof o = "function"
 
-    [<Emit("Object.keys($0)")>]
-    let objectKeys (_: obj) : string list = jsNative
+    let inline objectKeys (o: obj) : string seq = upcast JS.Object.keys(o)
 
 type DecoderError =
     | BadPrimitive of string * obj
@@ -138,6 +131,22 @@ let int : Decoder<int> =
             else
                 Ok(unbox<int> value)
 
+let int64 : Decoder<int64> =
+    fun value ->
+        if Helpers.isNumber value
+        then unbox<int> value |> int64 |> Ok
+        elif Helpers.isString value
+        then unbox<string> value |> int64 |> Ok
+        else BadPrimitive("an int64", value) |> Error
+
+let uint64 : Decoder<uint64> =
+    fun value ->
+        if Helpers.isNumber value
+        then unbox<int> value |> uint64 |> Ok
+        elif Helpers.isString value
+        then unbox<string> value |> uint64 |> Ok
+        else BadPrimitive("an uint64", value) |> Error
+
 let bool : Decoder<bool> =
     fun value ->
         if Helpers.isBoolean value then
@@ -152,6 +161,17 @@ let float : Decoder<float> =
         else
             BadPrimitive("a float", value) |> Error
 
+let datetime : Decoder<System.DateTime> =
+    fun value ->
+        if Helpers.isString value
+        then System.DateTime.Parse(unbox<string> value) |> Ok
+        else BadPrimitive("a date", value) |> Error
+
+let datetimeOffset : Decoder<System.DateTimeOffset> =
+    fun value ->
+        if Helpers.isString value
+        then System.DateTimeOffset.Parse(unbox<string> value) |> Ok
+        else BadPrimitive("a date with offset", value) |> Error
 
 /////////////////////////
 // Object primitives ///
@@ -238,8 +258,20 @@ let keyValuePairs (decoder : Decoder<'value>) : Decoder<(string * 'value) list> 
         else
             value
             |> Helpers.objectKeys
-            |> List.map (fun key -> (key, value?(key) |> unwrap decoder))
+            |> Seq.map (fun key -> (key, value?(key) |> unwrap decoder))
+            |> Seq.toList
             |> Ok
+
+let tuple2 (decoder1: Decoder<'T1>) (decoder2: Decoder<'T2>) : Decoder<'T1 * 'T2> =
+    fun value ->
+        if Helpers.isArray value then
+            let value = unbox<obj array> value
+            let a = unwrap decoder1 value.[0]
+            let b = unwrap decoder2 value.[1]
+            Ok(a, b)
+        else
+            BadPrimitive ("a tuple", value)
+            |> Error
 
 //////////////////////////////
 // Inconsistent Structure ///
@@ -474,3 +506,138 @@ let optional key valDecoder fallback decoder =
 
 let optionalAt path valDecoder fallback decoder =
     custom (optionalDecoder (at path value) valDecoder fallback) decoder
+
+//////////////////
+// Reflection ///
+////////////////
+
+open Microsoft.FSharp.Reflection
+
+// As generics are erased by Fable, let's just do an unsafe cast for performance
+let inline private boxDecoder (d: Decoder<'T>): Decoder<obj> =
+    !!d // d >> Result.map box
+
+let inline private unboxDecoder (d: Decoder<obj>): Decoder<'T> =
+    !!d // d >> Result.map unbox
+
+let private object (decoders: (string * Decoder<obj>)[]) (value: obj) =
+    if not (Helpers.isObject value) || Helpers.isArray value then
+        BadPrimitive ("an object", value) |> Error
+    else
+        (decoders, Ok []) ||> Array.foldBack (fun (name, decoder) acc ->
+            match acc with
+            | Error _ -> acc
+            | Ok result ->
+                // TODO!!! Optional types shouldn't be required
+                field name decoder value
+                |> Result.map (fun v -> v::result))
+
+let private mixedArray msg (decoders: Decoder<obj>[]) (values: obj[]): Result<obj list, DecoderError> =
+    if decoders.Length <> values.Length then
+        sprintf "Expected %i %s but got %i" decoders.Length msg values.Length
+        |> FailMessage |> Error
+    else
+        (values, decoders, Ok [])
+        |||> Array.foldBack2 (fun value decoder acc ->
+            match acc with
+            | Error _ -> acc
+            | Ok result -> decoder value |> Result.map (fun v -> v::result))
+
+let rec private autoDecodeRecordsAndUnions (t: System.Type) (isCamelCase : bool) : Decoder<obj> =
+    if FSharpType.IsRecord(t) then
+        fun value ->
+            let decoders =
+                FSharpType.GetRecordFields(t)
+                |> Array.map (fun fi ->
+                    let name =
+                        if isCamelCase then
+                            fi.Name.[..0].ToLowerInvariant() + fi.Name.[1..]
+                        else
+                            fi.Name
+                    name, autoDecoder isCamelCase fi.PropertyType)
+            object decoders value
+            |> Result.map (fun xs -> FSharpValue.MakeRecord(t, List.toArray xs))
+    elif FSharpType.IsUnion(t) then
+        fun (value: obj) ->
+            if Helpers.isString(value) then
+                let name = unbox<string> value
+                match FSharpType.GetUnionCases(t) |> Array.tryFind (fun x -> x.Name = name) with
+                | None -> FailMessage("Cannot find case " + name + " in " + t.FullName) |> Error
+                | Some uci -> FSharpValue.MakeUnion(uci, [||]) |> Ok
+            else
+                let uci, values = FSharpValue.GetUnionFields(value, t)
+                match FSharpType.GetUnionCases(t) |> Array.tryFind (fun x -> x.Name = uci.Name) with
+                | None -> FailMessage("Cannot find case " + uci.Name + " in " + t.FullName) |> Error
+                | Some uci ->
+                    let decoders = uci.GetFields() |> Array.map (fun fi -> autoDecoder isCamelCase fi.PropertyType)
+                    mixedArray "union fields" decoders values
+                    |> Result.map (fun values -> FSharpValue.MakeUnion(uci, List.toArray values))
+    else
+        failwithf "Class types cannot be automatically deserialized: %s" t.FullName
+
+and private autoDecoder isCamelCase (t: System.Type) : Decoder<obj> =
+    if t.IsArray then
+        let decoder = t.GetElementType() |> autoDecoder isCamelCase
+        array decoder |> boxDecoder
+    elif t.IsGenericType then
+        if FSharpType.IsTuple(t) then
+            let decoders = FSharpType.GetTupleElements(t) |> Array.map (autoDecoder isCamelCase)
+            fun value ->
+                if Helpers.isArray value then
+                    mixedArray "tuple elements" decoders (unbox value)
+                    |> Result.map (fun xs -> FSharpValue.MakeTuple(List.toArray xs, t))
+                else BadPrimitive ("an array", value) |> Error
+        else
+            let fullname = t.GetGenericTypeDefinition().FullName
+            if fullname = typedefof<obj list>.FullName
+            then t.GenericTypeArguments.[0] |> (autoDecoder isCamelCase) |> list |> boxDecoder
+            elif fullname = typedefof< Map<string, obj> >.FullName
+            then
+                let decoder = t.GenericTypeArguments.[1] |> autoDecoder isCamelCase
+                (array (tuple2 string decoder) >> Result.map Map) |> boxDecoder
+            else autoDecodeRecordsAndUnions t isCamelCase
+    else
+        let fullname = t.FullName
+        if fullname = typeof<int>.FullName
+        then boxDecoder int
+        elif fullname = typeof<float>.FullName
+        then boxDecoder float
+        elif fullname = typeof<string>.FullName
+        then boxDecoder string
+        elif fullname = typeof<bool>.FullName
+        then boxDecoder bool
+        elif fullname = typeof<int64>.FullName
+        then boxDecoder int64
+        elif fullname = typeof<uint64>.FullName
+        then boxDecoder uint64
+        elif fullname = typeof<System.DateTime>.FullName
+        then boxDecoder datetime
+        elif fullname = typeof<System.DateTimeOffset>.FullName
+        then boxDecoder datetimeOffset
+        // Fable compiles decimals as floats
+        elif fullname = typeof<decimal>.FullName
+        then boxDecoder float
+        // Fable compiles Guids as strings
+        elif fullname = typeof<System.Guid>.FullName
+        then boxDecoder string
+        elif fullname = typeof<obj>.FullName
+        then Ok
+        else autoDecodeRecordsAndUnions t isCamelCase
+
+type Auto =
+    static member GenerateDecoder<'T>(?isCamelCase : bool, [<Inject>] ?resolver: ITypeResolver<'T>): Decoder<'T> =
+        let isCamelCase = defaultArg isCamelCase false
+        resolver.Value.ResolveType() |> (autoDecoder isCamelCase) |> unboxDecoder
+
+    static member DecodeString<'T>(json: string, ?isCamelCase : bool, [<Inject>] ?resolver: ITypeResolver<'T>): 'T =
+        let decoder = Auto.GenerateDecoder(?isCamelCase=isCamelCase, ?resolver=resolver)
+        match decodeString decoder json with
+        | Ok x -> x
+        | Error msg -> failwith msg
+
+    static member DecodeString(json: string, t: System.Type, ?isCamelCase : bool): obj =
+        let isCamelCase = defaultArg isCamelCase false
+        let decoder = autoDecoder isCamelCase t
+        match decodeString decoder json with
+        | Ok x -> x
+        | Error msg -> failwith msg

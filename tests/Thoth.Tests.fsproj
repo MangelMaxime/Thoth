@@ -4,8 +4,8 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../src/Thoth.Json/Thoth.Json.fsproj" />
     <ProjectReference Include="../src/Thoth.Json.Net/Thoth.Json.Net.fsproj" />
+    <ProjectReference Include="../src/Thoth.Json/Thoth.Json.fsproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Util.fs" />

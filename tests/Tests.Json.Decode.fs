@@ -2,8 +2,10 @@ module Tests.Decode
 
 #if FABLE_COMPILER
 open Fable.Core.JsInterop
+open Thoth.Json
 open Thoth.Json.Decode
 #else
+open Thoth.Json.Net
 open Thoth.Json.Net.Decode
 #endif
 open Util.Testing
@@ -106,6 +108,17 @@ type Record8 =
           g = g
           h = h }
 
+type MyUnion = Foo of int
+
+type Record9 =
+    { a: int
+      b: string
+      c: (bool * int) list
+      d: MyUnion
+      e: Map<string, Record2>
+      f: System.DateTime
+    }
+
 type User =
     { Id : int
       Name : string
@@ -117,6 +130,10 @@ type User =
           Name = name
           Email = email
           Followers = followers }
+
+type MyList<'T> =
+| Nil
+| Cons of 'T * MyList<'T>
 
 let jsonRecord =
     """{ "a": 1.0,
@@ -329,6 +346,17 @@ Expecting an array but instead got: 1
                     decodeString (list int) "[1, 2, 3]"
 
                 equal expected actual
+
+            testCase "nested lists work" <| fun _ ->
+                [ [ "maxime2" ] ]
+                |> List.map (fun d ->
+                    d
+                    |> List.map Encode.string
+                    |> Encode.list)
+                |> Encode.list
+                |> Encode.encode 4
+                |> decodeString (list (list string))
+                |> function Ok v -> equal [["maxime2"]] v | Error er -> failwith er
 
             testCase "an invalid list output an error" <| fun _ ->
                 let expected = Error("Expecting a list but instead got: 1")
@@ -754,4 +782,48 @@ Expecting an object with a field named `version` but instead got:
 
         ]
 
+        testList "Auto" [
+            testCase "Auto.DecodeString works" <| fun _ ->
+                let json =
+                    { a = 5
+                      b = "bar"
+                      c = [false, 3; true, 5; false, 10]
+                      d = Foo 14
+                      e = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
+                      f = System.DateTime.Now
+                    } |> Encode.encodeAuto 4
+                // printfn "AUTO ENCODED %s" json
+                let r2 = Auto.DecodeString<Record9>(json)
+                equal 5 r2.a
+                equal "bar" r2.b
+                equal [false, 3; true, 5; false, 10] r2.c
+                equal (Foo 14) r2.d
+                equal -1.5 (Map.find "ah" r2.e).a
+                equal 2.   (Map.find "oh" r2.e).b
+
+            testCase "Auto serialization works with recursive types" <| fun _ ->
+                let len xs =
+                    let rec lenInner acc = function
+                        | Cons(_,rest) -> lenInner (acc + 1) rest
+                        | Nil -> acc
+                    lenInner 0 xs
+                let li = Cons(1, Cons(2, Cons(3, Nil)))
+                let json = Encode.encodeAuto 4 li
+                // printfn "AUTO ENCODED MYLIST %s" json
+                let li2 = Auto.DecodeString(json, typeof< MyList<int> >) :?> MyList<int>
+                len li2 |> equal 3
+                match li with
+                | Cons(i1, Cons(i2, Cons(i3, Nil))) -> i1 + i2 + i3
+                | Cons(i,_) -> i
+                | Nil -> 0
+                |> equal 6
+
+            testCase "Auto.DecodeString works with camelCase" <| fun _ ->
+                let json = """{ "id" : 0, "name": "maxime", "email": "mail@domain.com", "followers": 0 }"""
+                let user = Auto.DecodeString<User>(json, isCamelCase=true)
+                equal "maxime" user.Name
+                equal 0 user.Id
+                equal 0 user.Followers
+                equal "mail@domain.com" user.Email
+        ]
     ]

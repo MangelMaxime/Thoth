@@ -2,14 +2,21 @@ source https://www.nuget.org/api/v2
 
 storage:none
 
-clitool dotnet-fable
+clitool dotnet-fable 2.0.0-alpha-011
+nuget Fable.Core 2.0.0-alpha-010
 nuget FSharp.Core redirects:force
-nuget Fable.Core
 nuget Fable.Import.Browser
-nuget Newtonsoft.Json 11.0.1
+nuget Newtonsoft.Json 11.0.2
 nuget Expecto
 nuget Fable.Elmish
 nuget Fable.PowerPack
+
+# Save Newtonsoft pkg in repo dir so we
+# can access it with F# interactive
+group newtonsoft
+    source https://www.nuget.org/api/v2
+    framework >= net45
+    nuget Newtonsoft.Json 11.0.2
 
 group netcorebuild
     source https://www.nuget.org/api/v2
@@ -32,9 +39,9 @@ group Docs
     source https://www.nuget.org/api/v2
     framework: netstandard2.0
 
-    clitool dotnet-fable
+    clitool dotnet-fable prerelease
     nuget FSharp.Core redirects:force
-    nuget Fable.Core
+    nuget Fable.Core prerelease
     nuget Fable.Import.Browser
     nuget Fable.React prerelease
     nuget Fable.PowerPack
