@@ -16,6 +16,7 @@ open Fake.IO
 open Fake.IO.Globbing.Operators
 open Fake.IO.FileSystemOperators
 open Fake.Tools.Git
+open Fake.JavaScript
 
 #if MONO
 // prevent incorrect output encoding (e.g. https://github.com/fsharp/FAKE/issues/1196)
@@ -32,12 +33,12 @@ let docFile = "./docs/Docs.fsproj"
 
 module Util =
 
-    let visitFile (visitor: string->string) (fileName : string) =
+    let visitFile (visitor: string -> string) (fileName : string) =
         File.ReadAllLines(fileName)
         |> Array.map (visitor)
         |> fun lines -> File.WriteAllLines(fileName, lines)
 
-    let replaceLines (replacer: string->Match->string option) (reg: Regex) (fileName: string) =
+    let replaceLines (replacer: string -> Match -> string option) (reg: Regex) (fileName: string) =
         fileName |> visitFile (fun line ->
             let m = reg.Match(line)
             if not m.Success
@@ -60,10 +61,6 @@ module Logger =
     let error str = Printf.kprintf (fun s -> use c = consoleColor ConsoleColor.Red in printf "%s" s) str
     let errorfn str = Printf.kprintf (fun s -> use c = consoleColor ConsoleColor.Red in printfn "%s" s) str
 
-let platformTool tool =
-    Process.tryFindFileOnPath tool
-    |> function Some t -> t | _ -> failwithf "%s not found" tool
-
 let run (cmd:string) dir args  =
     if Process.execSimple (fun info ->
         { info with
@@ -74,10 +71,6 @@ let run (cmd:string) dir args  =
         }
     ) TimeSpan.MaxValue <> 0 then
         failwithf "Error while running '%s' with args: %s " cmd args
-
-let yarnTool = platformTool "yarn"
-
-let yarn = run yarnTool "./"
 
 let mono workingDir args =
     let code =
@@ -112,7 +105,7 @@ Target.create "Clean" (fun _ ->
 )
 
 Target.create "YarnInstall"(fun _ ->
-    yarn "install"
+    Yarn.install id
 )
 
 Target.create "DotnetRestore" (fun _ ->
@@ -144,7 +137,7 @@ Target.create "MochaTest" (fun _ ->
 
         //Run mocha tests
         let projDirOutput = projDir </> "bin"
-        yarn ("run mocha " + projDirOutput)
+        Yarn.exec ("run mocha " + projDirOutput) id
     )
 )
 
@@ -168,33 +161,11 @@ let docs = root </> "docs"
 let docsContent = docs </> "src" </> "Content"
 let buildMain = docs </> "build" </> "src" </> "Main.js"
 
-let execNPX args =
-    Process.execSimple
-        (fun info ->
-            { info with
-                FileName = "npx"
-                Arguments = args
-            }
-        )
-        (TimeSpan.FromSeconds 30.)
-    |> ignore
-
-let execNPXNoTimeout args =
-    Process.execSimple
-        (fun info ->
-            { info with
-                FileName = "npx"
-                Arguments = args
-            }
-        )
-        (TimeSpan.FromHours 2.)
-    |> ignore
-
 let buildSass _ =
-    execNPX "node-sass --output-style compressed --output docs/public/ docs/scss/main.scss"
+    Yarn.exec "run node-sass --output-style compressed --output docs/public/ docs/scss/main.scss" id
 
 let applyAutoPrefixer _ =
-    execNPX " postcss docs/public/main.css --use autoprefixer -o docs/public/main.css"
+    Yarn.exec "run postcss docs/public/main.css --use autoprefixer -o docs/public/main.css" id
 
 Target.create "Docs.Watch" (fun _ ->
     use watcher = new FileSystemWatcher(docsContent, "*.md")
@@ -223,7 +194,10 @@ Target.create "Docs.Watch" (fun _ ->
             dotnet projDir "fable" "yarn-run fable-splitter --port free -- -c docs/splitter.config.js -w"
           }
           async {
-            execNPXNoTimeout "node-sass --output-style compressed --watch --output docs/public/ docs/scss/main.scss"
+            Yarn.exec "run node-sass --output-style compressed --watch --output docs/public/ docs/scss/main.scss" id
+          }
+          async {
+            Yarn.exec "run http-server -c-1 docs/public" id
           }
         ]
         |> Async.Parallel
@@ -267,6 +241,8 @@ Target.create "Watch" (fun _ ->
 )
 
 Target.create "Build.Demos" (fun _ ->
+    Yarn.install (fun o -> { o with WorkingDirectory = "./demos/Thoth.Elmish.Demo/" })
+
     dotnet
         ("demos" </> "Thoth.Elmish.Demo")
         "restore"
