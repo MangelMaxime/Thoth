@@ -12,7 +12,6 @@ nuget Fable.Elmish
 nuget Fable.PowerPack
 
 group netcorebuild
-    storage:none
     source https://www.nuget.org/api/v2
     framework: netstandard2.0
 

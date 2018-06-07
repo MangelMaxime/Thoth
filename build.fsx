@@ -1,5 +1,8 @@
 #r "paket: groupref netcorebuild //"
 #load ".fake/build.fsx/intellisense.fsx"
+#if !FAKE
+#r "./packages/netcorebuild/NETStandard.Library.NETFramework/build/net461/lib/netstandard.dll"
+#endif
 
 #nowarn "52"
 
@@ -30,12 +33,12 @@ let docFile = "./docs/Docs.fsproj"
 
 module Util =
 
-    let visitFile (visitor: string->string) (fileName : string) =
+    let visitFile (visitor: string -> string) (fileName : string) =
         File.ReadAllLines(fileName)
         |> Array.map (visitor)
         |> fun lines -> File.WriteAllLines(fileName, lines)
 
-    let replaceLines (replacer: string->Match->string option) (reg: Regex) (fileName: string) =
+    let replaceLines (replacer: string -> Match -> string option) (reg: Regex) (fileName: string) =
         fileName |> visitFile (fun line ->
             let m = reg.Match(line)
             if not m.Success
@@ -57,10 +60,6 @@ module Logger =
     let warnfn str = Printf.kprintf (fun s -> use c = consoleColor ConsoleColor.DarkYellow in printfn "%s" s) str
     let error str = Printf.kprintf (fun s -> use c = consoleColor ConsoleColor.Red in printf "%s" s) str
     let errorfn str = Printf.kprintf (fun s -> use c = consoleColor ConsoleColor.Red in printfn "%s" s) str
-
-let platformTool tool =
-    Process.tryFindFileOnPath tool
-    |> function Some t -> t | _ -> failwithf "%s not found" tool
 
 let run (cmd:string) dir args  =
     if Process.execSimple (fun info ->
@@ -162,22 +161,11 @@ let docs = root </> "docs"
 let docsContent = docs </> "src" </> "Content"
 let buildMain = docs </> "build" </> "src" </> "Main.js"
 
-// let execNPXNoTimeout args =
-//     Process.execSimple
-//         (fun info ->
-//             { info with
-//                 FileName = "npx"
-//                 Arguments = args
-//             }
-//         )
-//         (TimeSpan.FromHours 2.)
-//     |> ignore
-
 let buildSass _ =
-    Yarn.exec "run npx node-sass --output-style compressed --output docs/public/ docs/scss/main.scss" id
+    Yarn.exec "run node-sass --output-style compressed --output docs/public/ docs/scss/main.scss" id
 
 let applyAutoPrefixer _ =
-    Yarn.exec "run npx postcss docs/public/main.css --use autoprefixer -o docs/public/main.css" id
+    Yarn.exec "run postcss docs/public/main.css --use autoprefixer -o docs/public/main.css" id
 
 Target.create "Docs.Watch" (fun _ ->
     use watcher = new FileSystemWatcher(docsContent, "*.md")
@@ -206,8 +194,10 @@ Target.create "Docs.Watch" (fun _ ->
             dotnet projDir "fable" "yarn-run fable-splitter --port free -- -c docs/splitter.config.js -w"
           }
           async {
-            Yarn.exec "run npx node-sass --output-style compressed --watch --output docs/public/ docs/scss/main.scss" id
-            //execNPXNoTimeout "node-sass --output-style compressed --watch --output docs/public/ docs/scss/main.scss"
+            Yarn.exec "run node-sass --output-style compressed --watch --output docs/public/ docs/scss/main.scss" id
+          }
+          async {
+            Yarn.exec "run http-server -c-1 docs/public" id
           }
         ]
         |> Async.Parallel
