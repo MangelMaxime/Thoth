@@ -339,6 +339,9 @@ Target.create "Docs.Publish" (fun _ ->
     ==> "ExpectoTest"
     ==> "Publish"
 
+"DotnetRestore"
+    ==> "Watch"
+
 "Build.Demos"
     ==> "Docs.Setup"
 

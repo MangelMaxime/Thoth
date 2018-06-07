@@ -118,6 +118,9 @@ type User =
           Email = email
           Followers = followers }
 
+type SmallRecord =
+    { fieldA: string }
+
 let jsonRecord =
     """{ "a": 1.0,
          "b": 2.0,
@@ -438,7 +441,7 @@ Expecting an array but instead got: 1
 I run into the following problems:
 
 Expecting a string but instead got: 1
-Expecting an object with a field named `test` but instead got:
+Expecting an object but instead got:
 1
                         """.Trim())
 
@@ -749,6 +752,56 @@ Expecting an object with a field named `version` but instead got:
                     decodeString
                         userDecoder
                         """{ "id": 67, "email": "user@mail.com" }"""
+
+                equal expected actual
+
+            testCase "optional fail if value isn't an object" <| fun _ ->
+                let json = """[ { "fieldA": "foo"} ]"""
+                let expected =
+                    Error(
+                        """
+Expecting an object but instead got:
+[
+    {
+        "fieldA": "foo"
+    }
+]
+                        """.Trim())
+
+                let decoder =
+                    decode
+                        (fun x0 ->
+                          { fieldA = x0 } : SmallRecord )
+                        |> optional "fieldA" string ""
+
+                let actual =
+                    json
+                    |> decodeString decoder
+
+                equal expected actual
+
+            testCase "optionalAt fail if value isn't an object" <| fun _ ->
+                let json = """{ "prop1" : [ { "fieldA": "foo"} ] }"""
+                let expected =
+                    Error(
+                        """
+Expecting an object at `prop1` but instead got:
+[
+    {
+        "fieldA": "foo"
+    }
+]
+                        """.Trim())
+
+                let decoder =
+                    decode
+                        (fun x0 ->
+                          { fieldA = x0 } : SmallRecord )
+                        |> optionalAt [ "prop1"; "fieldA" ] string ""
+
+                let actual =
+                    json
+                    |> decodeString decoder
 
                 equal expected actual
 
