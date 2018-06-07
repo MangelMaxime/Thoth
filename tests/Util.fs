@@ -7,7 +7,7 @@ module Util.Testing
     let testCase (msg : string) (test : obj -> unit) = msg, test
 
     let equal expected actual: unit =
-        Assert.AreEqual(expected, actual)
+        Assert.AreEqual(actual, expected)
 
     type Test = string * seq<string * seq<string * (obj -> unit)>>
     #else
