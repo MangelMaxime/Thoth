@@ -574,6 +574,7 @@ Expecting an object with a field named `test` but instead got:
                 let expected =
                     Error(
                         """
+Error at: `$.version`
 Expecting an object with a field named `version` but instead got:
 {
     "info": 3,
