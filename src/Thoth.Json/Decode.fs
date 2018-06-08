@@ -561,18 +561,14 @@ let optional (key : string) (valDecoder : Decoder<'a>) (fallback : 'a) (decoder 
             (path, BadType("an object", v))
             |> Error
 
-// let optional key valDecoder fallback decoder =
-//     custom (optionalDecoder (field key value) valDecoder fallback) decoder
+let optionalAt (path : string list) (valDecoder : Decoder<'a>) (fallback : 'a) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
+    fun p v ->
+        if Helpers.isObject v then
+            custom (optionalDecoder p (at path value) valDecoder fallback) decoder p v
+        else
+            (p, BadType("an object", v))
+            |> Error
 
-// let optionalAt (path : string list) (valDecoder : Decoder<'a>) (fallback : 'a) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
-//     fun v ->
-//         if Helpers.isObject v then
-//             custom (optionalDecoder (at path value) valDecoder fallback) decoder v
-//         else
-//             BadType("an object", v)
-//             |> Error
-// let optionalAt path valDecoder fallback decoder =
-//     custom (optionalDecoder (at path value) valDecoder fallback) decoder
 
 //////////////////
 // Reflection ///
