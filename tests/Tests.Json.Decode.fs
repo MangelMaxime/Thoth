@@ -1,13 +1,13 @@
 module Tests.Decode
 
-// #if FABLE_COMPILER
+#if FABLE_COMPILER
 open Fable.Core.JsInterop
 open Thoth.Json
 open Thoth.Json.Decode
-// #else
-// open Thoth.Json.Net
-// open Thoth.Json.Net.Decode
-// #endif
+#else
+open Thoth.Json.Net
+open Thoth.Json.Net.Decode
+#endif
 open Util.Testing
 
 type Record2 =
