@@ -772,23 +772,23 @@ Expecting an object with a field named `version` but instead got:
 
         testList "Pipeline" [
 
-            // testCase "required works" <| fun _ ->
-            //     let expected =
-            //         Ok(User.Create 67 "user@mail.com" "" 0)
+            testCase "required works" <| fun _ ->
+                let expected =
+                    Ok(User.Create 67 "user@mail.com" "" 0)
 
-            //     let userDecoder =
-            //         decode User.Create
-            //             |> required "id" int
-            //             |> required "email" string
-            //             |> optional "name" string ""
-            //             |> hardcoded 0
+                let userDecoder =
+                    decode User.Create
+                        |> required "id" int
+                        |> required "email" string
+                        |> optional "name" string ""
+                        |> hardcoded 0
 
-            //     let actual =
-            //         decodeString
-            //             userDecoder
-            //             """{ "id": 67, "email": "user@mail.com" }"""
+                let actual =
+                    decodeString
+                        userDecoder
+                        """{ "id": 67, "email": "user@mail.com" }"""
 
-            //     equal expected actual
+                equal expected actual
 
             testCase "optional fail if value isn't an object" <| fun _ ->
                 let json = """[ { "fieldA": "foo"} ]"""
