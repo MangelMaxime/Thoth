@@ -770,76 +770,78 @@ Expecting an object with a field named `version` but instead got:
 
         ]
 
-        // testList "Pipeline" [
+        testList "Pipeline" [
 
-        //     testCase "required works" <| fun _ ->
-        //         let expected =
-        //             Ok(User.Create 67 "user@mail.com" "" 0)
+            // testCase "required works" <| fun _ ->
+            //     let expected =
+            //         Ok(User.Create 67 "user@mail.com" "" 0)
 
-        //         let userDecoder =
-        //             decode User.Create
-        //                 |> required "id" int
-        //                 |> required "email" string
-        //                 |> optional "name" string ""
-        //                 |> hardcoded 0
+            //     let userDecoder =
+            //         decode User.Create
+            //             |> required "id" int
+            //             |> required "email" string
+            //             |> optional "name" string ""
+            //             |> hardcoded 0
 
-        //         let actual =
-        //             decodeString
-        //                 userDecoder
-        //                 """{ "id": 67, "email": "user@mail.com" }"""
+            //     let actual =
+            //         decodeString
+            //             userDecoder
+            //             """{ "id": 67, "email": "user@mail.com" }"""
 
-        //         equal expected actual
+            //     equal expected actual
 
-        //             testCase "optional fail if value isn't an object" <| fun _ ->
-        //                 let json = """[ { "fieldA": "foo"} ]"""
-        //                 let expected =
-        //                     Error(
-        //                         """
-        // Expecting an object but instead got:
-        // [
-        //     {
-        //         "fieldA": "foo"
-        //     }
-        // ]
-        //                         """.Trim())
+            testCase "optional fail if value isn't an object" <| fun _ ->
+                let json = """[ { "fieldA": "foo"} ]"""
+                let expected =
+                    Error(
+                        """
+Error at: `$`
+Expecting an object but instead got:
+[
+    {
+        "fieldA": "foo"
+    }
+]
+                        """.Trim())
 
-        //                 let decoder =
-        //                     decode
-        //                         (fun x0 ->
-        //                           { fieldA = x0 } : SmallRecord )
-        //                         |> optional "fieldA" string ""
+                let decoder =
+                    decode
+                        (fun x0 ->
+                          { fieldA = x0 } : SmallRecord )
+                        |> optional "fieldA" string ""
 
-        //                 let actual =
-        //                     json
-        //                     |> decodeString decoder
+                let actual =
+                    json
+                    |> decodeString decoder
 
-        //                 equal expected actual
+                equal expected actual
 
-        //             testCase "optionalAt fail if value isn't an object" <| fun _ ->
-        //                 let json = """{ "prop1" : [ { "fieldA": "foo"} ] }"""
-        //                 let expected =
-        //                     Error(
-        //                         """
-        // Expecting an object at `prop1` but instead got:
-        // [
-        //     {
-        //         "fieldA": "foo"
-        //     }
-        // ]
-        //                         """.Trim())
+            testCase "optionalAt fail if value isn't an object" <| fun _ ->
+                let json = """{ "prop1" : [ { "fieldA": "foo"} ] }"""
+                let expected =
+                    Error(
+                        """
+Error at: `$.prop1`
+Expecting an object at `prop1` but instead got:
+[
+    {
+        "fieldA": "foo"
+    }
+]
+                        """.Trim())
 
-        //                 let decoder =
-        //                     decode
-        //                         (fun x0 ->
-        //                           { fieldA = x0 } : SmallRecord )
-        //                         |> optionalAt [ "prop1"; "fieldA" ] string ""
+                let decoder =
+                    decode
+                        (fun x0 ->
+                          { fieldA = x0 } : SmallRecord )
+                        |> optionalAt [ "prop1"; "fieldA" ] string ""
 
-        //                 let actual =
-        //                     json
-        //                     |> decodeString decoder
+                let actual =
+                    json
+                    |> decodeString decoder
 
-        //                 equal expected actual
-        // ]
+                equal expected actual
+        ]
 
         // testList "Auto" [
         //     testCase "Auto.DecodeString works" <| fun _ ->

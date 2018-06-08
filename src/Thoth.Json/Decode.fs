@@ -354,7 +354,7 @@ let nil (output : 'a) : Decoder<'a> =
         else
             (path, BadPrimitive("null", value)) |> Error
 
-let value v = Ok v
+let value _ v = Ok v
 
 let succeed (output : 'a) : Decoder<'a> =
     fun _ _ ->
@@ -510,68 +510,65 @@ let dict (decoder : Decoder<'value>) : Decoder<Map<string, 'value>> =
 // Pipeline ///
 //////////////
 
-// let custom d1 d2 = map2 (|>) d1 d2
+let custom d1 d2 = map2 (|>) d1 d2
 
-// // let hardcoded<'a, 'b, 'c> : 'a -> Decoder<('a -> 'b)> -> 'c -> Result<'b,DecoderError> = succeed >> custom
+let hardcoded<'a, 'b, 'c> : 'a -> Decoder<('a -> 'b)> -> string -> 'c -> Result<'b,DecoderError> = succeed >> custom
 
-// let required path (key : string) (valDecoder : Decoder<'a>) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
-//     custom (field key valDecoder) decoder path
+let required (key : string) (valDecoder : Decoder<'a>) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
+    custom (field key valDecoder) decoder
 
-// let requiredAt (path : string list) (valDecoder : Decoder<'a>) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
-//     custom (at path valDecoder) decoder
+let requiredAt (path : string list) (valDecoder : Decoder<'a>) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
+    custom (at path valDecoder) decoder
 
-// let decode output value = succeed output value
+let decode output value = succeed output value
 
-// /// Convert a `Decoder<Result<x, 'a>>` into a `Decoder<'a>`
-// let resolve d1 : Decoder<'a> =
-//     fun path value ->
-//         andThen id d1 path value
+/// Convert a `Decoder<Result<x, 'a>>` into a `Decoder<'a>`
+let resolve d1 : Decoder<'a> =
+    fun path value ->
+        andThen id d1 path value
 
-// let optionalDecoder path pathDecoder valDecoder fallback =
-//     let nullOr decoder =
-//         oneOf [ decoder; nil fallback ]
+let optionalDecoder path pathDecoder valDecoder fallback =
+    let nullOr decoder =
+        oneOf [ decoder; nil fallback ]
 
-//     let handleResult input =
-//         match decodeValue path pathDecoder input with
-//         | Ok rawValue ->
-//             // Field was present, so we try to decode the value
-//             match decodeValue path (nullOr valDecoder) rawValue with
-//             | Ok finalResult ->
-//                 succeed finalResult
+    let handleResult input  =
+        match decodeValueError pathDecoder path input with
+        | Ok rawValue ->
+            // Field was present, so we try to decode the value
+            match decodeValue path (nullOr valDecoder) rawValue with
+            | Ok finalResult ->
+                succeed finalResult
 
-//             | Error finalErr ->
-//                 fail finalErr
+            | Error finalErr ->
+                fail finalErr
 
-//         | Error ((BadType _ ) as errorInfo) ->
-//             // If the error is of type `BadType` coming from `at` decoder then return the error
-//             // This mean the json was expecting an object but got an array instead
-//             fun _ -> Error errorInfo
-//         | Error _ ->
-//             // Field was not present && type was valid
-//             succeed fallback
+        | Error ((_, (BadType _ )) as errorInfo) ->
+            // If the error is of type `BadType` coming from `at` decoder then return the error
+            // This mean the json was expecting an object but got an array instead
+            fun _ _ -> Error errorInfo
+        | Error _ ->
+            // Field was not present && type was valid
+            succeed fallback
 
-//     value
-//     |> andThen handleResult
+    value
+    |> andThen handleResult
 
-// let optional (key : string) (valDecoder : Decoder<'a>) (fallback : 'a) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
-//     fun v ->
-//         if Helpers.isObject v then
-//             custom (optionalDecoder (field key value) valDecoder fallback) decoder v
-//         else
-//             BadType("an object", v)
-//             |> Error
-// // let optional key valDecoder fallback decoder =
-// //     custom (optionalDecoder (field key value) valDecoder fallback) decoder
+let optional (key : string) (valDecoder : Decoder<'a>) (fallback : 'a) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
+    fun path v ->
+        if Helpers.isObject v then
+            custom (optionalDecoder path (field key value) valDecoder fallback) decoder path v
+        else
+            (path, BadType("an object", v))
+            |> Error
 
-// let optionalAt (path : string list) (valDecoder : Decoder<'a>) (fallback : 'a) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
-//     fun v ->
-//         if Helpers.isObject v then
-//             custom (optionalDecoder (at path value) valDecoder fallback) decoder v
-//         else
-//             BadType("an object", v)
-//             |> Error
-// let optionalAt path valDecoder fallback decoder =
-//     custom (optionalDecoder (at path value) valDecoder fallback) decoder
+let optionalAt (path : string list) (valDecoder : Decoder<'a>) (fallback : 'a) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
+    fun p v ->
+        if Helpers.isObject v then
+            custom (optionalDecoder p (at path value) valDecoder fallback) decoder p v
+        else
+            (p, BadType("an object", v))
+            |> Error
+
 
 //////////////////
 // Reflection ///
