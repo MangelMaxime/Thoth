@@ -66,7 +66,7 @@ let private errorToString (path : string, error) =
             "I run into a `fail` decoder: " + msg
         | Direct msg ->
             msg
-        
+
     match error with
     | BadOneOf _
     | Direct _ ->
@@ -138,6 +138,30 @@ let int : Decoder<int> =
             with
                 | _ -> (path, BadPrimitiveExtra("an int", token, "Value was either too large or too small for an int")) |> Error
 
+let int64 : Decoder<int64> =
+    fun path token ->
+        if token.Type = JTokenType.Integer then
+            Ok(token.Value<int64>())
+        elif token.Type = JTokenType.String then
+            try
+                token.Value<int64>() |> int64 |> Ok
+            with
+                | ex ->
+                    (path, BadPrimitiveExtra("an int64", token, ex.Message)) |> Error
+        else (path, BadPrimitive("an int64", token)) |> Error
+
+let uint64 : Decoder<uint64> =
+    fun path token ->
+        if token.Type = JTokenType.Integer then
+            Ok(token.Value<uint64>())
+        elif token.Type = JTokenType.String then
+            try
+                token.Value<uint64>() |> uint64 |> Ok
+            with
+                | ex ->
+                    (path, BadPrimitiveExtra("an uint64", token, ex.Message)) |> Error
+        else (path, BadPrimitive("an uint64", token)) |> Error
+
 let bool : Decoder<bool> =
     fun path token ->
         if token.Type = JTokenType.Boolean then
@@ -153,6 +177,21 @@ let float : Decoder<float> =
             Ok(token.Value<float>())
         else
             (path, BadPrimitive("a float", token)) |> Error
+
+let datetime : Decoder<System.DateTime> =
+    fun path token ->
+        if token.Type = JTokenType.Date then
+            try
+                System.DateTime.Parse(token.Value<string>()) |> Ok
+            with
+                | _ ->
+                    (path, BadPrimitiveExtra("a datetime", token, "Input string was not in a correct format. It is recommanded to use ISO 8601 format.")) |> Error
+        else
+            if token.Type = JTokenType.String then
+                (path, BadPrimitiveExtra("a datetime", token, "Input string was not in a correct format. It is recommanded to use ISO 8601 format.")) |> Error
+            else
+                (path, BadPrimitive("a datetime", token)) |> Error
+
 
 /////////////////////////
 // Object primitives ///

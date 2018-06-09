@@ -9,6 +9,7 @@ open Thoth.Json.Net
 open Thoth.Json.Net.Decode
 #endif
 open Util.Testing
+open System
 
 type Record2 =
     { a : float
@@ -237,6 +238,122 @@ let tests : Test =
                     decodeString int "-2147483649"
 
                 equal expected actual
+
+            testCase "an int64 works from number" <| fun _ ->
+                let expected = Ok 1000L
+                let actual =
+                    decodeString int64 "1000"
+
+                equal expected actual
+
+            testCase "an int64 works from string" <| fun _ ->
+                let expected = Ok 99L
+                let actual =
+                    decodeString int64 "\"99\""
+
+                equal expected actual
+
+            testCase "an int64 works output an error if incorrect string" <| fun _ ->
+                let expected =
+                    Error(
+                        """
+Error at: `$`
+Expecting an int64 but instead got: "maxime"
+Reason: Input string was not in a correct format.
+                        """.Trim())
+                let actual =
+                    decodeString int64 "\"maxime\""
+
+                equal expected actual
+
+            testCase "an uint64 works from number" <| fun _ ->
+                let expected = Ok 1000UL
+                let actual =
+                    decodeString uint64 "1000"
+
+                equal expected actual
+
+            testCase "an uint64 works from string" <| fun _ ->
+                let expected = Ok 1000UL
+                let actual =
+                    decodeString uint64 "\"1000\""
+
+                equal expected actual
+
+            testCase "an uint64 works output an error if incorrect string" <| fun _ ->
+                let expected =
+                    Error(
+                        """
+Error at: `$`
+Expecting an uint64 but instead got: "maxime"
+Reason: Input string was not in a correct format.
+                        """.Trim())
+                let actual =
+                    decodeString uint64 "\"maxime\""
+
+                equal expected actual
+
+            testCase "a datetime works" <| fun _ ->
+                let expected = Ok (new DateTime(2018, 10, 1, 11, 12, 55, DateTimeKind.Utc))
+                let actual =
+                    decodeString datetime "\"2018-10-01T11:12:55.00Z\""
+
+                equal expected actual
+
+            testCase "a datetime output an error if invalid string" <| fun _ ->
+                let expected =
+                    Error(
+                        """
+Error at: `$`
+Expecting a datetime but instead got: "invalid_string"
+Reason: Input string was not in a correct format. It is recommanded to use ISO 8601 format.
+                        """.Trim())
+
+                let actual =
+                    decodeString datetime "\"invalid_string\""
+
+                equal expected actual
+
+            testCase "a datetime works with TimeZone" <| fun _ ->
+                let localDate = DateTime(2018, 10, 1, 11, 12, 55, DateTimeKind.Local)
+
+                let expected = Ok (localDate)
+                let json = sprintf "\"%s\"" (localDate.ToString("O"))
+                let actual =
+                    decodeString datetime json
+
+                equal expected actual
+
+            // testCase "a datetimeOffset works" <| fun _ ->
+            //     let date1 = DateTime(2018, 6, 27, 0, 0, 0, DateTimeKind.Local)
+            //     let date2 = DateTime(2018, 6, 27, 0, 0, 0, DateTimeKind.Utc)
+
+            //     let inline padLeft2 c =  (fun (x: string) -> x.PadLeft(2, c)) << Operators.string
+
+            //     let json =
+            //         let delta = date1 - date2
+            //         let hours = padLeft2 '0' (Math.Abs delta.Hours)
+            //         let minutes = padLeft2 '0' delta.Minutes
+            //         let sign =
+            //             if delta.Hours < 0 then
+            //                 "-"
+            //             else
+            //                 "+"
+            //         let offset = sign + hours + ":" + minutes
+            //         sprintf "%i/%i/%i %s"
+            //             date2.Day
+            //             date2.Month
+            //             date2.Year
+            //             offset
+
+            //     let localDto = DateTimeOffset(date1)
+
+            //     let expected = Ok localDto
+            //     let json = sprintf "\"%s\"" (json)
+            //     let actual =
+            //         decodeString datetimeOffset json
+
+            //     equal expected actual
         ]
 
         testList "Object primitives" [

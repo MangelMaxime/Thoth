@@ -159,18 +159,26 @@ let int : Decoder<int> =
 
 let int64 : Decoder<int64> =
     fun path value ->
-        if Helpers.isNumber value
-        then unbox<int> value |> int64 |> Ok
-        elif Helpers.isString value
-        then unbox<string> value |> int64 |> Ok
+        if Helpers.isNumber value then
+            unbox<int> value |> int64 |> Ok
+        elif Helpers.isString value then
+            try
+                unbox<string> value |> int64 |> Ok
+            with
+                | ex ->
+                    (path, BadPrimitiveExtra("an int64", value, ex.Message)) |> Error
         else (path, BadPrimitive("an int64", value)) |> Error
 
 let uint64 : Decoder<uint64> =
     fun path value ->
-        if Helpers.isNumber value
-        then unbox<int> value |> uint64 |> Ok
-        elif Helpers.isString value
-        then unbox<string> value |> uint64 |> Ok
+        if Helpers.isNumber value then
+            unbox<int> value |> uint64 |> Ok
+        elif Helpers.isString value then
+            try
+                unbox<string> value |> uint64 |> Ok
+            with
+                | ex ->
+                    (path, BadPrimitiveExtra("an uint64", value, ex.Message)) |> Error
         else (path, BadPrimitive("an uint64", value)) |> Error
 
 let bool : Decoder<bool> =
@@ -189,15 +197,19 @@ let float : Decoder<float> =
 
 let datetime : Decoder<System.DateTime> =
     fun path value ->
-        if Helpers.isString value
-        then System.DateTime.Parse(unbox<string> value) |> Ok
-        else (path, BadPrimitive("a date", value)) |> Error
+        if Helpers.isString value then
+            try
+                System.DateTime.Parse(unbox<string> value) |> Ok
+            with
+                | _ ->
+                    (path, BadPrimitiveExtra("a datetime", value, "Input string was not in a correct format. It is recommanded to use ISO 8601 format.")) |> Error
+        else (path, BadPrimitive("a datetime", value)) |> Error
 
-let datetimeOffset : Decoder<System.DateTimeOffset> =
-    fun path value ->
-        if Helpers.isString value
-        then System.DateTimeOffset.Parse(unbox<string> value) |> Ok
-        else (path, BadPrimitive("a date with offset", value)) |> Error
+// let datetimeOffset : Decoder<System.DateTimeOffset> =
+//     fun path value ->
+//         if Helpers.isString value
+//         then System.DateTimeOffset.Parse(unbox<string> value) |> Ok
+//         else (path, BadPrimitive("a date with offset", value)) |> Error
 
 /////////////////////////
 // Object primitives ///
