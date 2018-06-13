@@ -439,6 +439,20 @@ Node `firstname` is unkown.
 
                 equal expected actual
 
+            testCase "at output an error if non-object in path" <| fun _ ->
+                let json = """{ "user": "maxime" }"""
+                let expected =
+                    Error(
+                        """
+Expecting an object at `user` but instead got:
+"maxime"
+                        """.Trim())
+
+                let actual =
+                    decodeString (at ["user"; "firstname"] string) json
+
+                equal expected actual
+
             testCase "index works" <| fun _ ->
                 let json = """["maxime", "alfonso", "steffen"]"""
                 let expected = Ok("alfonso")
