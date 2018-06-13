@@ -170,6 +170,100 @@ let float : Decoder<float> =
 // Object primitives ///
 ///////////////////////
 
+exception UndefinedValueException of string
+exception UndefinedPathException of string * string list
+exception NonObjectTypeException
+exception NonObjectTypeInPathException of (string * obj)
+exception DecoderException of DecoderError
+
+type IFieldGetters =
+    abstract Required: string -> Decoder<'a> -> 'a
+    abstract Optional: string -> Decoder<'a> -> Option<'a>
+
+type IAtGetters =
+    abstract Required: List<string> -> Decoder<'a> -> 'a
+    abstract Optional: List<string> -> Decoder<'a> -> Option<'a>
+
+type Getters = {
+    field:  IFieldGetters
+    at:     IAtGetters
+}
+
+let object (builder: Getters -> 'value) : Decoder<'value> =
+    fun value ->
+        if Helpers.isObject value then
+
+            let get (fieldName: string) (decoder: Decoder<'a>) (value: obj): 'a =
+                let fieldValue = value?(fieldName)
+                if Helpers.isDefined fieldValue then
+                    match decoder fieldValue with
+                    | Ok value      -> value
+                    | Error error   -> raise (DecoderException error)
+                else
+                    raise (UndefinedValueException fieldName)
+
+            let rec getPath (fieldNames: List<string>) (decoder: Decoder<'a>) (value: obj): 'a =
+                let mutable cValue = value
+                let mutable index = 0
+                try
+                    for fieldName in fieldNames do
+                        if Helpers.isObject cValue then
+                            let currentNode = cValue?(fieldName)
+                            if Helpers.isDefined currentNode then
+                                cValue <- currentNode
+                            else
+                                raise (UndefinedValueException fieldName)
+                        else
+                            raise NonObjectTypeException
+                        index <- index + 1
+
+                    unwrap decoder cValue
+                with
+                | UndefinedValueException fieldName ->
+                    raise (UndefinedPathException (fieldName, fieldNames))
+                | NonObjectTypeException ->
+                    let path = String.concat "." fieldNames.[..index-1]
+                    raise (NonObjectTypeInPathException (path, cValue))
+
+            try
+                builder {
+                  field = {
+                      new IFieldGetters with
+                        member __.Required fieldName decoder =
+                            get fieldName decoder value
+                        member __.Optional fieldName decoder =
+                            try get fieldName decoder value |> Some with
+                            | UndefinedValueException _ -> None
+                  }
+                  at = {
+                      new IAtGetters with
+                        member __.Required fieldNames decoder =
+                            getPath fieldNames decoder value
+                        member __.Optional fieldNames decoder =
+                            try getPath fieldNames decoder value |> Some with
+                            | NonObjectTypeInPathException _
+                            | UndefinedValueException _
+                            | UndefinedPathException _ -> None
+                  }
+                } |> Ok
+            with
+                | NonObjectTypeInPathException (fieldName, cValue) ->
+                    let path = fieldName
+                    BadType ("an object at `" + path + "`", cValue)
+                    |> Error
+                | UndefinedValueException fieldName ->
+                    BadField ("an object with a field named `" + fieldName + "`", value)
+                   |> Error
+                | UndefinedPathException (fieldName, fieldNames) ->
+                    let msg = "an object with path `" + (String.concat "." fieldNames) + "`"
+                    BadPath (msg, value, fieldName)
+                    |> Error
+                | DecoderException error ->
+                    Error error
+        else
+            BadType("an object", value)
+            |> Error
+
 let field (fieldName: string) (decoder : Decoder<'value>) : Decoder<'value> =
     fun value ->
         if Helpers.isObject value then
@@ -183,8 +277,6 @@ let field (fieldName: string) (decoder : Decoder<'value>) : Decoder<'value> =
             BadType("an object", value)
             |> Error
 
-exception UndefinedValueException of string
-exception NonObjectTypeException
 
 let at (fieldNames: string list) (decoder : Decoder<'value>) : Decoder<'value> =
     fun value ->
