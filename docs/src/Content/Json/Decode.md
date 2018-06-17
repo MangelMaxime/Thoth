@@ -1,8 +1,8 @@
 # Decode
 
-Turn Json value into F# values.
+Turn Json values into F# values.
 
-By using a Decoder instead of Fable `ofJson` function, you will have a guarantee that the JSON structure is correct.
+By using a Decoder instead of Fable `ofJson` function, you will be guaranteed that the JSON structure is correct.
 This is especially useful if you use Fable without sharing your domain with the server.
 
 *This module is inspired by [Json.Decode from Elm](http://package.elm-lang.org/packages/elm-lang/core/latest/Json-Decode)
@@ -23,7 +23,7 @@ then you get an `Ok` result, otherwise an `Error` explaining why the decoder fai
 
 ## Primitives decoders
 
-There are 4 primitives decoders:
+There are 4 primitive decoders:
 
 - `string : Decoder<String>`
 - `int : Decoder<Int>`
