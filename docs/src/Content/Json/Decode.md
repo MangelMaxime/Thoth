@@ -1,6 +1,6 @@
 # Decode
 
-Turn Json values into F# values.
+Turn JSON values into F# values.
 
 By using a Decoder instead of Fable `ofJson` function, you will be guaranteed that the JSON structure is correct.
 This is especially useful if you use Fable without sharing your domain with the server.
@@ -46,7 +46,7 @@ val it : Result<bool, string> = Ok true
 val it : Result<float, string> = Err "Expecting a float but instead got: true"
 ```
 
-With these 4 primitives decoders we can handle the basic Json values.
+With these 4 primitives decoders we can handle the basic JSON values.
 
 ## Collections
 
@@ -90,7 +90,7 @@ These two decoders only take into account the field or path. The object can have
 
 ### Map functions
 
-To get data from several fields and apply them into a record you will need to use the maps functions
+To get data from several fields and convert them into a record you will need to use the `map` functions
 like `map2`, `map3`, ..., `map8`.
 
 ```fsharp
@@ -113,7 +113,7 @@ val it : Result<Point, string> = Ok { X = 10; Y = 21 }
 
 ### Pipeline decode style
 
-When working with larger object or if you prefer to use the `(|>)` operator, you can use pipeline helpers.
+When working with a larger object or if you prefer to use the `(|>)` operator, you can use the pipeline helpers.
 
 ```fsharp
 open Thoth.Json.Decode
