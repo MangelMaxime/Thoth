@@ -72,7 +72,7 @@ let private msg model =
 
 *Please note we don't need to use `Cmd.map` over `debouncerCmd` because it return a `Msg` directly*
 
-4. Bounce `EndOfInput` each time the user type something in the input
+4. Bounce `EndOfInput` each time the user types something in the input
 
 ```fs
 let private msg model =
@@ -91,8 +91,8 @@ let private msg model =
 ```fs
 val bounce:
    delay       : TimeSpan        -> // Delay before trying to send `msgToSend`
-   id          : Debouncer.Id    -> // Id used to identify the message in the debouncer. This is useful if you want to debounce differement message
-   msgToSend   : 'a              -> // The `Msg` to sent
+   id          : Debouncer.Id    -> // Id used to identify the message in the debouncer. This is useful if you want to debounce a different message
+   msgToSend   : 'a              -> // The `Msg` to send
    currentState: Debouncer.State    // Current debouncer state
               -> Debouncer.State * Cmd<Debouncer.SelfMessage<'a>>
 ```
