@@ -75,7 +75,7 @@
 </code></pre>
 <p><em>Please note we don't need to use <code>Cmd.map</code> over <code>debouncerCmd</code> because it return a <code>Msg</code> directly</em></p>
 <ol start="4">
-<li>Bounce <code>EndOfInput</code> each time the user type something in the input</li>
+<li>Bounce <code>EndOfInput</code> each time the user types something in the input</li>
 </ol>
 <pre><code class="hljs language-fs"><span class="hljs-keyword">let</span> <span class="hljs-keyword">private</span> msg model =
     <span class="hljs-keyword">match</span> msg <span class="hljs-keyword">with</span>
@@ -91,8 +91,8 @@
 <p><code>Debouncer.bounce</code> parameters:</p>
 <pre><code class="hljs language-fs"><span class="hljs-keyword">val</span> bounce:
    delay       : TimeSpan        -&gt; <span class="hljs-comment">// Delay before trying to send `msgToSend`</span>
-   id          : Debouncer.Id    -&gt; <span class="hljs-comment">// Id used to identify the message in the debouncer. This is useful if you want to debounce differement message</span>
-   msgToSend   : <span class="hljs-symbol">'a</span>              -&gt; <span class="hljs-comment">// The `Msg` to sent</span>
+   id          : Debouncer.Id    -&gt; <span class="hljs-comment">// Id used to identify the message in the debouncer. This is useful if you want to debounce a different message</span>
+   msgToSend   : <span class="hljs-symbol">'a</span>              -&gt; <span class="hljs-comment">// The `Msg` to send</span>
    currentState: Debouncer.State    <span class="hljs-comment">// Current debouncer state</span>
               -&gt; Debouncer.State * Cmd&lt;Debouncer.SelfMessage&lt;<span class="hljs-symbol">'a</span>&gt;&gt;
 </code></pre>
