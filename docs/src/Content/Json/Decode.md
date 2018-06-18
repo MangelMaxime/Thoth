@@ -23,8 +23,6 @@ then you get an `Ok` result, otherwise an `Error` explaining why the decoder fai
 
 ## Primitives decoders
 
-There are 4 primitive decoders:
-
 - `string : Decoder<String>`
 - `int : Decoder<Int>`
 - `float : Decoder<Float>`
