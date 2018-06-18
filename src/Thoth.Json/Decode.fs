@@ -121,6 +121,12 @@ let string : Decoder<string> =
         else
             BadPrimitive("a string", value) |> Error
 
+let guid : Decoder<System.Guid> =
+    fun value ->
+        if Helpers.isString value
+        then unbox<string> value |> System.Guid.Parse |> Ok
+        else BadPrimitive("a guid", value) |> Error
+
 let int : Decoder<int> =
     fun value ->
         if not (Helpers.isNumber value)  then
@@ -136,7 +142,7 @@ let int64 : Decoder<int64> =
         if Helpers.isNumber value
         then unbox<int> value |> int64 |> Ok
         elif Helpers.isString value
-        then unbox<string> value |> int64 |> Ok
+        then unbox<string> value |> System.Int64.Parse |> Ok
         else BadPrimitive("an int64", value) |> Error
 
 let uint64 : Decoder<uint64> =
@@ -144,8 +150,16 @@ let uint64 : Decoder<uint64> =
         if Helpers.isNumber value
         then unbox<int> value |> uint64 |> Ok
         elif Helpers.isString value
-        then unbox<string> value |> uint64 |> Ok
+        then unbox<string> value |> System.UInt64.Parse |> Ok
         else BadPrimitive("an uint64", value) |> Error
+
+let bigint : Decoder<bigint> =
+    fun value ->
+        if Helpers.isNumber value
+        then unbox<int> value |> bigint |> Ok
+        elif Helpers.isString value
+        then unbox<string> value |> bigint.Parse |> Ok
+        else BadPrimitive("a bigint", value) |> Error
 
 let bool : Decoder<bool> =
     fun value ->
@@ -160,6 +174,14 @@ let float : Decoder<float> =
             Ok(unbox<float> value)
         else
             BadPrimitive("a float", value) |> Error
+
+let decimal : Decoder<decimal> =
+    fun value ->
+        if Helpers.isNumber value
+        then unbox<float> value |> decimal |> Ok
+        elif Helpers.isString value
+        then unbox<string> value |> System.Decimal.Parse |> Ok
+        else BadPrimitive("a decimal", value) |> Error
 
 let datetime : Decoder<System.DateTime> =
     fun value ->
@@ -608,14 +630,16 @@ and private autoDecoder isCamelCase (t: System.Type) : Decoder<obj> =
             else autoDecodeRecordsAndUnions t isCamelCase
     else
         let fullname = t.FullName
-        if fullname = typeof<int>.FullName
+        if fullname = typeof<bool>.FullName
+        then boxDecoder bool
+        elif fullname = typeof<string>.FullName
+        then boxDecoder string
+        elif fullname = typeof<int>.FullName
         then boxDecoder int
         elif fullname = typeof<float>.FullName
         then boxDecoder float
-        elif fullname = typeof<string>.FullName
-        then boxDecoder string
-        elif fullname = typeof<bool>.FullName
-        then boxDecoder bool
+        elif fullname = typeof<decimal>.FullName
+        then boxDecoder decimal
         elif fullname = typeof<int64>.FullName
         then boxDecoder int64
         elif fullname = typeof<uint64>.FullName
@@ -624,12 +648,8 @@ and private autoDecoder isCamelCase (t: System.Type) : Decoder<obj> =
         then boxDecoder datetime
         elif fullname = typeof<System.DateTimeOffset>.FullName
         then boxDecoder datetimeOffset
-        // Fable compiles decimals as floats
-        elif fullname = typeof<decimal>.FullName
-        then boxDecoder float
-        // Fable compiles Guids as strings
         elif fullname = typeof<System.Guid>.FullName
-        then boxDecoder string
+        then boxDecoder guid
         elif fullname = typeof<obj>.FullName
         then Ok
         else autoDecodeRecordsAndUnions t isCamelCase
