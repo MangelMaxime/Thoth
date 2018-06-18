@@ -279,9 +279,11 @@ let tuple2 (decoder1: Decoder<'T1>) (decoder2: Decoder<'T2>) : Decoder<'T1 * 'T2
 
 let option (d1 : Decoder<'value>) : Decoder<'value option> =
     fun value ->
-        match decodeValue d1 value with
-        | Ok v -> Ok (Some v)
-        | Error _ -> Ok None
+        // Fable uses non-strict equality for null checking so this will work with
+        // undefined too, but we may need a helper in case Fable implementation changes
+        if isNull value
+        then Ok None
+        else d1 value |> Result.map Some
 
 let oneOf (decoders : Decoder<'value> list) : Decoder<'value> =
     fun value ->
@@ -543,7 +545,18 @@ let private mixedArray msg (decoders: Decoder<obj>[]) (values: obj[]): Result<ob
             | Error _ -> acc
             | Ok result -> decoder value |> Result.map (fun v -> v::result))
 
-let rec private autoDecodeRecordsAndUnions (t: System.Type) (isCamelCase : bool) : Decoder<obj> =
+let rec private makeUnion t isCamelCase name (values: obj[]) =
+    match FSharpType.GetUnionCases(t) |> Array.tryFind (fun x -> x.Name = name) with
+    | None -> FailMessage("Cannot find case " + name + " in " + t.FullName) |> Error
+    | Some uci ->
+        if values.Length = 0 then
+            FSharpValue.MakeUnion(uci, [||]) |> Ok
+        else
+            let decoders = uci.GetFields() |> Array.map (fun fi -> autoDecoder isCamelCase fi.PropertyType)
+            mixedArray "union fields" decoders values
+            |> Result.map (fun values -> FSharpValue.MakeUnion(uci, List.toArray values))
+
+and private autoDecodeRecordsAndUnions (t: System.Type) (isCamelCase : bool) : Decoder<obj> =
     if FSharpType.IsRecord(t) then
         fun value ->
             let decoders =
@@ -561,17 +574,12 @@ let rec private autoDecodeRecordsAndUnions (t: System.Type) (isCamelCase : bool)
         fun (value: obj) ->
             if Helpers.isString(value) then
                 let name = unbox<string> value
-                match FSharpType.GetUnionCases(t) |> Array.tryFind (fun x -> x.Name = name) with
-                | None -> FailMessage("Cannot find case " + name + " in " + t.FullName) |> Error
-                | Some uci -> FSharpValue.MakeUnion(uci, [||]) |> Ok
-            else
-                let uci, values = FSharpValue.GetUnionFields(value, t)
-                match FSharpType.GetUnionCases(t) |> Array.tryFind (fun x -> x.Name = uci.Name) with
-                | None -> FailMessage("Cannot find case " + uci.Name + " in " + t.FullName) |> Error
-                | Some uci ->
-                    let decoders = uci.GetFields() |> Array.map (fun fi -> autoDecoder isCamelCase fi.PropertyType)
-                    mixedArray "union fields" decoders values
-                    |> Result.map (fun values -> FSharpValue.MakeUnion(uci, List.toArray values))
+                makeUnion t isCamelCase name [||]
+            elif Helpers.isArray(value) then
+                let values = unbox<obj[]> value
+                let name = unbox<string> values.[0]
+                makeUnion t isCamelCase name values.[1..]
+            else BadPrimitive("a string or array", value) |> Error
     else
         failwithf "Class types cannot be automatically deserialized: %s" t.FullName
 
@@ -589,7 +597,9 @@ and private autoDecoder isCamelCase (t: System.Type) : Decoder<obj> =
                 else BadPrimitive ("an array", value) |> Error
         else
             let fullname = t.GetGenericTypeDefinition().FullName
-            if fullname = typedefof<obj list>.FullName
+            if fullname = typedefof<obj option>.FullName
+            then t.GenericTypeArguments.[0] |> (autoDecoder isCamelCase) |> option |> boxDecoder
+            elif fullname = typedefof<obj list>.FullName
             then t.GenericTypeArguments.[0] |> (autoDecoder isCamelCase) |> list |> boxDecoder
             elif fullname = typedefof< Map<string, obj> >.FullName
             then
