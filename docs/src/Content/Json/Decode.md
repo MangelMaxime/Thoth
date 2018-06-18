@@ -44,7 +44,7 @@ val it : Result<bool, string> = Ok true
 val it : Result<float, string> = Err "Expecting a float but instead got: true"
 ```
 
-With these 4 primitives decoders we can handle the basic JSON values.
+With these primitives decoders we can handle the basic JSON values.
 
 ## Collections
 
