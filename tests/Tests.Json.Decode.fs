@@ -114,9 +114,9 @@ type Record9 =
     { a: int
       b: string
       c: (bool * int) list
-      d: MyUnion
-      e: Map<string, Record2>
-      f: System.DateTime
+      d: (MyUnion option) []
+    //   e: Map<string, Record2>
+      f: System.DateTimeOffset
     }
 
 type User =
@@ -487,12 +487,9 @@ Expecting an object with a field named `test` but instead got:
 
                 equal expectedValid actualValid
 
-                // TODO: Fix
-                // let expectedInvalidType = Ok(None)
-                // let actualInvalidType =
-                //     decodeString (option (field "name" int) ) json
-
-                // equal expectedInvalidType actualInvalidType
+                match decodeString (option (field "name" int) ) json with
+                | Error _ -> ()
+                | Ok _ -> failwith "Expected type error for `name` field"
 
                 let expectedMissingField = Ok(None)
                 let actualMissingField =
@@ -789,18 +786,19 @@ Expecting an object with a field named `version` but instead got:
                     { a = 5
                       b = "bar"
                       c = [false, 3; true, 5; false, 10]
-                      d = Foo 14
-                      e = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
-                      f = System.DateTime.Now
+                      d = [|Some(Foo 14); None|]
+                    //   e = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
+                      f = System.DateTimeOffset.Now
                     } |> Encode.encodeAuto 4
                 // printfn "AUTO ENCODED %s" json
                 let r2 = Auto.DecodeString<Record9>(json)
                 equal 5 r2.a
                 equal "bar" r2.b
                 equal [false, 3; true, 5; false, 10] r2.c
-                equal (Foo 14) r2.d
-                equal -1.5 (Map.find "ah" r2.e).a
-                equal 2.   (Map.find "oh" r2.e).b
+                equal (Some(Foo 14)) r2.d.[0]
+                equal None r2.d.[1]
+                // equal -1.5 (Map.find "ah" r2.e).a
+                // equal 2.   (Map.find "oh" r2.e).b
 
             testCase "Auto serialization works with recursive types" <| fun _ ->
                 let len xs =

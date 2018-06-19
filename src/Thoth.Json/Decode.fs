@@ -16,9 +16,11 @@ module Helpers =
 
     let inline isArray (o: obj) : bool = JS.Array.isArray(o)
 
-    let inline isObject (o: obj) : bool = not (isNull o) && jsTypeof o = "object"
+    let inline isObject (o: obj) : bool = not (isNull o) && jsTypeof o = "object" && not(JS.Array.isArray(o))
 
     let inline isNaN (o: obj) : bool = JS.Number.isNaN(!!o)
+
+    let inline isNull (o: obj): bool = isNull o
 
     [<Emit("-2147483648 < $0 && $0 < 2147483647 && ($0 | 0) === $0")>]
     let isValidIntRange (_: obj) : bool = jsNative
@@ -35,6 +37,11 @@ module Helpers =
     let inline isFunction (o: obj) : bool = jsTypeof o = "function"
 
     let inline objectKeys (o: obj) : string seq = upcast JS.Object.keys(o)
+    let inline asBool (o: obj): bool = unbox o
+    let inline asInt (o: obj): int = unbox o
+    let inline asFloat (o: obj): float = unbox o
+    let inline asString (o: obj): string = unbox o
+    let inline asArray (o: obj): obj[] = unbox o
 
 type DecoderError =
     | BadPrimitive of string * obj
@@ -117,14 +124,14 @@ let decodeString (decoder : Decoder<'T>) =
 let string : Decoder<string> =
     fun value ->
         if Helpers.isString value then
-            Ok(unbox<string> value)
+            Ok(Helpers.asString value)
         else
             BadPrimitive("a string", value) |> Error
 
 let guid : Decoder<System.Guid> =
     fun value ->
         if Helpers.isString value
-        then unbox<string> value |> System.Guid.Parse |> Ok
+        then Helpers.asString value |> System.Guid.Parse |> Ok
         else BadPrimitive("a guid", value) |> Error
 
 let int : Decoder<int> =
@@ -135,64 +142,64 @@ let int : Decoder<int> =
             if not (Helpers.isValidIntRange value) then
                 BadPrimitiveExtra("an int", value, "Value was either too large or too small for an int") |> Error
             else
-                Ok(unbox<int> value)
+                Ok(Helpers.asInt value)
 
 let int64 : Decoder<int64> =
     fun value ->
         if Helpers.isNumber value
-        then unbox<int> value |> int64 |> Ok
+        then Helpers.asInt value |> int64 |> Ok
         elif Helpers.isString value
-        then unbox<string> value |> System.Int64.Parse |> Ok
+        then Helpers.asString value |> System.Int64.Parse |> Ok
         else BadPrimitive("an int64", value) |> Error
 
 let uint64 : Decoder<uint64> =
     fun value ->
         if Helpers.isNumber value
-        then unbox<int> value |> uint64 |> Ok
+        then Helpers.asInt value |> uint64 |> Ok
         elif Helpers.isString value
-        then unbox<string> value |> System.UInt64.Parse |> Ok
+        then Helpers.asString value |> System.UInt64.Parse |> Ok
         else BadPrimitive("an uint64", value) |> Error
 
 let bigint : Decoder<bigint> =
     fun value ->
         if Helpers.isNumber value
-        then unbox<int> value |> bigint |> Ok
+        then Helpers.asInt value |> bigint |> Ok
         elif Helpers.isString value
-        then unbox<string> value |> bigint.Parse |> Ok
+        then Helpers.asString value |> bigint.Parse |> Ok
         else BadPrimitive("a bigint", value) |> Error
 
 let bool : Decoder<bool> =
     fun value ->
         if Helpers.isBoolean value then
-            Ok(unbox<bool> value)
+            Ok(Helpers.asBool value)
         else
             BadPrimitive("a boolean", value) |> Error
 
 let float : Decoder<float> =
     fun value ->
         if Helpers.isNumber value then
-            Ok(unbox<float> value)
+            Ok(Helpers.asFloat value)
         else
             BadPrimitive("a float", value) |> Error
 
 let decimal : Decoder<decimal> =
     fun value ->
         if Helpers.isNumber value
-        then unbox<float> value |> decimal |> Ok
+        then Helpers.asFloat value |> decimal |> Ok
         elif Helpers.isString value
-        then unbox<string> value |> System.Decimal.Parse |> Ok
+        then Helpers.asString value |> System.Decimal.Parse |> Ok
         else BadPrimitive("a decimal", value) |> Error
 
 let datetime : Decoder<System.DateTime> =
     fun value ->
         if Helpers.isString value
-        then System.DateTime.Parse(unbox<string> value) |> Ok
+        then System.DateTime.Parse(Helpers.asString value) |> Ok
         else BadPrimitive("a date", value) |> Error
 
 let datetimeOffset : Decoder<System.DateTimeOffset> =
     fun value ->
         if Helpers.isString value
-        then System.DateTimeOffset.Parse(unbox<string> value) |> Ok
+        then System.DateTimeOffset.Parse(Helpers.asString value) |> Ok
         else BadPrimitive("a date with offset", value) |> Error
 
 /////////////////////////
@@ -228,7 +235,7 @@ let at (fieldNames: string list) (decoder : Decoder<'value>) : Decoder<'value> =
 let index (requestedIndex: int) (decoder : Decoder<'value>) : Decoder<'value> =
     fun value ->
         if Helpers.isArray value then
-            let vArray = unbox<obj array> value
+            let vArray = Helpers.asArray value
             if requestedIndex < vArray.Length then
                 unwrap decoder (vArray.[requestedIndex]) |> Ok
             else
@@ -254,7 +261,7 @@ let index (requestedIndex: int) (decoder : Decoder<'value>) : Decoder<'value> =
 let list (decoder : Decoder<'value>) : Decoder<'value list> =
     fun value ->
         if Helpers.isArray value then
-            unbox<obj array> value
+            Helpers.asArray value
             |> Array.map (unwrap decoder)
             |> Array.toList
             |> Ok
@@ -265,7 +272,7 @@ let list (decoder : Decoder<'value>) : Decoder<'value list> =
 let array (decoder : Decoder<'value>) : Decoder<'value array> =
     fun value ->
         if Helpers.isArray value then
-            unbox<obj array> value
+            Helpers.asArray value
             |> Array.map (unwrap decoder)
             |> Ok
         else
@@ -274,7 +281,7 @@ let array (decoder : Decoder<'value>) : Decoder<'value array> =
 
 let keyValuePairs (decoder : Decoder<'value>) : Decoder<(string * 'value) list> =
     fun value ->
-        if not (Helpers.isObject value) || Helpers.isArray value then
+        if not (Helpers.isObject value) then
             BadPrimitive ("an object", value)
             |> Error
         else
@@ -287,7 +294,7 @@ let keyValuePairs (decoder : Decoder<'value>) : Decoder<(string * 'value) list> 
 let tuple2 (decoder1: Decoder<'T1>) (decoder2: Decoder<'T2>) : Decoder<'T1 * 'T2> =
     fun value ->
         if Helpers.isArray value then
-            let value = unbox<obj array> value
+            let value = Helpers.asArray value
             let a = unwrap decoder1 value.[0]
             let b = unwrap decoder2 value.[1]
             Ok(a, b)
@@ -301,11 +308,14 @@ let tuple2 (decoder1: Decoder<'T1>) (decoder2: Decoder<'T2>) : Decoder<'T1 * 'T2
 
 let option (d1 : Decoder<'value>) : Decoder<'value option> =
     fun value ->
-        // Fable uses non-strict equality for null checking so this will work with
-        // undefined too, but we may need a helper in case Fable implementation changes
-        if isNull value
+        if Helpers.isNull value
         then Ok None
-        else d1 value |> Result.map Some
+        else
+            // TODO: Review, is this OK?
+            match d1 value with
+            | Ok v -> Some v |> Ok
+            | Error(BadField _) -> Ok None
+            | Error er -> Error er
 
 let oneOf (decoders : Decoder<'value> list) : Decoder<'value> =
     fun value ->
@@ -537,15 +547,18 @@ let optionalAt path valDecoder fallback decoder =
 
 open Microsoft.FSharp.Reflection
 
+// TODO: Same API as for Thot.Json.Net.Decoder.BoxedDecoder
+type private BoxedDecoder = Decoder<obj>
+
 // As generics are erased by Fable, let's just do an unsafe cast for performance
-let inline private boxDecoder (d: Decoder<'T>): Decoder<obj> =
+let inline private boxDecoder (d: Decoder<'T>): BoxedDecoder =
     !!d // d >> Result.map box
 
-let inline private unboxDecoder (d: Decoder<obj>): Decoder<'T> =
+let inline private unboxDecoder (d: BoxedDecoder): Decoder<'T> =
     !!d // d >> Result.map unbox
 
-let private object (decoders: (string * Decoder<obj>)[]) (value: obj) =
-    if not (Helpers.isObject value) || Helpers.isArray value then
+let private object (decoders: (string * BoxedDecoder)[]) (value: obj) =
+    if not (Helpers.isObject value) then
         BadPrimitive ("an object", value) |> Error
     else
         (decoders, Ok []) ||> Array.foldBack (fun (name, decoder) acc ->
@@ -556,7 +569,7 @@ let private object (decoders: (string * Decoder<obj>)[]) (value: obj) =
                 field name decoder value
                 |> Result.map (fun v -> v::result))
 
-let private mixedArray msg (decoders: Decoder<obj>[]) (values: obj[]): Result<obj list, DecoderError> =
+let private mixedArray msg (decoders: BoxedDecoder[]) (values: obj[]): Result<obj list, DecoderError> =
     if decoders.Length <> values.Length then
         sprintf "Expected %i %s but got %i" decoders.Length msg values.Length
         |> FailMessage |> Error
@@ -578,7 +591,7 @@ let rec private makeUnion t isCamelCase name (values: obj[]) =
             mixedArray "union fields" decoders values
             |> Result.map (fun values -> FSharpValue.MakeUnion(uci, List.toArray values))
 
-and private autoDecodeRecordsAndUnions (t: System.Type) (isCamelCase : bool) : Decoder<obj> =
+and private autoDecodeRecordsAndUnions (t: System.Type) (isCamelCase : bool) : BoxedDecoder =
     if FSharpType.IsRecord(t) then
         fun value ->
             let decoders =
@@ -595,17 +608,17 @@ and private autoDecodeRecordsAndUnions (t: System.Type) (isCamelCase : bool) : D
     elif FSharpType.IsUnion(t) then
         fun (value: obj) ->
             if Helpers.isString(value) then
-                let name = unbox<string> value
+                let name = Helpers.asString value
                 makeUnion t isCamelCase name [||]
             elif Helpers.isArray(value) then
-                let values = unbox<obj[]> value
-                let name = unbox<string> values.[0]
+                let values = Helpers.asArray value
+                let name = Helpers.asString values.[0]
                 makeUnion t isCamelCase name values.[1..]
             else BadPrimitive("a string or array", value) |> Error
     else
         failwithf "Class types cannot be automatically deserialized: %s" t.FullName
 
-and private autoDecoder isCamelCase (t: System.Type) : Decoder<obj> =
+and private autoDecoder isCamelCase (t: System.Type) : BoxedDecoder =
     if t.IsArray then
         let decoder = t.GetElementType() |> autoDecoder isCamelCase
         array decoder |> boxDecoder
@@ -614,7 +627,7 @@ and private autoDecoder isCamelCase (t: System.Type) : Decoder<obj> =
             let decoders = FSharpType.GetTupleElements(t) |> Array.map (autoDecoder isCamelCase)
             fun value ->
                 if Helpers.isArray value then
-                    mixedArray "tuple elements" decoders (unbox value)
+                    mixedArray "tuple elements" decoders (Helpers.asArray value)
                     |> Result.map (fun xs -> FSharpValue.MakeTuple(List.toArray xs, t))
                 else BadPrimitive ("an array", value) |> Error
         else
@@ -644,6 +657,8 @@ and private autoDecoder isCamelCase (t: System.Type) : Decoder<obj> =
         then boxDecoder int64
         elif fullname = typeof<uint64>.FullName
         then boxDecoder uint64
+        elif fullname = typeof<bigint>.FullName
+        then boxDecoder bigint
         elif fullname = typeof<System.DateTime>.FullName
         then boxDecoder datetime
         elif fullname = typeof<System.DateTimeOffset>.FullName

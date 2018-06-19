@@ -23,18 +23,37 @@ let private readElements(reader: JsonReader, itemTypes: Type[], serializer: Json
         advance reader
     upcast elems
 
+let private getUci (reader: JsonReader) t name =
+    FSharpType.GetUnionCases(t)
+    |> Array.tryFind (fun uci -> uci.Name = name)
+    |> function
+        | Some uci -> uci
+        | None -> failwithf "Cannot find case %s in %s (path: %s)" name (string t) reader.Path
+
+let private makeUnion (reader: JsonReader) uci values =
+    try FSharpValue.MakeUnion(uci, values)
+    with ex -> failwithf "Cannot create union %s (case %s) with %A (path: %s): %s"
+                    (string uci.DeclaringType) uci.Name values reader.Path ex.Message
+
+
+type OptionConverter() =
+    inherit JsonConverter()
+    override __.CanConvert(t) =
+        t.Name = "FSharpOption`1" && t.Namespace = "Microsoft.FSharp.Core"
+    override __.WriteJson(writer, value, serializer) =
+        let t = value.GetType()
+        let _, fields = FSharpValue.GetUnionFields(value, t)
+        if fields.Length = 0
+        then writer.WriteNull()
+        else serializer.Serialize(writer, fields.[0])
+    override __.ReadJson(reader, t, _existingValue, serializer) =
+        match reader.TokenType with
+        | JsonToken.Null -> makeUnion reader (getUci reader t "None") [||]
+        | _ -> let value = serializer.Deserialize(reader, t.GenericTypeArguments.[0])
+               makeUnion reader (getUci reader t "Some") [|value|]
+
 type UnionConverter() =
     inherit JsonConverter()
-    let getUci (reader: JsonReader) t name =
-        FSharpType.GetUnionCases(t)
-        |> Array.tryFind (fun uci -> uci.Name = name)
-        |> function
-            | Some uci -> uci
-            | None -> failwithf "Cannot find case %s in %s (path: %s)" name (string t) reader.Path
-    let makeUnion (reader: JsonReader) uci values =
-        try FSharpValue.MakeUnion(uci, values)
-        with ex -> failwithf "Cannot create union %s (case %s) with %A (path: %s): %s"
-                        (string uci.DeclaringType) uci.Name values reader.Path ex.Message
     override __.CanConvert(t) =
         FSharpType.IsUnion t
         && t.Name <> "FSharpList`1"
@@ -125,6 +144,7 @@ type MapConverter() =
 
 let converters =
     [|
+        OptionConverter() :> JsonConverter
         UnionConverter() :> JsonConverter
         TupleConverter() :> JsonConverter
         MapConverter() :> JsonConverter
