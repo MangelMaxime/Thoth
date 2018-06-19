@@ -277,9 +277,11 @@ let keyValuePairs (decoder : Decoder<'value>) : Decoder<(string * 'value) list> 
 
 let option (d1 : Decoder<'value>) : Decoder<'value option> =
     fun value ->
-        match decodeValue d1 value with
-        | Ok v -> Ok (Some v)
-        | Error _ -> Ok None
+        // Fable uses non-strict equality for null checking so this will work with
+        // undefined too, but we may need a helper in case Fable implementation changes
+        if isNull value
+        then Ok None
+        else d1 value |> Result.map Some
 
 let oneOf (decoders : Decoder<'value> list) : Decoder<'value> =
     fun value ->
