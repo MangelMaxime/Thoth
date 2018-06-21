@@ -1,8 +1,8 @@
 # Encode
 
-Module for turning F# values into Json values.
+Module for turning F# values into JSON values.
 
-*This mobule is inspired by [Json.Encode from Elm](http://package.elm-lang.org/packages/elm-lang/core/latest/Json-Encode).*
+*This module is inspired by [Json.Encode from Elm](http://package.elm-lang.org/packages/elm-lang/core/latest/Json-Encode).*
 
 ## How to use it ?
 

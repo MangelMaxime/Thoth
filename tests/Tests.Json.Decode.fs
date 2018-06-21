@@ -115,9 +115,9 @@ type Record9 =
     { a: int
       b: string
       c: (bool * int) list
-      d: MyUnion
-      e: Map<string, Record2>
-      f: System.DateTime
+      d: (MyUnion option) []
+    //   e: Map<string, Record2>
+      f: System.DateTimeOffset
     }
 
 type User =
@@ -239,59 +239,59 @@ let tests : Test =
 
                 equal expected actual
 
-            testCase "an int64 works from number" <| fun _ ->
-                let expected = Ok 1000L
-                let actual =
-                    decodeString int64 "1000"
+            // testCase "an int64 works from number" <| fun _ ->
+            //     let expected = Ok 1000L
+            //     let actual =
+            //         decodeString int64 "1000"
 
-                equal expected actual
+            //     equal expected actual
 
-            testCase "an int64 works from string" <| fun _ ->
-                let expected = Ok 99L
-                let actual =
-                    decodeString int64 "\"99\""
+//             testCase "an int64 works from string" <| fun _ ->
+//                 let expected = Ok 99L
+//                 let actual =
+//                     decodeString int64 "\"99\""
 
-                equal expected actual
+//                 equal expected actual
 
-            testCase "an int64 works output an error if incorrect string" <| fun _ ->
-                let expected =
-                    Error(
-                        """
-Error at: `$`
-Expecting an int64 but instead got: "maxime"
-Reason: Input string was not in a correct format.
-                        """.Trim())
-                let actual =
-                    decodeString int64 "\"maxime\""
+//             testCase "an int64 works output an error if incorrect string" <| fun _ ->
+//                 let expected =
+//                     Error(
+//                         """
+// Error at: `$`
+// Expecting an int64 but instead got: "maxime"
+// Reason: Input string was not in a correct format.
+//                         """.Trim())
+//                 let actual =
+//                     decodeString int64 "\"maxime\""
 
-                equal expected actual
+//                 equal expected actual
 
-            testCase "an uint64 works from number" <| fun _ ->
-                let expected = Ok 1000UL
-                let actual =
-                    decodeString uint64 "1000"
+//             testCase "an uint64 works from number" <| fun _ ->
+//                 let expected = Ok 1000UL
+//                 let actual =
+//                     decodeString uint64 "1000"
 
-                equal expected actual
+//                 equal expected actual
 
-            testCase "an uint64 works from string" <| fun _ ->
-                let expected = Ok 1000UL
-                let actual =
-                    decodeString uint64 "\"1000\""
+//             testCase "an uint64 works from string" <| fun _ ->
+//                 let expected = Ok 1000UL
+//                 let actual =
+//                     decodeString uint64 "\"1000\""
 
-                equal expected actual
+//                 equal expected actual
 
-            testCase "an uint64 works output an error if incorrect string" <| fun _ ->
-                let expected =
-                    Error(
-                        """
-Error at: `$`
-Expecting an uint64 but instead got: "maxime"
-Reason: Input string was not in a correct format.
-                        """.Trim())
-                let actual =
-                    decodeString uint64 "\"maxime\""
+//             testCase "an uint64 works output an error if incorrect string" <| fun _ ->
+//                 let expected =
+//                     Error(
+//                         """
+// Error at: `$`
+// Expecting an uint64 but instead got: "maxime"
+// Reason: Input string was not in a correct format.
+//                         """.Trim())
+//                 let actual =
+//                     decodeString uint64 "\"maxime\""
 
-                equal expected actual
+//                 equal expected actual
 
             testCase "a datetime works" <| fun _ ->
                 let expected = Ok (new DateTime(2018, 10, 1, 11, 12, 55, DateTimeKind.Utc))
@@ -613,11 +613,9 @@ Expecting an object but instead got:
 
                 equal expectedValid actualValid
 
-                let expectedInvalidType = Ok(None)
-                let actualInvalidType =
-                    decodeString (option (field "name" int) ) json
-
-                equal expectedInvalidType actualInvalidType
+                match decodeString (option (field "name" int) ) json with
+                | Error _ -> ()
+                | Ok _ -> failwith "Expected type error for `name` field"
 
                 let expectedMissingField = Ok(None)
                 let actualMissingField =
@@ -966,16 +964,17 @@ Expecting an object at `prop1` but instead got:
         //             { a = 5
         //               b = "bar"
         //               c = [false, 3; true, 5; false, 10]
-        //               d = Foo 14
-        //               e = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
-        //               f = System.DateTime.Now
+        //               d = [|Some(Foo 14); None|]
+        //             //   e = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
+        //               f = System.DateTimeOffset.Now
         //             } |> Encode.encodeAuto 4
         //         // printfn "AUTO ENCODED %s" json
         //         let r2 = Auto.DecodeString<Record9>(json)
         //         equal 5 r2.a
         //         equal "bar" r2.b
         //         equal [false, 3; true, 5; false, 10] r2.c
-        //         equal (Foo 14) r2.d
+        //         equal (Some(Foo 14)) r2.d.[0]
+        //         equal None r2.d.[1]
         //         equal -1.5 (Map.find "ah" r2.e).a
         //         equal 2.   (Map.find "oh" r2.e).b
 

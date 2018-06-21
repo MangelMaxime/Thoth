@@ -13,25 +13,51 @@ open Newtonsoft.Json
 let private advance(reader: JsonReader) =
     reader.Read() |> ignore
 
+/// ATTENTION: The reader should be located in the first element of the array (not in StartArray)
 let private readElements(reader: JsonReader, itemTypes: Type[], serializer: JsonSerializer): obj seq =
     let mutable index = 0
     let elems = ResizeArray()
-    if reader.TokenType = JsonToken.StartArray then
-        advance reader
     while reader.TokenType <> JsonToken.EndArray do
         elems.Add(serializer.Deserialize(reader, itemTypes.[index]))
         index <- index + 1
         advance reader
     upcast elems
 
+let private getUci (reader: JsonReader) t name =
+    FSharpType.GetUnionCases(t)
+    |> Array.tryFind (fun uci -> uci.Name = name)
+    |> function
+        | Some uci -> uci
+        | None -> failwithf "Cannot find case %s in %s (path: %s)" name (string t) reader.Path
+
+let private makeUnion (reader: JsonReader) uci values =
+    try FSharpValue.MakeUnion(uci, values)
+    with ex -> failwithf "Cannot create union %s (case %s) with %A (path: %s): %s"
+                    (string uci.DeclaringType) uci.Name values reader.Path ex.Message
+
+
+type OptionConverter() =
+    inherit JsonConverter()
+    override __.CanConvert(t) =
+        t.Name = "FSharpOption`1" && t.Namespace = "Microsoft.FSharp.Core"
+    override __.WriteJson(writer, value, serializer) =
+        let t = value.GetType()
+        let _, fields = FSharpValue.GetUnionFields(value, t)
+        if fields.Length = 0
+        then writer.WriteNull()
+        else serializer.Serialize(writer, fields.[0])
+    override __.ReadJson(reader, t, _existingValue, serializer) =
+        match reader.TokenType with
+        | JsonToken.Null -> makeUnion reader (getUci reader t "None") [||]
+        | _ -> let value = serializer.Deserialize(reader, t.GenericTypeArguments.[0])
+               makeUnion reader (getUci reader t "Some") [|value|]
+
 type UnionConverter() =
     inherit JsonConverter()
-    let getUci t name =
-        FSharpType.GetUnionCases(t)
-        |> Array.find (fun uci -> uci.Name = name)
     override __.CanConvert(t) =
         FSharpType.IsUnion t
         && t.Name <> "FSharpList`1"
+        && t.Name <> "FSharpOption`1"
     override __.WriteJson(writer, value, serializer) =
         let t = value.GetType()
         let uci, fields = FSharpValue.GetUnionFields(value, t)
@@ -46,16 +72,21 @@ type UnionConverter() =
         match reader.TokenType with
         | JsonToken.String ->
             let name = serializer.Deserialize(reader, typeof<string>) :?> string
-            FSharpValue.MakeUnion(getUci t name, [||])
+            makeUnion reader (getUci reader t name) [||]
         | JsonToken.StartArray ->
             advance reader
-            let name = reader.Value :?> string
-            let uci = getUci t name
+            let name =
+                match reader.TokenType with
+                | JsonToken.String -> reader.Value :?> string
+                | token -> failwithf "Expecting string (case name) as first element of array but got %s (path: %s)"
+                                        (Enum.GetName(typeof<JsonToken>, token)) reader.Path
+            let uci = getUci reader t name
             advance reader
             let itemTypes = uci.GetFields() |> Array.map (fun pi -> pi.PropertyType)
-            let values = readElements(reader, itemTypes, serializer)
-            FSharpValue.MakeUnion(uci, Seq.toArray values)
-        | _ -> failwith "invalid token"
+            let values = readElements(reader, itemTypes, serializer) |> Seq.toArray
+            makeUnion reader uci values
+        | token -> failwithf "Expecting string or array for %s but got %s (path: %s)"
+                        (string t) (Enum.GetName(typeof<JsonToken>, token)) reader.Path
 
 type TupleConverter() =
     inherit JsonConverter()
@@ -67,10 +98,14 @@ type TupleConverter() =
     override __.ReadJson(reader, t, _existingValue, serializer) =
         match reader.TokenType with
         | JsonToken.StartArray ->
-            let values = readElements(reader, FSharpType.GetTupleElements(t), serializer)
-            FSharpValue.MakeTuple(Seq.toArray values, t)
+            advance reader
+            let values = readElements(reader, FSharpType.GetTupleElements(t), serializer) |> Seq.toArray
+            try FSharpValue.MakeTuple(values, t)
+            with ex -> failwithf "Cannot create tuple %s with %A (path: %s): %s"
+                            (string t) values reader.Path ex.Message
         | JsonToken.Null -> null // {"tuple": null}
-        | _ -> failwith "invalid token"
+        | token -> failwithf "Expecting array for tuple got %s (path: %s)"
+                        (Enum.GetName(typeof<JsonToken>, token)) reader.Path
 
 type MapConverter() =
     inherit JsonConverter()
@@ -98,6 +133,7 @@ type MapConverter() =
             let meth = listType.GetMethod("Add")
             advance reader
             while reader.TokenType <> JsonToken.EndArray do
+                advance reader
                 let values = readElements(reader, mapTypes, serializer)
                 let tuple = FSharpValue.MakeTuple(Seq.toArray values, tupleType)
                 meth.Invoke(list, [|tuple|]) |> ignore
@@ -108,6 +144,7 @@ type MapConverter() =
 
 let converters =
     [|
+        OptionConverter() :> JsonConverter
         UnionConverter() :> JsonConverter
         TupleConverter() :> JsonConverter
         MapConverter() :> JsonConverter
