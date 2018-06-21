@@ -106,23 +106,27 @@ Target.create "Clean" (fun _ ->
 
 Target.create "YarnInstall"(fun _ ->
     Yarn.install id
+    Yarn.install (fun o -> { o with WorkingDirectory = "./docs/" })
 )
 
 Target.create "DotnetRestore" (fun _ ->
     srcFiles
     ++ testsGlob
+    ++ docFile
     |> Seq.iter (fun proj ->
         DotNet.restore id proj
 ))
 
 
 let dotnet workingDir command args =
-    DotNet.exec (fun p ->
+    let result =
+        DotNet.exec (fun p ->
                 { p with WorkingDirectory = workingDir
                          DotNetCliPath = "dotnet" } )
-        command
-        args
-    |> ignore
+            command
+            args
+
+    if not result.OK then failwithf "dotnet failed with code %i" result.ExitCode
 
 let build project framework =
     DotNet.build (fun p ->
@@ -338,6 +342,12 @@ Target.create "Docs.Publish" (fun _ ->
     ==> "MochaTest"
     ==> "ExpectoTest"
     ==> "Publish"
+
+"DotnetRestore"
+    ==> "Watch"
+
+"Docs.Setup"
+    <== [ "DotnetRestore" ]
 
 "Build.Demos"
     ==> "Docs.Setup"

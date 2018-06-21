@@ -16,7 +16,8 @@ module Helpers =
 
     let inline isArray (o: obj) : bool = JS.Array.isArray(o)
 
-    let inline isObject (o: obj) : bool = not (isNull o) && jsTypeof o = "object" && not(JS.Array.isArray(o))
+    [<Emit("Object.getPrototypeOf($0 || false) === Object.prototype")>]
+    let isObject (_ : obj) : bool = jsNative
 
     let inline isNaN (o: obj) : bool = JS.Number.isNaN(!!o)
 
@@ -45,12 +46,14 @@ module Helpers =
 
 type DecoderError =
     | BadPrimitive of string * obj
+    | BadType of string * obj
     | BadPrimitiveExtra of string * obj * string
     | BadField of string * obj
     | BadPath of string * obj * string
     | TooSmallArray of string * obj
     | FailMessage of string
     | BadOneOf of string list
+    | Direct of string
 
 type Decoder<'T> = obj -> Result<'T, DecoderError>
 
@@ -72,6 +75,8 @@ let private errorToString =
     function
     | BadPrimitive (msg, value) ->
         genericMsg msg value false
+    | BadType (msg, value) ->
+        genericMsg msg value true
     | BadPrimitiveExtra (msg, value, reason) ->
         genericMsg msg value false + "\nReason: " + reason
     | BadField (msg, value) ->
@@ -84,6 +89,8 @@ let private errorToString =
         "I run into the following problems:\n\n" + String.concat "\n" messages
     | FailMessage msg ->
         "I run into a `fail` decoder: " + msg
+    | Direct msg ->
+        msg
 
 let unwrap (decoder : Decoder<'T>) (value : obj) : 'T =
     match decoder value with
@@ -96,17 +103,25 @@ let unwrap (decoder : Decoder<'T>) (value : obj) : 'T =
 // Runners ///
 /////////////
 
-let decodeValue (decoder : Decoder<'T>) =
+let private decodeValueError (decoder : Decoder<'T>) =
     fun value ->
         try
             match decoder value with
             | Ok success ->
                 Ok success
             | Error error ->
-                Error (errorToString error)
+                Error error
         with
             | ex ->
-                Error ex.Message
+                Error (Direct ex.Message)
+
+let decodeValue (decoder : Decoder<'T>) =
+    fun value ->
+        match decodeValueError decoder value with
+        | Ok success ->
+            Ok success
+        | Error error ->
+            Error (errorToString error)
 
 let decodeString (decoder : Decoder<'T>) =
     fun value ->
@@ -208,28 +223,45 @@ let datetimeOffset : Decoder<System.DateTimeOffset> =
 
 let field (fieldName: string) (decoder : Decoder<'value>) : Decoder<'value> =
     fun value ->
-        let fieldValue = value?(fieldName)
-        if Helpers.isDefined fieldValue then
-            decoder fieldValue
+        if Helpers.isObject value then
+            let fieldValue = value?(fieldName)
+            if Helpers.isDefined fieldValue then
+                decoder fieldValue
+            else
+                BadField ("an object with a field named `" + fieldName + "`", value)
+                |> Error
         else
-            BadField ("an object with a field named `" + fieldName + "`", value)
+            BadType("an object", value)
             |> Error
+
+exception UndefinedValueException of string
+exception NonObjectTypeException
 
 let at (fieldNames: string list) (decoder : Decoder<'value>) : Decoder<'value> =
     fun value ->
         let mutable cValue = value
+        let mutable index = 0
         try
             for fieldName in fieldNames do
-                let currentNode = cValue?(fieldName)
-                if Helpers.isDefined currentNode then
-                    cValue <- currentNode
+                if Helpers.isObject cValue then
+                    let currentNode = cValue?(fieldName)
+                    if Helpers.isDefined currentNode then
+                        cValue <- currentNode
+                    else
+                        raise (UndefinedValueException fieldName)
                 else
-                    failwith fieldName
+                    raise NonObjectTypeException
+                index <- index + 1
+
             unwrap decoder cValue |> Ok
         with
-            | ex ->
+            | NonObjectTypeException ->
+                let path = String.concat "." fieldNames.[..index-1]
+                BadType ("an object at `" + path + "`", cValue)
+                |> Error
+            | UndefinedValueException fieldName ->
                 let msg = "an object with path `" + (String.concat "." fieldNames) + "`"
-                BadPath (msg, value, ex.Message)
+                BadPath (msg, value, fieldName)
                 |> Error
 
 let index (requestedIndex: int) (decoder : Decoder<'value>) : Decoder<'value> =
@@ -518,7 +550,7 @@ let optionalDecoder pathDecoder valDecoder fallback =
         oneOf [ decoder; nil fallback ]
 
     let handleResult input =
-        match decodeValue pathDecoder input with
+        match decodeValueError pathDecoder input with
         | Ok rawValue ->
             // Field was present, so we try to decode the value
             match decodeValue (nullOr valDecoder) rawValue with
@@ -528,18 +560,32 @@ let optionalDecoder pathDecoder valDecoder fallback =
             | Error finalErr ->
                 fail finalErr
 
+        | Error ((BadType _ ) as errorInfo) ->
+            // If the error is of type `BadType` coming from `at` decoder then return the error
+            // This mean the json was expecting an object but got an array instead
+            fun _ -> Error errorInfo
         | Error _ ->
-            // Field was not present
+            // Field was not present && type was valid
             succeed fallback
 
     value
     |> andThen handleResult
 
-let optional key valDecoder fallback decoder =
-    custom (optionalDecoder (field key value) valDecoder fallback) decoder
+let optional (key : string) (valDecoder : Decoder<'a>) (fallback : 'a) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
+    fun v ->
+        if Helpers.isObject v then
+            custom (optionalDecoder (field key value) valDecoder fallback) decoder v
+        else
+            BadType("an object", v)
+            |> Error
 
-let optionalAt path valDecoder fallback decoder =
-    custom (optionalDecoder (at path value) valDecoder fallback) decoder
+let optionalAt (path : string list) (valDecoder : Decoder<'a>) (fallback : 'a) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
+    fun v ->
+        if Helpers.isObject v then
+            custom (optionalDecoder (at path value) valDecoder fallback) decoder v
+        else
+            BadType("an object", v)
+            |> Error
 
 //////////////////
 // Reflection ///
