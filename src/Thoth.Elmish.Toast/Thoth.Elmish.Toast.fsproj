@@ -7,7 +7,7 @@
         <RepositoryUrl>https://github.com/MangelMaxime/Thoth</RepositoryUrl>
         <PackageTags>fable;fsharp;json</PackageTags>
         <Authors>Maxime Mangel</Authors>
-        <Version>1.0.0-beta-002</Version>
+        <Version>1.0.0-beta-003</Version>
     </PropertyGroup>
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
@@ -17,7 +17,7 @@
         <Compile Include="Toast.fs" />
     </ItemGroup>
     <ItemGroup>
-        <Content Include="*.fsproj; **\*.fs; **\*.js" PackagePath="fable" />
+        <Content Include="*.fsproj; **\*.fs; **\*.js; **\*.css" PackagePath="fable" />
     </ItemGroup>
     <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

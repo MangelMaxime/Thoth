@@ -1,3 +1,7 @@
+### 1.0.0-beta-003
+
+* Fix package to include css files too
+
 ### 1.0.0-beta-002
 
 * Disable progress bar support
