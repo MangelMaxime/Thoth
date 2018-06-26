@@ -9,17 +9,17 @@
 </head>
 
 <body>
-    <nav class="navbar is-fixed-top is-primary"><div class="bd-special-shadow" style="opacity:1;transform:scaleY(1)"></div><div class="container"><div class="navbar-brand"><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/index.html"><p class="title is-4">Thoth</p></a><a class="navbar-item is-hidden-desktop" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span></a><a class="navbar-item twitter is-hidden-desktop" href="https://twitter.com/MangelMaxime"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span></a><div class="navbar-burger"><span></span><span></span><span></span></div></div><div class="navbar-menu" id="navMenu"><div class="navbar-item is-hoverable has-dropdown"><div class="navbar-link">Json</div><div class="navbar-dropdown"><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/decode.html">Decode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/encode.html">Encode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/net.html">.Net &amp; NetCore</a></div></div><div class="navbar-item is-hoverable has-dropdown"><div class="navbar-link">Elmish</div><div class="navbar-dropdown"><a class="navbar-item is-active" href="https://mangelmaxime.github.io/Thoth/elmish/debouncer.html">Debouncer</a></div></div></div><div class="navbar-end"><a class="navbar-item is-hidden-mobile" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span></a><a class="navbar-item twitter is-hidden-mobile" href="https://twitter.com/MangelMaxime"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span></a><div class="navbar-item"><div class="field is-grouped"><p class="control"><a class="button twitter" href="https://twitter.com/intent/tweet?via=MangelMaxime&amp;text=Thoth%20is%20a%20set%20of%20several%20libraries%20for%20working%20with%20@FableCompiler%20applications" target="_blank"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span><span>Tweet</span></a></p><p class="control"><a class="button github" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span><span>Github</span></a></p></div></div></div></div></nav>
+    <nav class="navbar is-fixed-top is-thoth-primary"><div class="bd-special-shadow" style="opacity:1;transform:scaleY(1)"></div><div class="container"><div class="navbar-brand"><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/index.html"><p class="title is-4">Thoth</p></a><a class="navbar-item is-hidden-desktop" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span></a><a class="navbar-item twitter is-hidden-desktop" href="https://twitter.com/MangelMaxime"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span></a><div class="navbar-burger"><span></span><span></span><span></span></div></div><div class="navbar-menu" id="navMenu"><div class="navbar-item is-hoverable has-dropdown"><div class="navbar-link">Json</div><div class="navbar-dropdown"><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/decode.html">Decode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/encode.html">Encode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/net.html">.Net &amp; NetCore</a></div></div><div class="navbar-item is-hoverable has-dropdown"><div class="navbar-link">Elmish</div><div class="navbar-dropdown"><a class="navbar-item is-active" href="https://mangelmaxime.github.io/Thoth/elmish/debouncer.html">Debouncer</a><div class="navbar-divider"></div><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/elmish/toast_docs.html">Toast - Docs</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/elmish/toast_demo.html">Toast - Demo</a></div></div></div><div class="navbar-end"><a class="navbar-item is-hidden-mobile" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span></a><a class="navbar-item twitter is-hidden-mobile" href="https://twitter.com/MangelMaxime"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span></a><div class="navbar-item"><div class="field is-grouped"><p class="control"><a class="button twitter" href="https://twitter.com/intent/tweet?via=MangelMaxime&amp;text=Thoth%20is%20a%20set%20of%20several%20libraries%20for%20working%20with%20@FableCompiler%20applications" target="_blank"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span><span>Tweet</span></a></p><p class="control"><a class="button github" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span><span>Github</span></a></p></div></div></div></div></nav>
     <div class="container">
         <div class="content" style="margin: 1rem 0 0">
-            <h1><a href="#debouncer" aria-hidden="true"><span class="anchor" id="debouncer"></span>&#128279;</a> Debouncer</h1>
-<h2><a href="#kezako" aria-hidden="true"><span class="anchor" id="kezako"></span>&#128279;</a> Kezako ?</h2>
+            <h1><a href="#debouncer" aria-hidden="true"><span class="anchor" id="debouncer"></span>#</a> Debouncer</h1>
+<h2><a href="#kezako" aria-hidden="true"><span class="anchor" id="kezako"></span>#</a> Kezako ?</h2>
 <blockquote>
 <p>Debouncing enforces that a function not be called again until a certain amount of time has passed without it being called. As in &quot;execute this function only if 100 milliseconds have passed without it being called.&quot;</p>
 <p>Perhaps a function is called 1,000 times in a quick burst, dispersed over 3 seconds, then stops being called. If you have debounced it at 100 milliseconds, the function will only fire once, at 3.1 seconds, once the burst is over. Each time the function is called during the burst it resets the debouncing timer.</p>
 <p><a href="https://css-tricks.com/the-difference-between-throttling-and-debouncing/">Source</a></p>
 </blockquote>
-<h2><a href="#demo" aria-hidden="true"><span class="anchor" id="demo"></span>&#128279;</a> Demo</h2>
+<h2><a href="#demo" aria-hidden="true"><span class="anchor" id="demo"></span>#</a> Demo</h2>
 <p>The following demo works like that:</p>
 <ol>
 <li>Ask the user to type something</li>
@@ -35,11 +35,12 @@
 <div class="has-text-centered">
 <p><em><a href="https://github.com/MangelMaxime/Thoth/blob/master/demos/Thoth.Elmish.Demo/src/Debouncer.fs">View the code</a></em></p>
 </div>
+<script type="text/javascript" src="../demos/vendors.js"></script>
 <script type="text/javascript" src="../demos/demo.js"></script>
 <script type="text/javascript">
     Demos.DebouncerDemo("debouncer_demo");
 </script>
-<h2><a href="#how-to-use" aria-hidden="true"><span class="anchor" id="how-to-use"></span>&#128279;</a> How to use ?</h2>
+<h2><a href="#how-to-use" aria-hidden="true"><span class="anchor" id="how-to-use"></span>#</a> How to use ?</h2>
 <ol>
 <li>Store the <code>Debouncer</code> instance in your model</li>
 </ol>

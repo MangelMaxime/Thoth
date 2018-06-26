@@ -1,0 +1,211 @@
+<!doctype html>
+<html class="has-navbar-fixed-top">
+
+<head>
+    <title>Thoth</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /> <link rel="stylesheet" type="text/css" href="https://mangelmaxime.github.io/Thoth/main.css"/>
+</head>
+
+<body>
+    <nav class="navbar is-fixed-top is-thoth-primary"><div class="bd-special-shadow" style="opacity:1;transform:scaleY(1)"></div><div class="container"><div class="navbar-brand"><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/index.html"><p class="title is-4">Thoth</p></a><a class="navbar-item is-hidden-desktop" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span></a><a class="navbar-item twitter is-hidden-desktop" href="https://twitter.com/MangelMaxime"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span></a><div class="navbar-burger"><span></span><span></span><span></span></div></div><div class="navbar-menu" id="navMenu"><div class="navbar-item is-hoverable has-dropdown"><div class="navbar-link">Json</div><div class="navbar-dropdown"><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/decode.html">Decode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/encode.html">Encode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/net.html">.Net &amp; NetCore</a></div></div><div class="navbar-item is-hoverable has-dropdown"><div class="navbar-link">Elmish</div><div class="navbar-dropdown"><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/elmish/debouncer.html">Debouncer</a><div class="navbar-divider"></div><a class="navbar-item is-active" href="https://mangelmaxime.github.io/Thoth/elmish/toast_docs.html">Toast - Docs</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/elmish/toast_demo.html">Toast - Demo</a></div></div></div><div class="navbar-end"><a class="navbar-item is-hidden-mobile" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span></a><a class="navbar-item twitter is-hidden-mobile" href="https://twitter.com/MangelMaxime"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span></a><div class="navbar-item"><div class="field is-grouped"><p class="control"><a class="button twitter" href="https://twitter.com/intent/tweet?via=MangelMaxime&amp;text=Thoth%20is%20a%20set%20of%20several%20libraries%20for%20working%20with%20@FableCompiler%20applications" target="_blank"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span><span>Tweet</span></a></p><p class="control"><a class="button github" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span><span>Github</span></a></p></div></div></div></div></nav>
+    <div class="container">
+        <div class="content" style="margin: 1rem 0 0">
+            <h1><a href="#toast" aria-hidden="true"><span class="anchor" id="toast"></span>#</a> Toast</h1>
+<article class="message is-warning">
+    <div class="message-body">
+This library is a <strong>Work In Progress</strong> so changes can still occur.
+<p>When using this library with HMR, the view can flicker a bit especially when you are changing the custom view implementation. If you refresh your tab the problem should be gone.</p>
+<p>Because you don't use HMR in production, there is no problem to use this library.
+</div></p>
+</article>
+<p>This library aims to provide you a nice way to inform the user that something occured. By attaching itself at the top level of your application toasts can be persistant between page navigation.</p>
+<p>It also provide a very basic input system. Do not abuse of it, a toast should be about notifying the user not asking him an action.</p>
+<h2><a href="#demo" aria-hidden="true"><span class="anchor" id="demo"></span>#</a> Demo</h2>
+<p>You can see a demo on <a href="https://mangelmaxime.github.io/Thoth/elmish/toast_demo.html">this page</a>.</p>
+<h2><a href="#how-to-use" aria-hidden="true"><span class="anchor" id="how-to-use"></span>#</a> How to use ?</h2>
+<ol>
+<li>
+<p>Add the <code>Thoth.Elmish.Toast</code> dependency in your <a href="https://fsprojects.github.io/Paket/">Paket</a> files: <code>paket add Thoth.Elmish.Toast --project &lt;your project&gt;</code></p>
+</li>
+<li>
+<p>Attach the toast system to your Elmish program</p>
+</li>
+</ol>
+<pre><code class="hljs language-fs"><span class="hljs-keyword">open</span> Elmish
+<span class="hljs-keyword">open</span> Thoth.Elmish
+
+Program.mkProgram init update view
+|&gt; Program.withToast Toast.render
+|&gt; Program.run
+</code></pre>
+<ol start="3">
+<li>You can now send <code>Toast</code> from any command in your program.</li>
+</ol>
+<pre><code class="hljs language-fs"><span class="hljs-keyword">let</span> update msg model =
+    <span class="hljs-keyword">match</span> msg <span class="hljs-keyword">with</span>
+    | DemoInfo -&gt;
+        model, Toast.message <span class="hljs-string">"I am toast of type Info"</span>
+                |&gt; Toast.title <span class="hljs-string">"Info"</span>
+                |&gt; Toast.info
+</code></pre>
+<h2><a href="#customize-the-view" aria-hidden="true"><span class="anchor" id="customize-the-view"></span>#</a> Customize the view</h2>
+<p>This library include a default <code>render</code> function. Like that you can experiment with the library and see if it fit your needs.</p>
+<p><span class="icon is-medium has-text-info"><i class="fa fa-2x fa-exclamation-triangle"></i></span> We strongly encourage you to implement your own render. <span class="icon is-medium has-text-info"><i class="fa fa-2x fa-exclamation-triangle"></i></span></p>
+<p>Examples:</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>F# code</th>
+<th>CSS code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Default</td>
+<td><a href="https://github.com/MangelMaxime/Thoth/blob/master/src/Thoth.Elmish.Toast/Toast.fs#L442-L481">F# code</a></td>
+<td><a href="https://github.com/MangelMaxime/Thoth/blob/master/src/Thoth.Elmish.Toast/css/toast-minimal.css">CSS code</a></td>
+</tr>
+<tr>
+<td>Fulma</td>
+<td><a href="https://github.com/MangelMaxime/Thoth/blob/master/demos/Thoth.Elmish.Demo/src/Toast.fs#L24-L68">F# code</a></td>
+<td><a href="https://github.com/MangelMaxime/Thoth/blob/master/demos/Thoth.Elmish.Demo/src/scss/toast.scss">CSS code</a></td>
+</tr>
+</tbody>
+</table>
+<h2><a href="#api" aria-hidden="true"><span class="anchor" id="api"></span>#</a> API</h2>
+<h3><a href="#usage" aria-hidden="true"><span class="anchor" id="usage"></span>#</a> Usage</h3>
+<p>Any time you want to send a toast you need to follow this rules:</p>
+<ol>
+<li>Create it and set it's content using <code>Toast.message</code></li>
+<li>Pipe any number of <a href="#builder">Builder</a> you want</li>
+<li>Use one of the <a href="#trigger">Trigger</a> to set it's <a href="#status">Status</a> and send it</li>
+</ol>
+<h3><a href="#status" aria-hidden="true"><span class="anchor" id="status"></span>#</a> Status</h3>
+<pre><code class="hljs language-fs"><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-title">Status</span> </span>=
+    | Success
+    | Warning
+    | Error
+    | Info
+</code></pre>
+<h3><a href="#position" aria-hidden="true"><span class="anchor" id="position"></span>#</a> Position</h3>
+<pre><code class="hljs language-fs"><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-title">Position</span> </span>=
+    | BottomRight
+    | BottomLeft
+    | BottomCenter
+    | TopRight
+    | TopLeft
+    | TopCenter
+</code></pre>
+<h3><a href="#builder" aria-hidden="true"><span class="anchor" id="builder"></span>#</a> Builder</h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Toast.message</code></td>
+<td>Create a toast and set the message content</td>
+</tr>
+<tr>
+<td><code>Toast.title</code></td>
+<td>Set the title content</td>
+</tr>
+<tr>
+<td><code>Toast.position</code></td>
+<td>Set the position</td>
+</tr>
+<tr>
+<td><code>Toast.addInput</code></td>
+<td>Add an input to the toast</td>
+</tr>
+<tr>
+<td><code>Toast.icon</code></td>
+<td>Set the icon</td>
+</tr>
+<tr>
+<td><code>Toast.timeout</code></td>
+<td>Set the timeout in seconds</td>
+</tr>
+<tr>
+<td><code>Toast.noTimeout</code></td>
+<td>No timeout, make sure to add close button or dismin on click</td>
+</tr>
+<tr>
+<td><code>Toast.dismissOnClick</code></td>
+<td>Allow user to dismis the toast by cliking on it</td>
+</tr>
+<tr>
+<td><code>Toast.withCloseButton</code></td>
+<td>Add a close button</td>
+</tr>
+</tbody>
+</table>
+<h3><a href="#trigger" aria-hidden="true"><span class="anchor" id="trigger"></span>#</a> Trigger</h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Toast.success</code></td>
+<td>Send the toast marked with Success status</td>
+</tr>
+<tr>
+<td><code>Toast.warning</code></td>
+<td>Send the toast marked with Warning status</td>
+</tr>
+<tr>
+<td><code>Toast.error</code></td>
+<td>Send the toast marked with Error status</td>
+</tr>
+<tr>
+<td><code>Toast.info</code></td>
+<td>Send the toast marked with Info status</td>
+</tr>
+</tbody>
+</table>
+
+        </div>
+    </div>
+    <div><br/><div class="footer has-text-centered"><div class="container"><div class="content"><p><strong>Thoth</strong> by <a href="https://twitter.com/MangelMaxime">Maxime Mangel</a></p>
+<p>Powered by <a href="https://mangelmaxime.github.io/Fulma/">Fulma</a> and <a href="https://github.com/fable-compiler/static-page-generator">Fable static-page-generator</a>.</p>
+</div></div></div></div>
+    <script type="text/javascript">
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Get all "navbar-burger" elements
+            var $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+
+            // Check if there are any navbar burgers
+            if ($navbarBurgers.length > 0) {
+
+                // Add a click event on each of them
+                $navbarBurgers.forEach(function ($el) {
+                    $el.addEventListener('click', function () {
+
+                        var $target = document.getElementById("navMenu");
+
+                        // Toggle the class on both the "navbar-burger" and the "navbar-menu"
+                        $el.classList.toggle('is-active');
+                        $target.classList.toggle('is-active');
+
+                    });
+                });
+            }
+
+        });
+
+    </script>
+</body>
+
+</html>
