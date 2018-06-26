@@ -1,20 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Description>Toolbox for working with Elmish applications</Description>
+        <Description>Toast encapsulation program for your Elmish application</Description>
         <PackageProjectUrl>https://github.com/MangelMaxime/Thoth</PackageProjectUrl>
         <PackageLicenseUrl>https://github.com/MangelMaxime/Thoth/blob/master/LICENSE.md</PackageLicenseUrl>
         <RepositoryUrl>https://github.com/MangelMaxime/Thoth</RepositoryUrl>
         <PackageTags>fable;fsharp;json</PackageTags>
         <Authors>Maxime Mangel</Authors>
-        <Version>0.1.1</Version>
+        <Version>1.0.0-beta-002</Version>
     </PropertyGroup>
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
     <ItemGroup>
-        <Compile Include="Debouncer.fs" />
         <Compile Include="Toast.fs" />
     </ItemGroup>
     <ItemGroup>

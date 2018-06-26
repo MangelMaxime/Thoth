@@ -1,4 +1,11 @@
 $fa-font-path: "./../../node_modules/font-awesome/fonts/";
 @import './../../node_modules/font-awesome/scss/font-awesome.scss';
 
+$body-size: 14px;
+
 @import './../../node_modules/bulma/bulma.sass';
+@import './../../node_modules/bulma-switch/dist/css/bulma-switch.sass';
+@import './../../node_modules/bulma-checkradio/dist/css/bulma-checkradio.sass';
+@import './../../node_modules/bulma-tooltip/dist/css/bulma-tooltip.sass';
+
+@import './toast.scss';

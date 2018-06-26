@@ -1,0 +1,50 @@
+/*
+    This style is always included
+    It control the position of the toast
+ */
+.toast-wrapper {
+    z-index: 99999;
+    position: fixed;
+    width: 350px;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+}
+
+.toast-wrapper.toast-wrapper-bottom-left {
+    left: 0;
+    bottom: 0;
+}
+
+.toast-wrapper.toast-wrapper-bottom-center {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0;
+}
+
+.toast-wrapper.toast-wrapper-bottom-right {
+    right: 0;
+    bottom: 0;
+}
+
+.toast-wrapper.toast-wrapper-top-left {
+    left: 0;
+    top: 0;
+}
+
+.toast-wrapper.toast-wrapper-top-center {
+    left: 50%;
+    transform: translateX(-50%);
+    top: 0;
+}
+
+.toast-wrapper.toast-wrapper-top-right {
+    right: 0;
+    top: 0;
+}
+
+.toast-container {
+    margin: 5px;
+    border-radius: 3px;
+    pointer-events: all;
+}

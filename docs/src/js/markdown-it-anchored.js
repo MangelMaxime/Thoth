@@ -25,7 +25,7 @@ const renderPermalink = (slug, state, idx) => {
             ]
         }),
         new state.Token('anchor_open', 'span', -1),
-        Object.assign(new state.Token('html_block', '', 0), { content: '&#128279;' }),
+        Object.assign(new state.Token('html_block', '', 0), { content: '#' }),
         new state.Token('link_close', 'a', -1)
     ];
 

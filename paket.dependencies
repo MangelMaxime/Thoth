@@ -10,6 +10,7 @@ nuget Newtonsoft.Json 11.0.1
 nuget Expecto
 nuget Fable.Elmish
 nuget Fable.PowerPack
+nuget Fable.React
 
 group netcorebuild
     source https://www.nuget.org/api/v2
@@ -57,3 +58,4 @@ group Demos
     nuget Fable.React
     nuget Fulma
     nuget Thoth.Elmish
+    nuget Fulma.Extensions prerelease
