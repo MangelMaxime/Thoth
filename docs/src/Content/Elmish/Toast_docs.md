@@ -42,16 +42,16 @@ let update msg model =
 
 ## Customize the view
 
-By default, this library include a minimal `IRenderer<'icon>` implementation. So you can experiment with it and see if it can fit your need.
+This library include a default `render` function. Like that you can experiment with the library and see if it fit your needs.
 
 <span class="icon is-medium has-text-info"><i class="fa fa-2x fa-exclamation-triangle"></i></span> We strongly encourage you to implement your own render. <span class="icon is-medium has-text-info"><i class="fa fa-2x fa-exclamation-triangle"></i></span>
 
-Example:
+Examples:
 
 | Name | F# code | CSS code |
 |---|---|---|
-| Default render | [F# code]() | [CSS code]() |
-| Fulma render | [F# code]() | [CSS code]() |
+| Default | [F# code](https://github.com/MangelMaxime/Thoth/blob/master/src/Thoth.Elmish.Toast/Toast.fs#L442-L481) | [CSS code](https://github.com/MangelMaxime/Thoth/blob/master/src/Thoth.Elmish.Toast/css/toast-minimal.css) |
+| Fulma | [F# code](https://github.com/MangelMaxime/Thoth/blob/master/demos/Thoth.Elmish.Demo/src/Toast.fs#L24-L68) | [CSS code](https://github.com/MangelMaxime/Thoth/blob/master/demos/Thoth.Elmish.Demo/src/scss/toast.scss) |
 
 ## API
 
