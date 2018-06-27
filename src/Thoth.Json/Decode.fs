@@ -47,6 +47,7 @@ module Helpers =
 type ErrorReason =
     | BadPrimitive of string * obj
     | BadType of string * obj
+    | BadTypeAt of string * obj
     | BadPrimitiveExtra of string * obj * string
     | BadField of string * obj
     | BadPath of string * obj * string
@@ -79,6 +80,8 @@ let private errorToString (path : string, error) =
         | BadPrimitive (msg, value) ->
             genericMsg msg value false
         | BadType (msg, value) ->
+            genericMsg msg value true
+        | BadTypeAt (msg, value) ->
             genericMsg msg value true
         | BadPrimitiveExtra (msg, value, reason) ->
             genericMsg msg value false + "\nReason: " + reason
@@ -114,8 +117,8 @@ let unwrap (path : string) (decoder : Decoder<'T>) (value : obj) : 'T =
 // Runners ///
 /////////////
 
-let private decodeValueError (decoder : Decoder<'T>) =
-    fun path value ->
+let private decodeValueError path (decoder : Decoder<'T>) =
+    fun value ->
         try
             match decoder path value with
             | Ok success ->
@@ -128,7 +131,7 @@ let private decodeValueError (decoder : Decoder<'T>) =
 
 let decodeValue (path : string) (decoder : Decoder<'T>) =
     fun value ->
-        match decodeValueError decoder path value with
+        match decodeValueError path decoder value with
         | Ok success ->
             Ok success
         | Error error ->
@@ -286,7 +289,7 @@ let at (fieldNames: string list) (decoder : Decoder<'value>) : Decoder<'value> =
         with
             | NonObjectTypeException ->
                 let path = String.concat "." fieldNames.[..index-1]
-                (currentPath, BadType ("an object at `" + path + "`", cValue))
+                (currentPath, BadTypeAt ("an object at `" + path + "`", cValue))
                 |> Error
             | UndefinedValueException fieldName ->
                 let msg = "an object with path `" + (String.concat "." fieldNames) + "`"
@@ -555,69 +558,57 @@ let map8
 let dict (decoder : Decoder<'value>) : Decoder<Map<string, 'value>> =
     map Map.ofList (keyValuePairs decoder)
 
-////////////////
-// Pipeline ///
-//////////////
+//////////////////////
+// Object builder ///
+////////////////////
 
-let custom d1 d2 = map2 (|>) d1 d2
+type IRequiredGetter =
+    abstract Field : string -> Decoder<'a> -> 'a
+    abstract At : List<string> -> Decoder<'a> -> 'a
 
-let hardcoded<'a, 'b, 'c> : 'a -> Decoder<('a -> 'b)> -> string -> 'c -> Result<'b,DecoderError> = succeed >> custom
+type IOptionalGetter =
+    abstract Field : string -> Decoder<'a> -> 'a option
+    abstract At : List<string> -> Decoder<'a> -> 'a option
 
-let required (key : string) (valDecoder : Decoder<'a>) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
-    custom (field key valDecoder) decoder
+type IGetters =
+    abstract Required: IRequiredGetter
+    abstract Optional: IOptionalGetter
 
-let requiredAt (path : string list) (valDecoder : Decoder<'a>) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
-    custom (at path valDecoder) decoder
-
-let decode output value = succeed output value
-
-/// Convert a `Decoder<Result<x, 'a>>` into a `Decoder<'a>`
-let resolve d1 : Decoder<'a> =
-    fun path value ->
-        andThen id d1 path value
-
-let optionalDecoder path pathDecoder valDecoder fallback =
-    let nullOr decoder =
-        oneOf [ decoder; nil fallback ]
-
-    let handleResult input  =
-        match decodeValueError pathDecoder path input with
-        | Ok rawValue ->
-            // Field was present, so we try to decode the value
-            match decodeValue path (nullOr valDecoder) rawValue with
-            | Ok finalResult ->
-                succeed finalResult
-
-            | Error finalErr ->
-                fail finalErr
-
-        | Error ((_, (BadType _ )) as errorInfo) ->
-            // If the error is of type `BadType` coming from `at` decoder then return the error
-            // This mean the json was expecting an object but got an array instead
-            fun _ _ -> Error errorInfo
-        | Error _ ->
-            // Field was not present && type was valid
-            succeed fallback
-
-    value
-    |> andThen handleResult
-
-let optional (key : string) (valDecoder : Decoder<'a>) (fallback : 'a) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
+let object (builder: IGetters -> 'value) : Decoder<'value> =
     fun path v ->
-        if Helpers.isObject v then
-            custom (optionalDecoder path (field key value) valDecoder fallback) decoder path v
-        else
-            (path, BadType("an object", v))
-            |> Error
-
-let optionalAt (path : string list) (valDecoder : Decoder<'a>) (fallback : 'a) (decoder : Decoder<'a -> 'b>) : Decoder<'b> =
-    fun p v ->
-        if Helpers.isObject v then
-            custom (optionalDecoder p (at path value) valDecoder fallback) decoder p v
-        else
-            (p, BadType("an object", v))
-            |> Error
-
+        builder { new IGetters with
+            member __.Required =
+                { new IRequiredGetter with
+                    member __.Field (fieldName : string) (decoder : Decoder<_>) =
+                        match decodeValue path (field fieldName decoder) v with
+                        | Ok v -> v
+                        | Error msg -> failwith msg
+                    member __.At (fieldNames : string list) (decoder : Decoder<_>) =
+                        match decodeValue path (at fieldNames decoder) v with
+                        | Ok v -> v
+                        | Error msg -> failwith msg }
+            member __.Optional =
+                { new IOptionalGetter with
+                    member __.Field (fieldName : string) (decoder : Decoder<_>) =
+                        match decodeValueError path (field fieldName decoder) v with
+                        | Ok v -> Some v
+                        | Error (_, BadField _ )
+                        | Error (_, BadPrimitive (_, null)) -> None
+                        | Error error ->
+                            failwith (errorToString error)
+                    member __.At (fieldNames : string list) (decoder : Decoder<_>) =
+                        if Helpers.isObject v then
+                            match decodeValueError path (at fieldNames decoder) v with
+                            | Ok v -> Some v
+                            | Error (_, BadPath _ )
+                            | Error (_, BadType (_, null))
+                            | Error (_, BadTypeAt _) -> None
+                            | Error error ->
+                                printfn "Error: %A" error
+                                failwith (errorToString error)
+                        else
+                            failwith (errorToString (path, BadType ("an object", v))) }
+        } |> Ok
 
 //////////////////
 // Reflection ///

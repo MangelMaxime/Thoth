@@ -1,13 +1,13 @@
 module Tests.Decode
 
-#if FABLE_COMPILER
+// #if FABLE_COMPILER
 open Fable.Core.JsInterop
 open Thoth.Json
 open Thoth.Json.Decode
-#else
-open Thoth.Json.Net
-open Thoth.Json.Net.Decode
-#endif
+// #else
+// open Thoth.Json.Net
+// open Thoth.Json.Net.Decode
+// #endif
 open Util.Testing
 open System
 
@@ -126,7 +126,7 @@ type User =
       Email : string
       Followers : int }
 
-    static member Create id email name followers =
+    static member Create id name email followers =
         { Id = id
           Name = name
           Email = email
@@ -134,6 +134,9 @@ type User =
 
 type SmallRecord =
     { fieldA: string }
+
+type SmallRecord2 =
+    { optionalField : string option }
 
 type MyList<'T> =
     | Nil
@@ -885,18 +888,295 @@ Expecting an object with a field named `version` but instead got:
 
         ]
 
-        testList "Pipeline" [
+        testList "object builder" [
 
-            testCase "required works" <| fun _ ->
+            testCase "get.Required.Field works" <| fun _ ->
+                let json = """{ "name": "maxime", "age": 25 }"""
+                let expected = Ok({ fieldA = "maxime" })
+
+                let decoder =
+                    object
+                        (fun get ->
+                            { fieldA = get.Required.Field "name" string }
+                        )
+
+                let actual =
+                    decodeString decoder json
+
+                equal expected actual
+
+            testCase "get.Required.Field returns Error if field is missing" <| fun _ ->
+                let json = """{ "age": 25 }"""
                 let expected =
-                    Ok(User.Create 67 "user@mail.com" "" 0)
+                    Error(
+                        """
+Error at: `$.name`
+Expecting an object with a field named `name` but instead got:
+{
+    "age": 25
+}
+                        """.Trim())
+
+                let decoder =
+                    object
+                        (fun get ->
+                            { fieldA = get.Required.Field "name" string }
+                        )
+
+                let actual =
+                    decodeString decoder json
+
+                equal expected actual
+
+            testCase "get.Required.Field returns Error if type is incorrect" <| fun _ ->
+                let json = """{ "name": 12, "age": 25 }"""
+                let expected =
+                    Error(
+                        """
+Error at: `$.name`
+Expecting a string but instead got: 12
+                        """.Trim())
+
+                let decoder =
+                    object
+                        (fun get ->
+                            { fieldA = get.Required.Field "name" string }
+                        )
+
+                let actual =
+                    decodeString decoder json
+
+                equal expected actual
+
+            testCase "get.Optional.Field works" <| fun _ ->
+                let json = """{ "name": "maxime", "age": 25 }"""
+                let expected = Ok({ optionalField = Some "maxime" })
+
+                let decoder =
+                    object
+                        (fun get ->
+                            { optionalField = get.Optional.Field "name" string }
+                        )
+
+                let actual =
+                    decodeString decoder json
+
+                equal expected actual
+
+            testCase "get.Optional.Field returns None value if field is missing" <| fun _ ->
+                let json = """{ "age": 25 }"""
+                let expected = Ok({ optionalField = None })
+
+                let decoder =
+                    object
+                        (fun get ->
+                            { optionalField = get.Optional.Field "name" string }
+                        )
+
+                let actual =
+                    decodeString decoder json
+
+                equal expected actual
+
+            testCase "get.Optional.Field returns None if field is null" <| fun _ ->
+                let json = """{ "name": null, "age": 25 }"""
+                let expected = Ok({ optionalField = None })
+
+                let decoder =
+                    object
+                        (fun get ->
+                            { optionalField = get.Optional.Field "name" string }
+                        )
+
+                let actual =
+                    decodeString decoder json
+
+                equal expected actual
+
+            testCase "get.Optional.Field returns Error if type is incorrect" <| fun _ ->
+                let json = """{ "name": 12, "age": 25 }"""
+                let expected =
+                    Error(
+                        """
+Error at: `$.name`
+Expecting a string but instead got: 12
+                        """.Trim())
+
+                let decoder =
+                    object
+                        (fun get ->
+                            { optionalField = get.Optional.Field "name" string }
+                        )
+
+                let actual =
+                    decodeString decoder json
+
+                equal expected actual
+
+
+            testCase "get.Required.At works" <| fun _ ->
+
+                let json = """{ "user": { "name": "maxime", "age": 25 } }"""
+                let expected = Ok({ fieldA = "maxime" })
+
+                let decoder =
+                    object
+                        (fun get ->
+                            { fieldA = get.Required.At [ "user"; "name" ] string }
+                        )
+
+                let actual =
+                    decodeString decoder json
+
+                equal expected actual
+
+            testCase "get.Required.At returns Error if non-object in path" <| fun _ ->
+                let json = """{ "user": "maxime" }"""
+                let expected =
+                    Error(
+                        """
+Error at: `$.user`
+Expecting an object at `user` but instead got:
+"maxime"
+                        """.Trim())
+
+                let decoder =
+                    object
+                        (fun get ->
+                            { fieldA = get.Required.At [ "user"; "name" ] string }
+                        )
+
+                let actual =
+                    decodeString decoder json
+
+                equal expected actual
+
+            testCase "get.Required.At returns Error if field missing" <| fun _ ->
+                let json = """{ "user": { "name": "maxime", "age": 25 } }"""
+                let expected =
+                    Error(
+                        """
+Error at: `$.user.firstname`
+Expecting an object with path `user.firstname` but instead got:
+{
+    "user": {
+        "name": "maxime",
+        "age": 25
+    }
+}
+Node `firstname` is unkown.
+                        """.Trim())
+
+                let decoder =
+                    object
+                        (fun get ->
+                            { fieldA = get.Required.At [ "user"; "firstname" ] string }
+                        )
+
+                let actual =
+                    decodeString decoder json
+
+                equal expected actual
+
+            testCase "get.Required.At returns Error if type is incorrect" <| fun _ ->
+                let json = """{ "user": { "name": 12, "age": 25 } }"""
+                let expected =
+                    Error(
+                        """
+Error at: `$.user.name`
+Expecting a string but instead got: 12
+                        """.Trim())
+
+                let decoder =
+                    object
+                        (fun get ->
+                            { fieldA = get.Required.At [ "user"; "name" ] string }
+                        )
+
+                let actual =
+                    decodeString decoder json
+
+                equal expected actual
+
+            testCase "get.Optional.At works" <| fun _ ->
+
+                let json = """{ "user": { "name": "maxime", "age": 25 } }"""
+                let expected = Ok({ optionalField = Some "maxime" })
+
+                let decoder =
+                    object
+                        (fun get ->
+                            { optionalField = get.Optional.At [ "user"; "name" ] string }
+                        )
+
+                let actual =
+                    decodeString decoder json
+
+                equal expected actual
+
+            testCase "get.Optional.At returns None if non-object in path" <| fun _ ->
+                let json = """{ "user": "maxime" }"""
+                let expected = Ok({ optionalField = None })
+
+                let decoder =
+                    object
+                        (fun get ->
+                            { optionalField = get.Optional.At [ "user"; "name" ] string }
+                        )
+
+                let actual =
+                    decodeString decoder json
+
+                equal expected actual
+
+            testCase "get.Optional.At returns None if field missing" <| fun _ ->
+                let json = """{ "user": { "name": "maxime", "age": 25 } }"""
+                let expected = Ok({ optionalField = None })
+
+                let decoder =
+                    object
+                        (fun get ->
+                            { optionalField = get.Optional.At [ "user"; "firstname" ] string }
+                        )
+
+                let actual =
+                    decodeString decoder json
+
+                equal expected actual
+
+            testCase "get.Optional.At returns Error if type is incorrect" <| fun _ ->
+                let json = """{ "user": { "name": 12, "age": 25 } }"""
+                let expected =
+                    Error(
+                        """
+Error at: `$.user.name`
+Expecting a string but instead got: 12
+                        """.Trim())
+
+                let decoder =
+                    object
+                        (fun get ->
+                            { optionalField = get.Optional.At [ "user"; "name" ] string }
+                        )
+
+                let actual =
+                    decodeString decoder json
+
+                equal expected actual
+
+            testCase "complex object builder works" <| fun _ ->
+                let expected =
+                    Ok(User.Create 67 "" "user@mail.com" 0)
 
                 let userDecoder =
-                    decode User.Create
-                        |> required "id" int
-                        |> required "email" string
-                        |> optional "name" string ""
-                        |> hardcoded 0
+                    object
+                        (fun get ->
+                            { Id = get.Required.Field "id" int
+                              Name = get.Optional.Field "name" string
+                                        |> Option.defaultValue ""
+                              Email = get.Required.Field "email" string
+                              Followers = 0 }
+                        )
 
                 let actual =
                     decodeString
@@ -905,57 +1185,6 @@ Expecting an object with a field named `version` but instead got:
 
                 equal expected actual
 
-            testCase "optional fail if value isn't an object" <| fun _ ->
-                let json = """[ { "fieldA": "foo"} ]"""
-                let expected =
-                    Error(
-                        """
-Error at: `$`
-Expecting an object but instead got:
-[
-    {
-        "fieldA": "foo"
-    }
-]
-                        """.Trim())
-
-                let decoder =
-                    decode
-                        (fun x0 ->
-                          { fieldA = x0 } : SmallRecord )
-                        |> optional "fieldA" string ""
-
-                let actual =
-                    json
-                    |> decodeString decoder
-
-                equal expected actual
-
-            testCase "optionalAt fail if value isn't an object" <| fun _ ->
-                let json = """{ "prop1" : [ { "fieldA": "foo"} ] }"""
-                let expected =
-                    Error(
-                        """
-Error at: `$.prop1`
-Expecting an object at `prop1` but instead got:
-[
-    {
-        "fieldA": "foo"
-    }
-]
-                        """.Trim())
-
-                let decoder =
-                    decode
-                        (fun x0 ->
-                          { fieldA = x0 } : SmallRecord )
-                        |> optionalAt [ "prop1"; "fieldA" ] string ""
-
-                let actual =
-                    json
-                    |> decodeString decoder
-
-                equal expected actual
         ]
 
         // testList "Auto" [
