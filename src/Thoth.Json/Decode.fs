@@ -8,6 +8,9 @@ module Helpers =
     [<Emit("typeof $0")>]
     let jsTypeof (_ : obj) : string = jsNative
 
+    [<Emit("$0 instanceof SyntaxError")>]
+    let isSyntaxError (_ : obj) : bool = jsNative
+
     let inline isString (o: obj) : bool = o :? string
 
     let inline isBoolean (o: obj) : bool = o :? bool
@@ -143,7 +146,7 @@ let decodeString (decoder : Decoder<'T>) =
             let json = JS.JSON.parse value
             decodeValue "$" decoder json
         with
-            | ex ->
+            | ex when Helpers.isSyntaxError ex ->
                 Error("Given an invalid JSON: " + ex.Message)
 
 //////////////////

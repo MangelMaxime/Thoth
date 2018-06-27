@@ -165,9 +165,9 @@ let jsonRecordInvalid =
 let tests : Test =
     testList "Thoth.Json.Decode" [
 
-        #if FABLE_COMPILER
-
         testList "Errors" [
+
+            #if FABLE_COMPILER
 
             testCase "circular structure are supported when reporting error" <| fun _ ->
                 let a = createObj [ ]
@@ -179,10 +179,16 @@ let tests : Test =
                 let actual = decodeValue "$" float b
 
                 equal expected actual
+            #endif
 
+            testCase "invalid json" <| fun _ ->
+                let expected : Result<float, string>= Error "Given an invalid JSON: Unexpected token m in JSON at position 0"
+                let actual = decodeString float "maxime"
+
+                equal expected actual
         ]
 
-        #endif
+
 
         testList "Primitives" [
 
