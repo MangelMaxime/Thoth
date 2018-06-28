@@ -314,8 +314,7 @@ Reason: Input string was not in a correct format.
                     Error(
                         """
 Error at: `$`
-Expecting a datetime but instead got: "invalid_string"
-Reason: Input string was not in a correct format. It is recommanded to use ISO 8601 format.
+Expecting a datetime in ISO 8601 format but instead got: "invalid_string"
                         """.Trim())
 
                 let actual =
@@ -333,36 +332,49 @@ Reason: Input string was not in a correct format. It is recommanded to use ISO 8
 
                 equal expected actual
 
-            // testCase "a datetimeOffset works" <| fun _ ->
-            //     let date1 = DateTime(2018, 6, 27, 0, 0, 0, DateTimeKind.Local)
-            //     let date2 = DateTime(2018, 6, 27, 0, 0, 0, DateTimeKind.Utc)
+            testCase "a datetimeOffset works" <| fun _ ->
+                let date1 = DateTime(2018, 6, 27, 0, 0, 0, DateTimeKind.Local)
+                let date2 = DateTime(2018, 6, 27, 0, 0, 0, DateTimeKind.Utc)
 
-            //     let inline padLeft2 c =  (fun (x: string) -> x.PadLeft(2, c)) << Operators.string
+                let inline padLeft2 c =  (fun (x: string) -> x.PadLeft(2, c)) << Operators.string
 
-            //     let json =
-            //         let delta = date1 - date2
-            //         let hours = padLeft2 '0' (Math.Abs delta.Hours)
-            //         let minutes = padLeft2 '0' delta.Minutes
-            //         let sign =
-            //             if delta.Hours < 0 then
-            //                 "-"
-            //             else
-            //                 "+"
-            //         let offset = sign + hours + ":" + minutes
-            //         sprintf "%i/%i/%i %s"
-            //             date2.Day
-            //             date2.Month
-            //             date2.Year
-            //             offset
+                let json =
+                    let delta = date1 - date2
+                    let hours = padLeft2 '0' (Math.Abs delta.Hours)
+                    let minutes = padLeft2 '0' delta.Minutes
+                    let sign =
+                        if delta.Hours < 0 then
+                            "+"
+                        else
+                            "-"
+                    let offset = sign + hours + ":" + minutes
+                    sprintf "%i-%s-%s %s"
+                        date2.Year
+                        (padLeft2 '0' date2.Month)
+                        (padLeft2 '0' date2.Day)
+                        offset
 
-            //     let localDto = DateTimeOffset(date1)
+                let localDto = DateTimeOffset(date1)
 
-            //     let expected = Ok localDto
-            //     let json = sprintf "\"%s\"" (json)
-            //     let actual =
-            //         decodeString datetimeOffset json
+                let expected = Ok localDto
+                let json = sprintf "\"%s\"" (json)
+                let actual =
+                    decodeString datetimeOffset json
 
-            //     equal expected actual
+                equal expected actual
+
+            testCase "a datetimeOffset returns Error if invalid format" <| fun _ ->
+                let expected =
+                    Error(
+                        """
+Error at: `$`
+Expecting a date in ISO 8601 format with offset but instead got: "2018-1-1"
+                        """.Trim())
+                let json = "\"2018-1-1\""
+                let actual =
+                    decodeString datetimeOffset json
+
+                equal expected actual
         ]
 
         testList "Object primitives" [

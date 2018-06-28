@@ -232,22 +232,22 @@ let decimal : Decoder<decimal> =
         else
             (path, BadPrimitive("a decimal", value)) |> Error
 
+// Regex copied from: https://www.myintervals.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
+let ISO_8601 = System.Text.RegularExpressions.Regex("^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$")
+
 let datetime : Decoder<System.DateTime> =
     fun path value ->
-        if Helpers.isString value then
-            try
-                System.DateTime.Parse(Helpers.asString value) |> Ok
-            with
-                | _ ->
-                    (path, BadPrimitiveExtra("a datetime", value, "Input string was not in a correct format. It is recommanded to use ISO 8601 format.")) |> Error
-        else (path, BadPrimitive("a datetime", value)) |> Error
+        if Helpers.isString value && ISO_8601.Match(Helpers.asString value).Success then
+            System.DateTime.Parse(Helpers.asString value) |> Ok
+        else
+            (path, BadPrimitive("a datetime in ISO 8601 format", value)) |> Error
 
 let datetimeOffset : Decoder<System.DateTimeOffset> =
     fun path value ->
-        if Helpers.isString value then
+        if Helpers.isString value && ISO_8601.Match(Helpers.asString value).Success then
             System.DateTimeOffset.Parse(Helpers.asString value) |> Ok
         else
-            (path, BadPrimitive("a date with offset", value)) |> Error
+            (path, BadPrimitive("a date in ISO 8601 format with offset", value)) |> Error
 
 /////////////////////////
 // Object primitives ///
