@@ -176,17 +176,17 @@ let int : Decoder<int> =
             else
                 Ok(Helpers.asInt value)
 
-// let int64 : Decoder<int64> =
-//     fun path value ->
-//         if Helpers.isNumber value then
-//             Helpers.asInt value |> int64 |> Ok
-//         elif Helpers.isString value then
-//             try
-//                 Helpers.asString value |> System.Int64.Parse |> Ok
-//             with
-//                 | ex ->
-//                     (path, BadPrimitiveExtra("an int64", value, ex.Message)) |> Error
-//         else (path, BadPrimitive("an int64", value)) |> Error
+let int64 : Decoder<int64> =
+    fun path value ->
+        if Helpers.isNumber value then
+            Helpers.asInt value |> int64 |> Ok
+        elif Helpers.isString value then
+            try
+                Helpers.asString value |> System.Int64.Parse |> Ok
+            with
+                | ex ->
+                    (path, BadPrimitiveExtra("an int64", value, ex.Message)) |> Error
+        else (path, BadPrimitive("an int64", value)) |> Error
 
 let uint64 : Decoder<uint64> =
     fun path value ->
@@ -194,7 +194,7 @@ let uint64 : Decoder<uint64> =
             Helpers.asInt value |> uint64 |> Ok
         elif Helpers.isString value then
             try
-                Helpers.asInt value |> uint64 |> Ok
+                Helpers.asString value |> uint64 |> Ok
             with
                 | ex ->
                     (path, BadPrimitiveExtra("an uint64", value, ex.Message)) |> Error

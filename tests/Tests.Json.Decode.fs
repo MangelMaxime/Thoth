@@ -248,59 +248,59 @@ let tests : Test =
 
                 equal expected actual
 
-            // testCase "an int64 works from number" <| fun _ ->
-            //     let expected = Ok 1000L
-            //     let actual =
-            //         decodeString int64 "1000"
+            testCase "an int64 works from number" <| fun _ ->
+                let expected = Ok 1000L
+                let actual =
+                    decodeString int64 "1000"
 
-            //     equal expected actual
+                equal expected actual
 
-//             testCase "an int64 works from string" <| fun _ ->
-//                 let expected = Ok 99L
-//                 let actual =
-//                     decodeString int64 "\"99\""
+            testCase "an int64 works from string" <| fun _ ->
+                let expected = Ok 99L
+                let actual =
+                    decodeString int64 "\"99\""
 
-//                 equal expected actual
+                equal expected actual
 
-//             testCase "an int64 works output an error if incorrect string" <| fun _ ->
-//                 let expected =
-//                     Error(
-//                         """
-// Error at: `$`
-// Expecting an int64 but instead got: "maxime"
-// Reason: Input string was not in a correct format.
-//                         """.Trim())
-//                 let actual =
-//                     decodeString int64 "\"maxime\""
+            testCase "an int64 works output an error if incorrect string" <| fun _ ->
+                let expected =
+                    Error(
+                        """
+Error at: `$`
+Expecting an int64 but instead got: "maxime"
+Reason: Input string was not in a correct format.
+                        """.Trim())
+                let actual =
+                    decodeString int64 "\"maxime\""
 
-//                 equal expected actual
+                equal expected actual
 
-//             testCase "an uint64 works from number" <| fun _ ->
-//                 let expected = Ok 1000UL
-//                 let actual =
-//                     decodeString uint64 "1000"
+            testCase "an uint64 works from number" <| fun _ ->
+                let expected = Ok 1000UL
+                let actual =
+                    decodeString uint64 "1000"
 
-//                 equal expected actual
+                equal expected actual
 
-//             testCase "an uint64 works from string" <| fun _ ->
-//                 let expected = Ok 1000UL
-//                 let actual =
-//                     decodeString uint64 "\"1000\""
+            testCase "an uint64 works from string" <| fun _ ->
+                let expected = Ok 1000UL
+                let actual =
+                    decodeString uint64 "\"1000\""
 
-//                 equal expected actual
+                equal expected actual
 
-//             testCase "an uint64 works output an error if incorrect string" <| fun _ ->
-//                 let expected =
-//                     Error(
-//                         """
-// Error at: `$`
-// Expecting an uint64 but instead got: "maxime"
-// Reason: Input string was not in a correct format.
-//                         """.Trim())
-//                 let actual =
-//                     decodeString uint64 "\"maxime\""
+            testCase "an uint64 output an error if incorrect string" <| fun _ ->
+                let expected =
+                    Error(
+                        """
+Error at: `$`
+Expecting an uint64 but instead got: "maxime"
+Reason: Input string was not in a correct format.
+                        """.Trim())
+                let actual =
+                    decodeString uint64 "\"maxime\""
 
-//                 equal expected actual
+                equal expected actual
 
             testCase "a datetime works" <| fun _ ->
                 let expected = Ok (new DateTime(2018, 10, 1, 11, 12, 55, DateTimeKind.Utc))
