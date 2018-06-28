@@ -1205,49 +1205,49 @@ Expecting a string but instead got: 12
 
         ]
 
-        // testList "Auto" [
-        //     testCase "Auto.DecodeString works" <| fun _ ->
-        //         let json =
-        //             { a = 5
-        //               b = "bar"
-        //               c = [false, 3; true, 5; false, 10]
-        //               d = [|Some(Foo 14); None|]
-        //             //   e = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
-        //               f = System.DateTimeOffset.Now
-        //             } |> Encode.encodeAuto 4
-        //         // printfn "AUTO ENCODED %s" json
-        //         let r2 = Auto.DecodeString<Record9>(json)
-        //         equal 5 r2.a
-        //         equal "bar" r2.b
-        //         equal [false, 3; true, 5; false, 10] r2.c
-        //         equal (Some(Foo 14)) r2.d.[0]
-        //         equal None r2.d.[1]
-        //         equal -1.5 (Map.find "ah" r2.e).a
-        //         equal 2.   (Map.find "oh" r2.e).b
+        testList "Auto" [
+            // testCase "Auto.DecodeString works" <| fun _ ->
+            //     let json =
+            //         { a = 5
+            //           b = "bar"
+            //           c = [false, 3; true, 5; false, 10]
+            //           d = [|Some(Foo 14); None|]
+            //         //   e = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
+            //           f = System.DateTimeOffset.Now
+            //         } |> Encode.encodeAuto 4
+            //     // printfn "AUTO ENCODED %s" json
+            //     let r2 = Auto.DecodeString<Record9>(json)
+            //     equal 5 r2.a
+            //     equal "bar" r2.b
+            //     equal [false, 3; true, 5; false, 10] r2.c
+            //     equal (Some(Foo 14)) r2.d.[0]
+            //     equal None r2.d.[1]
+            //     equal -1.5 (Map.find "ah" r2.e).a
+            //     equal 2.   (Map.find "oh" r2.e).b
 
-        //     testCase "Auto serialization works with recursive types" <| fun _ ->
-        //         let len xs =
-        //             let rec lenInner acc = function
-        //                 | Cons(_,rest) -> lenInner (acc + 1) rest
-        //                 | Nil -> acc
-        //             lenInner 0 xs
-        //         let li = Cons(1, Cons(2, Cons(3, Nil)))
-        //         let json = Encode.encodeAuto 4 li
-        //         // printfn "AUTO ENCODED MYLIST %s" json
-        //         let li2 = Auto.DecodeString(json, typeof< MyList<int> >) :?> MyList<int>
-        //         len li2 |> equal 3
-        //         match li with
-        //         | Cons(i1, Cons(i2, Cons(i3, Nil))) -> i1 + i2 + i3
-        //         | Cons(i,_) -> i
-        //         | Nil -> 0
-        //         |> equal 6
+            testCase "Auto serialization works with recursive types" <| fun _ ->
+                let len xs =
+                    let rec lenInner acc = function
+                        | Cons(_,rest) -> lenInner (acc + 1) rest
+                        | Nil -> acc
+                    lenInner 0 xs
+                let li = Cons(1, Cons(2, Cons(3, Nil)))
+                let json = Encode.encodeAuto 4 li
+                printfn "AUTO ENCODED MYLIST %s" json
+                let li2 = Auto.DecodeString(json, typeof< MyList<int> >) :?> MyList<int>
+                len li2 |> equal 3
+                match li with
+                | Cons(i1, Cons(i2, Cons(i3, Nil))) -> i1 + i2 + i3
+                | Cons(i,_) -> i
+                | Nil -> 0
+                |> equal 6
 
-        //     testCase "Auto.DecodeString works with camelCase" <| fun _ ->
-        //         let json = """{ "id" : 0, "name": "maxime", "email": "mail@domain.com", "followers": 0 }"""
-        //         let user = Auto.DecodeString<User>(json, isCamelCase=true)
-        //         equal "maxime" user.Name
-        //         equal 0 user.Id
-        //         equal 0 user.Followers
-        //         equal "mail@domain.com" user.Email
-        // ]
+            testCase "Auto.DecodeString works with camelCase" <| fun _ ->
+                let json = """{ "id" : 0, "name": "maxime", "email": "mail@domain.com", "followers": 0 }"""
+                let user = Auto.DecodeString<User>(json, isCamelCase=true)
+                equal "maxime" user.Name
+                equal 0 user.Id
+                equal 0 user.Followers
+                equal "mail@domain.com" user.Email
+        ]
     ]
