@@ -19,23 +19,24 @@ module Decode =
             token.WriteTo(jsonWriter)
             stream.ToString()
 
-        let isBool (token: JToken) = token.Type = JTokenType.Boolean
-        let isNumber (token: JToken) = token.Type = JTokenType.Float
-        let isString (token: JToken) = token.Type = JTokenType.String
-        let isArray (token: JToken) = token.Type = JTokenType.Array
-        let isObject (token: JToken) = token.Type = JTokenType.Object
-        let isNull (token: JToken) = token.Type = JTokenType.Null
-        let asBool (token: JToken): bool = token.Value<bool>()
-        let asInt (token: JToken): int = token.Value<int>()
-        let asFloat (token: JToken): float = token.Value<float>()
-        let asString (token: JToken): string = token.Value<string>()
-        let asArray (token: JToken): JToken[] = token.Value<JArray>().Values() |> Seq.toArray
+        let inline isBool (token: JToken) = token.Type = JTokenType.Boolean
+        let inline isNumber (token: JToken) = token.Type = JTokenType.Float || token.Type = JTokenType.Integer
+        let inline isString (token: JToken) = token.Type = JTokenType.String
+        let inline isArray (token: JToken) = token.Type = JTokenType.Array
+        let inline isObject (token: JToken) = token.Type = JTokenType.Object
+        let inline isNull (token: JToken) = token.Type = JTokenType.Null
+        let inline asBool (token: JToken): bool = token.Value<bool>()
+        let inline asInt (token: JToken): int = token.Value<int>()
+        let inline asFloat (token: JToken): float = token.Value<float>()
+        let inline asString (token: JToken): string = token.Value<string>()
+        let inline asArray (token: JToken): JToken[] = token.Value<JArray>().Values() |> Seq.toArray
 
     type ErrorReason =
         | BadPrimitive of string * JToken
         | BadPrimitiveExtra of string * JToken * string
         | BadField of string * JToken
         | BadType of string * JToken
+        | BadTypeAt of string * JToken
         | BadPath of string * JToken * string
         | TooSmallArray of string * JToken
         | FailMessage of string
@@ -66,6 +67,8 @@ module Decode =
             | BadPrimitive (msg, value) ->
                 genericMsg msg value false
             | BadType (msg, value) ->
+                genericMsg msg value true
+            | BadTypeAt (msg, value) ->
                 genericMsg msg value true
             | BadPrimitiveExtra (msg, value, reason) ->
                 genericMsg msg value false + "\nReason: " + reason
@@ -102,8 +105,8 @@ module Decode =
     // Runners ///
     /////////////
 
-    let private decodeValueError (decoder : Decoder<'T>) =
-        fun path value ->
+    let private decodeValueError path (decoder : Decoder<'T>) =
+        fun value ->
             try
                 match decoder path value with
                 | Ok success ->
@@ -116,7 +119,7 @@ module Decode =
 
     let decodeValue (path : string) (decoder : Decoder<'T>) =
         fun value ->
-            match decodeValueError decoder path value with
+            match decodeValueError path decoder value with
             | Ok success ->
                 Ok success
             | Error error ->
@@ -159,17 +162,17 @@ module Decode =
                 with
                     | _ -> (path, BadPrimitiveExtra("an int", token, "Value was either too large or too small for an int")) |> Error
 
-    // let int64 : Decoder<int64> =
-    //     fun path token ->
-    //         if token.Type = JTokenType.Integer then
-    //             Ok(token.Value<int64>())
-    //         elif token.Type = JTokenType.String then
-    //             try
-    //                 token.Value<int64>() |> int64 |> Ok
-    //             with
-    //                 | ex ->
-    //                     (path, BadPrimitiveExtra("an int64", token, ex.Message)) |> Error
-    //         else (path, BadPrimitive("an int64", token)) |> Error
+    let int64 : Decoder<int64> =
+        fun path token ->
+            if token.Type = JTokenType.Integer then
+                Ok(token.Value<int64>())
+            elif token.Type = JTokenType.String then
+                try
+                    token.Value<int64>() |> int64 |> Ok
+                with
+                    | ex ->
+                        (path, BadPrimitiveExtra("an int64", token, ex.Message)) |> Error
+            else (path, BadPrimitive("an int64", token)) |> Error
 
     let uint64 : Decoder<uint64> =
         fun path token ->
@@ -184,13 +187,17 @@ module Decode =
             else (path, BadPrimitive("an uint64", token)) |> Error
 
     let bigint : Decoder<bigint> =
-        fun path value ->
-            if Helpers.isNumber value then
-                Helpers.asInt value |> bigint |> Ok
-            elif Helpers.isString value then
-                Helpers.asString value |> bigint.Parse |> Ok
+        fun path token ->
+            if Helpers.isNumber token then
+                Helpers.asInt token |> bigint |> Ok
+            elif Helpers.isString token then
+                try
+                    Helpers.asString token |> bigint.Parse |> Ok
+                with
+                    | _ ->
+                        (path, BadPrimitive("a bigint", token)) |> Error
             else
-                (path, BadPrimitive("a bigint", value)) |> Error
+                (path, BadPrimitive("a bigint", token)) |> Error
 
     let bool : Decoder<bool> =
         fun path token ->
@@ -217,31 +224,37 @@ module Decode =
             else
                 (path, BadPrimitive("a decimal", value)) |> Error
 
+    // Regex copied from: https://www.myintervals.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
+    let ISO_8601 = System.Text.RegularExpressions.Regex("^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$")
+
     let datetime : Decoder<System.DateTime> =
         fun path token ->
             if token.Type = JTokenType.Date then
                 try
-                    System.DateTime.Parse(token.Value<string>()) |> Ok
+                    System.DateTime.Parse(token.Value<string>(), new  System.Globalization.CultureInfo("en-US")) |> Ok
                 with
                     | _ ->
-                        (path, BadPrimitiveExtra("a datetime", token, "Input string was not in a correct format. It is recommanded to use ISO 8601 format.")) |> Error
+                        (path, BadPrimitive("a datetime in ISO 8601 format", token)) |> Error
             else
-                if token.Type = JTokenType.String then
-                    (path, BadPrimitiveExtra("a datetime", token, "Input string was not in a correct format. It is recommanded to use ISO 8601 format.")) |> Error
+                if token.Type = JTokenType.String && ISO_8601.Match(Helpers.asString token).Success then
+                    System.DateTime.Parse(Helpers.asString token, new  System.Globalization.CultureInfo("en-US")) |> Ok
                 else
-                    (path, BadPrimitive("a datetime", token)) |> Error
+                    (path, BadPrimitive("a datetime in ISO 8601 format", token)) |> Error
 
     let datetimeOffset : Decoder<System.DateTimeOffset> =
-        fun path value ->
+        fun path token ->
             // Using Helpers.isString fails because Json.NET directly assigns Date type
-            if value.Type = JTokenType.Date then
-                value.Value<System.DateTime>() |> System.DateTimeOffset |> Ok
+            if token.Type = JTokenType.Date then
+                token.Value<System.DateTime>() |> System.DateTimeOffset |> Ok
             else
-                (path, BadPrimitive("a date with offset", value)) |> Error
+                if token.Type = JTokenType.String && ISO_8601.Match(Helpers.asString token).Success then
+                    System.DateTimeOffset.Parse(Helpers.asString token) |> Ok
+                else
+                    (path, BadPrimitive("a date in ISO 8601 format with offset", token)) |> Error
+
     /////////////////////////
     // Object primitives ///
     ///////////////////////
-
 
     let field (fieldName: string) (decoder : Decoder<'value>) : Decoder<'value> =
         fun path token ->
@@ -281,7 +294,7 @@ module Decode =
             with
                 | NonObjectTypeException ->
                     let path = String.concat "." fieldNames.[..index-1]
-                    (currentPath, BadType ("an object at `" + path + "`", cValue))
+                    (currentPath, BadTypeAt ("an object at `" + path + "`", cValue))
                     |> Error
                 | UndefinedValueException fieldName ->
                     let msg = "an object with path `" + (String.concat "." fieldNames) + "`"
@@ -308,8 +321,6 @@ module Decode =
             else
                 (currentPath, BadPrimitive("an array", token))
                 |> Error
-
-    // let nullable (d1: Decoder<'value>) : Resul<'value option, DecoderError> =
 
     // //////////////////////
     // // Data structure ///
@@ -551,6 +562,57 @@ module Decode =
 
     let dict (decoder : Decoder<'value>) : Decoder<Map<string, 'value>> =
         map Map.ofList (keyValuePairs decoder)
+
+    //////////////////////
+    // Object builder ///
+    ////////////////////
+
+    type IRequiredGetter =
+        abstract Field : string -> Decoder<'a> -> 'a
+        abstract At : List<string> -> Decoder<'a> -> 'a
+
+    type IOptionalGetter =
+        abstract Field : string -> Decoder<'a> -> 'a option
+        abstract At : List<string> -> Decoder<'a> -> 'a option
+
+    type IGetters =
+        abstract Required: IRequiredGetter
+        abstract Optional: IOptionalGetter
+
+    let object (builder: IGetters -> 'value) : Decoder<'value> =
+        fun path v ->
+            builder { new IGetters with
+                member __.Required =
+                    { new IRequiredGetter with
+                        member __.Field (fieldName : string) (decoder : Decoder<_>) =
+                            match decodeValue path (field fieldName decoder) v with
+                            | Ok v -> v
+                            | Error msg -> failwith msg
+                        member __.At (fieldNames : string list) (decoder : Decoder<_>) =
+                            match decodeValue path (at fieldNames decoder) v with
+                            | Ok v -> v
+                            | Error msg -> failwith msg }
+                member __.Optional =
+                    { new IOptionalGetter with
+                        member __.Field (fieldName : string) (decoder : Decoder<_>) =
+                            match decodeValueError path (field fieldName decoder) v with
+                            | Ok v -> Some v
+                            | Error (_, BadField _ )
+                            | Error (_, BadPrimitive (_, null)) -> None
+                            | Error error ->
+                                failwith (errorToString error)
+                        member __.At (fieldNames : string list) (decoder : Decoder<_>) =
+                            if Helpers.isObject v then
+                                match decodeValueError path (at fieldNames decoder) v with
+                                | Ok v -> Some v
+                                | Error (_, BadPath _ )
+                                | Error (_, BadType (_, null))
+                                | Error (_, BadTypeAt _) -> None
+                                | Error error ->
+                                    failwith (errorToString error)
+                            else
+                                failwith (errorToString (path, BadType ("an object", v))) }
+            } |> Ok
 
     //////////////////
     // Reflection ///

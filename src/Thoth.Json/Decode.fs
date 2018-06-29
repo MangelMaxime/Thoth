@@ -615,7 +615,6 @@ module Decode =
                                 | Error (_, BadType (_, null))
                                 | Error (_, BadTypeAt _) -> None
                                 | Error error ->
-                                    printfn "Error: %A" error
                                     failwith (errorToString error)
                             else
                                 failwith (errorToString (path, BadType ("an object", v))) }
