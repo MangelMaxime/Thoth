@@ -6,13 +6,13 @@ This library is a <strong>Work In Progress</strong> so changes can still occur.
 
 When using this library with HMR, the view can flicker a bit especially when you are changing the custom view implementation. If you refresh your tab the problem should be gone.
 
-Because you don't use HMR in production, there is no problem to use this library.
+Because you don't use HMR in production, there is no problem using this library for production purposes.
     </div>
 </article>
 
 This library aims to provide you a nice way to inform the user that something occured. By attaching itself at the top level of your application toasts can be persistant between page navigation.
 
-It also provide a very basic input system. Do not abuse of it, a toast should be about notifying the user not asking him an action.
+It also provides a very basic input system. Do not abuse it, a toast should be about notifying the user, not asking them to perform an action.
 
 ## Demo
 
@@ -46,7 +46,7 @@ let update msg model =
 
 ## Customize the view
 
-This library include a default `render` function. Like that you can experiment with the library and see if it fit your needs.
+This library includes a default `render` function. You can use the default function to experiment with the library and see if it fits your needs.
 
 <span class="icon is-medium has-text-info"><i class="fa fa-2x fa-exclamation-triangle"></i></span> We strongly encourage you to implement your own render. <span class="icon is-medium has-text-info"><i class="fa fa-2x fa-exclamation-triangle"></i></span>
 
@@ -61,11 +61,11 @@ Examples:
 
 ### Usage
 
-Any time you want to send a toast you need to follow this rules:
+Any time you want to send a toast you need to follow these rules:
 
-1. Create it and set it's content using `Toast.message`
-2. Pipe any number of [Builder](#builder) you want
-3. Use one of the [Trigger](#trigger) to set it's [Status](#status) and send it
+1. Create it and set its content using `Toast.message`
+2. Pipe any number of [Builders](#builder) you want
+3. Use one of the [Triggers](#trigger) to set its [Status](#status) and send it
 
 ### Status
 
@@ -99,8 +99,8 @@ type Position =
 | `Toast.addInput` | Add an input to the toast |
 | `Toast.icon` | Set the icon |
 | `Toast.timeout` | Set the timeout in seconds |
-| `Toast.noTimeout` | No timeout, make sure to add close button or dismin on click |
-| `Toast.dismissOnClick` | Allow user to dismis the toast by cliking on it |
+| `Toast.noTimeout` | No timeout, make sure to add a close button or dismiss on click |
+| `Toast.dismissOnClick` | Allow user to dismiss the toast by cliking on it |
 | `Toast.withCloseButton` | Add a close button |
 
 ### Trigger

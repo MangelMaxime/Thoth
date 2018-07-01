@@ -16,7 +16,7 @@ module Toast =
     // Generate a unique name for the event
     // We use this trick to attach the event listener to a different event each time
     // the application is patched using HMR.
-    // Yes previous listener are still attached and working but the program instance do not run anymore so handler do nothing
+    // Yes previous listener is still attached and working but the program instance does not run anymore so handler does nothing
     // In production, the bundle can't be patched using HMR so it should not be a problem
     let eventIdentifier = "notify_event_" + Guid.NewGuid().ToString()
 
@@ -93,11 +93,11 @@ module Toast =
     let timeout delay (builder : Builder<_, _>) =
         { builder with Delay = Some delay }
 
-    /// No timeout, make sure to add close button or dismin on click
+    /// No timeout, make sure to add close button or dismiss on click
     let noTimeout (builder : Builder<_, _>) =
         { builder with Delay = None }
 
-    /// Allow user to dismis the toast by cliking on it
+    /// Allow user to dismiss the toast by cliking on it
     let dismissOnClick (builder : Builder<_, _>) =
         { builder with DismissOnClick = true }
 
@@ -181,7 +181,7 @@ module Toast =
         abstract CloseButton : (React.MouseEvent -> unit) -> React.ReactElement
 
         /// **Description**
-        /// Render the outet element of the Input Area
+        /// Render the outer element of the Input Area
         /// **Parameters**
         /// * `content` - parameter of type `React.ReactElement list`
         ///     > This is the content of the input area.
@@ -238,7 +238,7 @@ module Toast =
 
 
         /// **Description**
-        /// Render the splitted layout (when toast have an Icon and Message)
+        /// Render the splitted layout (when toast has an Icon and Message)
         /// **Parameters**
         /// * `icon` - parameter of type `React.ReactElement`
         ///     > Icon view
@@ -358,7 +358,7 @@ module Toast =
                     do! Promise.sleep (int delay.TotalMilliseconds)
                     return notification
                 }
-            | None -> failwith "No delay attach to notification can't delayed it. `delayedCmd` should not have been called by the program"
+            | None -> failwith "No delay attached to notification can't delayed it. `delayedCmd` should not have been called by the program"
 
         let withToast (renderer : IRenderer<'icon>) (program : Elmish.Program<'arg, 'model, 'msg, 'view >) =
 
