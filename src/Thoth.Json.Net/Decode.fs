@@ -597,8 +597,8 @@ module Decode =
                         member __.Field (fieldName : string) (decoder : Decoder<_>) =
                             match decodeValueError path (field fieldName decoder) v with
                             | Ok v -> Some v
-                            | Error (_, BadField _ )
-                            | Error (_, BadPrimitive (_, null)) -> None
+                            | Error (_, BadField _ ) -> None
+                            | Error (_, BadPrimitive (_, jToken)) when jToken.Type = JTokenType.Null -> None
                             | Error error ->
                                 failwith (errorToString error)
                         member __.At (fieldNames : string list) (decoder : Decoder<_>) =
@@ -606,8 +606,8 @@ module Decode =
                                 match decodeValueError path (at fieldNames decoder) v with
                                 | Ok v -> Some v
                                 | Error (_, BadPath _ )
-                                | Error (_, BadType (_, null))
                                 | Error (_, BadTypeAt _) -> None
+                                | Error (_, BadType (_, jToken)) when jToken.Type = JTokenType.Null -> None
                                 | Error error ->
                                     failwith (errorToString error)
                             else
