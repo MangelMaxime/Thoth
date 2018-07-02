@@ -1,3 +1,7 @@
+### 1.0.0-beta-004
+
+* Fix typos in doc comments
+
 ### 1.0.0-beta-003
 
 * Fix package to include css files too
