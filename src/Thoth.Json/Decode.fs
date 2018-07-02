@@ -166,8 +166,11 @@ module Decode =
 
     let guid : Decoder<System.Guid> =
         fun path value ->
-            if Helpers.isString value
-            then Helpers.asString value |> System.Guid.Parse |> Ok
+            if Helpers.isString value then
+                try
+                    Helpers.asString value |> System.Guid.Parse |> Ok
+                with
+                    |  _ -> (path, BadPrimitive("a guid", value)) |> Error
             else (path, BadPrimitive("a guid", value)) |> Error
 
     let int : Decoder<int> =

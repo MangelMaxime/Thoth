@@ -16,7 +16,7 @@ module Util.Testing
     let testList name tests = testList name tests
     let testCase msg test = testCase msg test
 
-    let equal expected actual: unit =
+    let inline equal expected actual: unit =
         Expect.equal actual expected ""
 
     type Test = Expecto.Test
