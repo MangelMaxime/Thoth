@@ -250,12 +250,12 @@ module Decode =
             else
                 (path, BadPrimitive("a datetime in ISO 8601 format", value)) |> Error
 
-    let datetimeOffset : Decoder<System.DateTimeOffset> =
-        fun path value ->
-            if Helpers.isString value && ISO_8601.Match(Helpers.asString value).Success then
-                System.DateTimeOffset.Parse(Helpers.asString value) |> Ok
-            else
-                (path, BadPrimitive("a date in ISO 8601 format with offset", value)) |> Error
+    // let datetimeOffset : Decoder<System.DateTimeOffset> =
+    //     fun path value ->
+    //         if Helpers.isString value && ISO_8601.Match(Helpers.asString value).Success then
+    //             System.DateTimeOffset.Parse(Helpers.asString value) |> Ok
+    //         else
+    //             (path, BadPrimitive("a date in ISO 8601 format with offset", value)) |> Error
 
     /////////////////////////
     // Object primitives ///
@@ -740,8 +740,8 @@ module Decode =
             then boxDecoder bigint
             elif fullname = typeof<System.DateTime>.FullName
             then boxDecoder datetime
-            elif fullname = typeof<System.DateTimeOffset>.FullName
-            then boxDecoder datetimeOffset
+            // elif fullname = typeof<System.DateTimeOffset>.FullName
+            // then boxDecoder datetimeOffset
             elif fullname = typeof<System.Guid>.FullName
             then boxDecoder guid
             elif fullname = typeof<obj>.FullName

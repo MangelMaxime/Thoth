@@ -241,16 +241,16 @@ module Decode =
                 else
                     (path, BadPrimitive("a datetime in ISO 8601 format", token)) |> Error
 
-    let datetimeOffset : Decoder<System.DateTimeOffset> =
-        fun path token ->
-            // Using Helpers.isString fails because Json.NET directly assigns Date type
-            if token.Type = JTokenType.Date then
-                token.Value<System.DateTime>() |> System.DateTimeOffset |> Ok
-            else
-                if token.Type = JTokenType.String && ISO_8601.Match(Helpers.asString token).Success then
-                    System.DateTimeOffset.Parse(Helpers.asString token) |> Ok
-                else
-                    (path, BadPrimitive("a date in ISO 8601 format with offset", token)) |> Error
+    // let datetimeOffset : Decoder<System.DateTimeOffset> =
+    //     fun path token ->
+    //         // Using Helpers.isString fails because Json.NET directly assigns Date type
+    //         if token.Type = JTokenType.Date then
+    //             token.Value<System.DateTime>() |> System.DateTimeOffset |> Ok
+    //         else
+    //             if token.Type = JTokenType.String && ISO_8601.Match(Helpers.asString token).Success then
+    //                 System.DateTimeOffset.Parse(Helpers.asString token) |> Ok
+    //             else
+    //                 (path, BadPrimitive("a date in ISO 8601 format with offset", token)) |> Error
 
     /////////////////////////
     // Object primitives ///
