@@ -35,7 +35,6 @@ let private makeUnion (reader: JsonReader) uci values =
     with ex -> failwithf "Cannot create union %s (case %s) with %A (path: %s): %s"
                     (string uci.DeclaringType) uci.Name values reader.Path ex.Message
 
-
 type OptionConverter() =
     inherit JsonConverter()
     override __.CanConvert(t) =
@@ -140,7 +139,8 @@ type MapConverter() =
                 advance reader
             let cons = t.GetConstructors() |> Array.head
             cons.Invoke([|list|])
-        | _ -> failwith "invalid token"
+        | token -> failwithf "Expecting array for map got %s (path: %s)"
+                        (Enum.GetName(typeof<JsonToken>, token)) reader.Path
 
 let converters =
     [|

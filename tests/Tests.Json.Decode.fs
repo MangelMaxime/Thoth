@@ -116,8 +116,8 @@ type Record9 =
       b: string
       c: (bool * int) list
       d: (MyUnion option) []
-    //   e: Map<string, Record2>
-      f: System.DateTimeOffset
+      e: Map<string, Record2>
+      f: System.DateTime
     }
 
 type User =
@@ -1274,41 +1274,41 @@ Expecting a string but instead got: 12
         ]
 
         testList "Auto" [
-            // testCase "Auto.Decode.decodeString works" <| fun _ ->
-            //     let json =
-            //         { a = 5
-            //           b = "bar"
-            //           c = [false, 3; true, 5; false, 10]
-            //           d = [|Some(Foo 14); None|]
-            //         //   e = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
-            //           f = System.DateTimeOffset.Now
-            //         } |> Encode.encodeAuto 4
-            //     // printfn "AUTO ENCODED %s" json
-            //     let r2 = Auto.Decode.decodeString<Record9>(json)
-            //     equal 5 r2.a
-            //     equal "bar" r2.b
-            //     equal [false, 3; true, 5; false, 10] r2.c
-            //     equal (Some(Foo 14)) r2.d.[0]
-            //     equal None r2.d.[1]
-            //     equal -1.5 (Map.find "ah" r2.e).a
-            //     equal 2.   (Map.find "oh" r2.e).b
+            testCase "Auto.Decode.decodeString works" <| fun _ ->
+                let json =
+                    { a = 5
+                      b = "bar"
+                      c = [false, 3; true, 5; false, 10]
+                      d = [|Some(Foo 14); None|]
+                      e = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
+                      f = System.DateTime.Now
+                    } |> Encode.encodeAuto 4
+                printfn "AUTO ENCODED %s" json
+                let r2 = Decode.Auto.DecodeString<Record9>(json)
+                equal 5 r2.a
+                equal "bar" r2.b
+                equal [false, 3; true, 5; false, 10] r2.c
+                equal (Some(Foo 14)) r2.d.[0]
+                equal None r2.d.[1]
+                equal -1.5 (Map.find "ah" r2.e).a
+                equal 2.   (Map.find "oh" r2.e).b
 
-            // testCase "Auto serialization works with recursive types" <| fun _ ->
-            //     let len xs =
-            //         let rec lenInner acc = function
-            //             | Cons(_,rest) -> lenInner (acc + 1) rest
-            //             | Nil -> acc
-            //         lenInner 0 xs
-            //     let li = Cons(1, Cons(2, Cons(3, Nil)))
-            //     let json = Encode.encodeAuto 4 li
-            //     printfn "AUTO ENCODED MYLIST %s" json
-            //     let li2 = Decode.Auto.DecodeString(json, typeof< MyList<int> >) :?> MyList<int>
-            //     len li2 |> equal 3
-            //     match li with
-            //     | Cons(i1, Cons(i2, Cons(i3, Nil))) -> i1 + i2 + i3
-            //     | Cons(i,_) -> i
-            //     | Nil -> 0
-            //     |> equal 6
+            testCase "Auto serialization works with recursive types" <| fun _ ->
+                let len xs =
+                    let rec lenInner acc = function
+                        | Cons(_,rest) -> lenInner (acc + 1) rest
+                        | Nil -> acc
+                    lenInner 0 xs
+                let li = Cons(1, Cons(2, Cons(3, Nil)))
+                let json = Encode.encodeAuto 4 li
+                printfn "AUTO ENCODED MYLIST %s" json
+                let li2 = Decode.Auto.DecodeString(json, typeof< MyList<int> >) :?> MyList<int>
+                len li2 |> equal 3
+                match li with
+                | Cons(i1, Cons(i2, Cons(i3, Nil))) -> i1 + i2 + i3
+                | Cons(i,_) -> i
+                | Nil -> 0
+                |> equal 6
 
             testCase "Auto decoders works for string" <| fun _ ->
                 let value = "maxime"
@@ -1368,13 +1368,19 @@ Expecting a string but instead got: 12
                 let value = DateTime.Now
                 let json = Encode.encodeAuto 4 value
                 let res = Decode.Auto.DecodeString<DateTime>(json)
-                equal value res
+                equal value.Date res.Date
+                equal value.Hour res.Hour
+                equal value.Minute res.Minute
+                equal value.Second res.Second
 
             testCase "Auto decoders works for datetime UTC" <| fun _ ->
                 let value = DateTime.UtcNow
                 let json = Encode.encodeAuto 4 value
                 let res = Decode.Auto.DecodeString<DateTime>(json)
-                equal value res
+                equal value.Date res.Date
+                equal value.Hour res.Hour
+                equal value.Minute res.Minute
+                equal value.Second res.Second
 
             // testCase "Auto decoders works for datetimeOffset" <| fun _ ->
             //     let value = DateTimeOffset.Now

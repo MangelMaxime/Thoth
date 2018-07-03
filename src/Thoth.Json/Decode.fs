@@ -639,6 +639,9 @@ module Decode =
     let inline private unboxDecoder (d: BoxedDecoder): Decoder<'T> =
         !!d // d >> Result.map unbox
 
+    // This is used to force Fable use a generic comparer for map keys
+    let private toMap<'key, 'value when 'key: comparison> (xs: ('key*'value) seq) = Map.ofSeq xs
+
     let private autoObject (decoders: (string * BoxedDecoder)[]) (path : string) (value: obj) =
         if not (Helpers.isObject value) then
             (path, BadPrimitive ("an object", value)) |> Error
@@ -718,10 +721,14 @@ module Decode =
                 then t.GenericTypeArguments.[0] |> (autoDecoder isCamelCase) |> option |> boxDecoder
                 elif fullname = typedefof<obj list>.FullName
                 then t.GenericTypeArguments.[0] |> (autoDecoder isCamelCase) |> list |> boxDecoder
-                // elif fullname = typedefof< Map<string, obj> >.FullName
-                // then
-                    // let decoder = t.GenericTypeArguments.[1] |> autoDecoder isCamelCase
-                    // (array (tuple2 string decoder) >> Result.map Map) |> boxDecoder
+                elif fullname = typedefof< Map<string, obj> >.FullName
+                then
+                    let decoder1 = t.GenericTypeArguments.[0] |> autoDecoder isCamelCase
+                    let decoder2 = t.GenericTypeArguments.[1] |> autoDecoder isCamelCase
+                    fun path value ->
+                        match array (tuple2 decoder1 decoder2) path value with
+                        | Error er -> Error er
+                        | Ok ar -> toMap (unbox ar) |> box |> Ok
                 else autoDecodeRecordsAndUnions t isCamelCase
         else
             let fullname = t.FullName

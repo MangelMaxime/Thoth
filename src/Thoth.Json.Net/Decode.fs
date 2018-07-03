@@ -693,7 +693,42 @@ module Decode =
                         | Error er -> Error er
                         | Ok result -> FSharpValue.MakeUnion(ucis.[1], [|result; acc|]) |> Ok)
 
-    let rec private makeUnion t isCamelCase name (path : string) (values: JToken[]) =
+    let rec private genericMap isCamelCase (t: System.Type) =
+        let keyType   = t.GenericTypeArguments.[0]
+        let valueType = t.GenericTypeArguments.[1]
+        let keyDecoder   = autoDecoder isCamelCase keyType
+        let valueDecoder = autoDecoder isCamelCase valueType
+        let tupleType = typedefof<obj * obj>.MakeGenericType([|keyType; valueType|])
+        let listType = typedefof< ResizeArray<obj> >.MakeGenericType([|tupleType|])
+        let addMethod = listType.GetMethod("Add")
+        fun (path : string)  (value: JToken) ->
+            if not (Helpers.isArray value) then
+                (path, BadPrimitive ("an array", value)) |> Error
+            else
+                let values = value.Value<JArray>()
+                let empty = System.Activator.CreateInstance(listType)
+                (Ok empty, values) ||> Seq.fold (fun acc value ->
+                    match acc with
+                    | Error _ -> acc
+                    | Ok acc ->
+                        if not (Helpers.isArray value) then
+                            (path, BadPrimitive ("an array", value)) |> Error
+                        else
+                            let kv = value.Value<JArray>()
+                            // TODO: How do we add the index to the path?
+                            match keyDecoder.Decode(path, kv.[0]), valueDecoder.Decode(path, kv.[1]) with
+                            | Error er, _ -> Error er
+                            | _, Error er -> Error er
+                            | Ok key, Ok value ->
+                                addMethod.Invoke(acc, [|FSharpValue.MakeTuple([|key; value|], tupleType)|]) |> ignore
+                                Ok acc)
+                |> function
+                    | Error er -> Error er
+                    | Ok kvs ->
+                        let mapType = typedefof< Map<string, obj> >.MakeGenericType([|keyType; valueType|])
+                        System.Activator.CreateInstance(mapType, kvs) |> Ok
+
+    and private makeUnion t isCamelCase name (path : string) (values: JToken[]) =
         match FSharpType.GetUnionCases(t) |> Array.tryFind (fun x -> x.Name = name) with
         | None -> (path, FailMessage("Cannot find case " + name + " in " + t.FullName)) |> Error
         | Some uci ->
@@ -757,10 +792,8 @@ module Decode =
                 then autoDecoder isCamelCase t.GenericTypeArguments.[0] |> genericOption t |> boxDecoder
                 elif fullname = typedefof<obj list>.FullName
                 then autoDecoder isCamelCase t.GenericTypeArguments.[0] |> genericList t |> boxDecoder
-                // elif fullname = typedefof< Map<string, obj> >.FullName
-                // then
-                //     let decoder = t.GenericTypeArguments.[1] |> autoDecoder isCamelCase
-                //     (array (tuple2 string decoder.BoxedDecoder) >> Result.map Map) |> boxDecoder // TODO: fails
+                elif fullname = typedefof< Map<string, obj> >.FullName
+                then genericMap isCamelCase t |> boxDecoder
                 else autoDecodeRecordsAndUnions t isCamelCase
         else
             let fullname = t.FullName
@@ -819,9 +852,9 @@ module Decode =
             | Ok x -> x :?> 'T
             | Error msg -> failwith msg
 
-        static member DecodeString(json: string, t: System.Type, ?isCamelCase : bool): 'T =
+        static member DecodeString(json: string, t: System.Type, ?isCamelCase : bool): obj =
             let isCamelCase = defaultArg isCamelCase false
             let decoder = autoDecoder isCamelCase t
             match decodeString decoder.BoxedDecoder json with
-            | Ok x -> x :?> 'T
+            | Ok x -> x
             | Error msg -> failwith msg
