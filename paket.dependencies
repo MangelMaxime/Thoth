@@ -11,6 +11,7 @@ nuget Expecto
 nuget Fable.Elmish
 nuget Fable.PowerPack
 nuget Fable.React
+nuget Fable.Import.HMR
 
 group netcorebuild
     source https://www.nuget.org/api/v2
@@ -59,3 +60,4 @@ group Demos
     nuget Fulma
     nuget Thoth.Elmish
     nuget Fulma.Extensions prerelease
+nuget Fable.Import.HMR

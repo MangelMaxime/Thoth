@@ -13,12 +13,7 @@ module Toast =
     importSideEffects "./css/toast-base.css"
     importSideEffects "./css/toast-minimal.css"
 
-    // Generate a unique name for the event
-    // We use this trick to attach the event listener to a different event each time
-    // the application is patched using HMR.
-    // Yes previous listener is still attached and working but the program instance does not run anymore so handler does nothing
-    // In production, the bundle can't be patched using HMR so it should not be a problem
-    let eventIdentifier = "notify_event_" + Guid.NewGuid().ToString()
+    let eventIdentifier = "thoth_elmish_toast_notify_event"
 
     type Status =
         | Success
@@ -409,10 +404,24 @@ module Toast =
                   Toasts_TR = [] }, cmd
 
             let notifcationEvent (dispatch : Elmish.Dispatch<Notifiable<_, _>>) =
-                Browser.window.addEventListener(eventIdentifier, !^(fun ev ->
-                    let ev = ev :?> Browser.CustomEvent
-                    dispatch (Add (unbox ev.detail))
-                ))
+                // If HMR support is active, then we provide have a custom implementation.
+                // This is needed to avoid:
+                // - flickering (trigger several react renderer process)
+                // - attaching several event listener to the same event
+                if not (isNull HMR.``module``.hot) then
+                    if HMR.``module``.hot.status() <> HMR.Idle then
+                        Browser.window.removeEventListener(eventIdentifier, !!Browser.window?(eventIdentifier))
+
+                    Browser.window?(eventIdentifier) <- fun (ev : Browser.Event) ->
+                        let ev = ev :?> Browser.CustomEvent
+                        dispatch (Add (unbox ev.detail))
+
+                    Browser.window.addEventListener(eventIdentifier, !!Browser.window?(eventIdentifier))
+                else
+                    Browser.window.addEventListener(eventIdentifier, !^(fun ev ->
+                        let ev = ev :?> Browser.CustomEvent
+                        dispatch (Add (unbox ev.detail))
+                    ))
 
             let init =
                 program.init

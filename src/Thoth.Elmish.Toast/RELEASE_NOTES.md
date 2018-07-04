@@ -1,3 +1,7 @@
+### 1.0.0-beta-005
+
+* Fix HMR support
+
 ### 1.0.0-beta-004
 
 * Fix typos in doc comments

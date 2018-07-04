@@ -3,10 +3,6 @@
 <article class="message is-warning">
     <div class="message-body">
 This library is a <strong>Work In Progress</strong> so changes can still occur.
-
-When using this library with HMR, the view can flicker a bit especially when you are changing the custom view implementation. If you refresh your tab the problem should be gone.
-
-Because you don't use HMR in production, there is no problem using this library for production purposes.
     </div>
 </article>
 
