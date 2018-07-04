@@ -16,12 +16,10 @@
 <article class="message is-warning">
     <div class="message-body">
 This library is a <strong>Work In Progress</strong> so changes can still occur.
-<p>When using this library with HMR, the view can flicker a bit especially when you are changing the custom view implementation. If you refresh your tab the problem should be gone.</p>
-<p>Because you don't use HMR in production, there is no problem to use this library.
-</div></p>
+    </div>
 </article>
 <p>This library aims to provide you a nice way to inform the user that something occured. By attaching itself at the top level of your application toasts can be persistant between page navigation.</p>
-<p>It also provide a very basic input system. Do not abuse of it, a toast should be about notifying the user not asking him an action.</p>
+<p>It also provides a very basic input system. Do not abuse it, a toast should be about notifying the user, not asking them to perform an action.</p>
 <h2><a href="#demo" aria-hidden="true"><span class="anchor" id="demo"></span>#</a> Demo</h2>
 <p>You can see a demo on <a href="https://mangelmaxime.github.io/Thoth/elmish/toast_demo.html">this page</a>.</p>
 <h2><a href="#how-to-use" aria-hidden="true"><span class="anchor" id="how-to-use"></span>#</a> How to use ?</h2>
@@ -51,7 +49,7 @@ Program.mkProgram init update view
                 |&gt; Toast.info
 </code></pre>
 <h2><a href="#customize-the-view" aria-hidden="true"><span class="anchor" id="customize-the-view"></span>#</a> Customize the view</h2>
-<p>This library include a default <code>render</code> function. Like that you can experiment with the library and see if it fit your needs.</p>
+<p>This library includes a default <code>render</code> function. You can use the default function to experiment with the library and see if it fits your needs.</p>
 <p><span class="icon is-medium has-text-info"><i class="fa fa-2x fa-exclamation-triangle"></i></span> We strongly encourage you to implement your own render. <span class="icon is-medium has-text-info"><i class="fa fa-2x fa-exclamation-triangle"></i></span></p>
 <p>Examples:</p>
 <table>
@@ -77,11 +75,11 @@ Program.mkProgram init update view
 </table>
 <h2><a href="#api" aria-hidden="true"><span class="anchor" id="api"></span>#</a> API</h2>
 <h3><a href="#usage" aria-hidden="true"><span class="anchor" id="usage"></span>#</a> Usage</h3>
-<p>Any time you want to send a toast you need to follow this rules:</p>
+<p>Any time you want to send a toast you need to follow these rules:</p>
 <ol>
-<li>Create it and set it's content using <code>Toast.message</code></li>
-<li>Pipe any number of <a href="#builder">Builder</a> you want</li>
-<li>Use one of the <a href="#trigger">Trigger</a> to set it's <a href="#status">Status</a> and send it</li>
+<li>Create it and set its content using <code>Toast.message</code></li>
+<li>Pipe any number of <a href="#builder">Builders</a> you want</li>
+<li>Use one of the <a href="#trigger">Triggers</a> to set its <a href="#status">Status</a> and send it</li>
 </ol>
 <h3><a href="#status" aria-hidden="true"><span class="anchor" id="status"></span>#</a> Status</h3>
 <pre><code class="hljs language-fs"><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-title">Status</span> </span>=
@@ -134,11 +132,11 @@ Program.mkProgram init update view
 </tr>
 <tr>
 <td><code>Toast.noTimeout</code></td>
-<td>No timeout, make sure to add close button or dismin on click</td>
+<td>No timeout, make sure to add a close button or dismiss on click</td>
 </tr>
 <tr>
 <td><code>Toast.dismissOnClick</code></td>
-<td>Allow user to dismis the toast by cliking on it</td>
+<td>Allow user to dismiss the toast by cliking on it</td>
 </tr>
 <tr>
 <td><code>Toast.withCloseButton</code></td>
