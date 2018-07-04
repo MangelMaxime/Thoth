@@ -238,7 +238,6 @@ module Decode =
     let datetime : Decoder<System.DateTime> =
         fun path token ->
             try
-                // Using Helpers.isString fails because Json.NET directly assigns Date type
                 if token.Type = JTokenType.Date || (token.Type = JTokenType.String && ISO_8601.IsMatch(Helpers.asString token))
                 then System.DateTime.Parse(Helpers.asString token, new System.Globalization.CultureInfo("en-US")) |> Ok
                 else failDate path token
@@ -247,7 +246,6 @@ module Decode =
     let datetimeOffset : Decoder<System.DateTimeOffset> =
         fun path token ->
             try
-                // Using Helpers.isString fails because Json.NET directly assigns Date type
                 if token.Type = JTokenType.Date || (token.Type = JTokenType.String && ISO_8601.IsMatch(Helpers.asString token))
                 then System.DateTimeOffset.Parse(Helpers.asString token, new System.Globalization.CultureInfo("en-US")) |> Ok
                 else failDate path token
