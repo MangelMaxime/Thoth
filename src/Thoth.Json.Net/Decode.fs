@@ -793,8 +793,6 @@ module Decode =
                 else autoDecodeRecordsAndUnions t isCamelCase
         else
             let fullname = t.FullName
-            // TODO: Fable will compile typeof<bool>.FullName as strings
-            // but for .NET maybe it's better to cache a dictionary
             if fullname = typeof<bool>.FullName
             then boxDecoder bool
             elif fullname = typeof<string>.FullName
