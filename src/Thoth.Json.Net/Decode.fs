@@ -232,31 +232,26 @@ module Decode =
     // Regex copied from: https://www.myintervals.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
     let ISO_8601 = System.Text.RegularExpressions.Regex("^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$")
 
+    let private failDate path token =
+        (path, BadPrimitive("a date in ISO 8601 format", token)) |> Error
+
     let datetime : Decoder<System.DateTime> =
         fun path token ->
-            if token.Type = JTokenType.Date then
-                try
-                    // TODO: Is correct to always use en-US here? (and in the "else" branch)
-                    System.DateTime.Parse(token.Value<string>(), new  System.Globalization.CultureInfo("en-US")) |> Ok
-                with
-                    | _ ->
-                        (path, BadPrimitive("a datetime in ISO 8601 format", token)) |> Error
-            else
-                if token.Type = JTokenType.String && ISO_8601.Match(Helpers.asString token).Success then
-                    System.DateTime.Parse(Helpers.asString token, new  System.Globalization.CultureInfo("en-US")) |> Ok
-                else
-                    (path, BadPrimitive("a datetime in ISO 8601 format", token)) |> Error
+            try
+                // Using Helpers.isString fails because Json.NET directly assigns Date type
+                if token.Type = JTokenType.Date || (token.Type = JTokenType.String && ISO_8601.IsMatch(Helpers.asString token))
+                then System.DateTime.Parse(Helpers.asString token, new System.Globalization.CultureInfo("en-US")) |> Ok
+                else failDate path token
+            with _ -> failDate path token
 
-    // let datetimeOffset : Decoder<System.DateTimeOffset> =
-    //     fun path token ->
-    //         // Using Helpers.isString fails because Json.NET directly assigns Date type
-    //         if token.Type = JTokenType.Date then
-    //             token.Value<System.DateTime>() |> System.DateTimeOffset |> Ok
-    //         else
-    //             if token.Type = JTokenType.String && ISO_8601.Match(Helpers.asString token).Success then
-    //                 System.DateTimeOffset.Parse(Helpers.asString token) |> Ok
-    //             else
-    //                 (path, BadPrimitive("a date in ISO 8601 format with offset", token)) |> Error
+    let datetimeOffset : Decoder<System.DateTimeOffset> =
+        fun path token ->
+            try
+                // Using Helpers.isString fails because Json.NET directly assigns Date type
+                if token.Type = JTokenType.Date || (token.Type = JTokenType.String && ISO_8601.IsMatch(Helpers.asString token))
+                then System.DateTimeOffset.Parse(Helpers.asString token, new System.Globalization.CultureInfo("en-US")) |> Ok
+                else failDate path token
+            with _ -> failDate path token
 
     /////////////////////////
     // Object primitives ///
@@ -818,16 +813,15 @@ module Decode =
             then boxDecoder bigint
             elif fullname = typeof<System.DateTime>.FullName
             then boxDecoder datetime
-            // elif fullname = typeof<System.DateTimeOffset>.FullName
-            // then boxDecoder datetimeOffset
+            elif fullname = typeof<System.DateTimeOffset>.FullName
+            then boxDecoder datetimeOffset
             elif fullname = typeof<System.Guid>.FullName
             then boxDecoder guid
             elif fullname = typeof<obj>.FullName
             then boxDecoder (fun _ v ->
-                if v.Type = JTokenType.Null then
-                    Ok null
-                else
-                    Ok v)
+                if v.Type = JTokenType.Null
+                then Ok null
+                else Ok v)
             else autoDecodeRecordsAndUnions t isCamelCase
 
     type Auto =

@@ -246,20 +246,24 @@ module Decode =
     // Regex copied from: https://www.myintervals.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
     let ISO_8601 = System.Text.RegularExpressions.Regex("^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$")
 
+    let private failDate path token =
+        (path, BadPrimitive("a date in ISO 8601 format", token)) |> Error
+
     let datetime : Decoder<System.DateTime> =
         fun path value ->
-            // TODO: Fable already includes a regex check when using System.DateTime so this shouldn't be necessary
-            if Helpers.isString value && ISO_8601.Match(Helpers.asString value).Success then
-                System.DateTime.Parse(Helpers.asString value) |> Ok
-            else
-                (path, BadPrimitive("a datetime in ISO 8601 format", value)) |> Error
+            try
+                if Helpers.isString value && ISO_8601.IsMatch(Helpers.asString value)
+                then System.DateTime.Parse(Helpers.asString value) |> Ok
+                else failDate path value
+            with _ -> failDate path value
 
-    // let datetimeOffset : Decoder<System.DateTimeOffset> =
-    //     fun path value ->
-    //         if Helpers.isString value && ISO_8601.Match(Helpers.asString value).Success then
-    //             System.DateTimeOffset.Parse(Helpers.asString value) |> Ok
-    //         else
-    //             (path, BadPrimitive("a date in ISO 8601 format with offset", value)) |> Error
+    let datetimeOffset : Decoder<System.DateTimeOffset> =
+        fun path value ->
+            try
+                if Helpers.isString value && ISO_8601.IsMatch(Helpers.asString value)
+                then System.DateTimeOffset.Parse(Helpers.asString value) |> Ok
+                else failDate path value
+            with _ -> failDate path value
 
     /////////////////////////
     // Object primitives ///
@@ -751,8 +755,8 @@ module Decode =
             then boxDecoder bigint
             elif fullname = typeof<System.DateTime>.FullName
             then boxDecoder datetime
-            // elif fullname = typeof<System.DateTimeOffset>.FullName
-            // then boxDecoder datetimeOffset
+            elif fullname = typeof<System.DateTimeOffset>.FullName
+            then boxDecoder datetimeOffset
             elif fullname = typeof<System.Guid>.FullName
             then boxDecoder guid
             elif fullname = typeof<obj>.FullName
