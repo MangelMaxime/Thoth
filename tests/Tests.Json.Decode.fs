@@ -1283,7 +1283,7 @@ Expecting a string but instead got: 12
                       e = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
                       f = System.DateTime.Now
                     } |> Encode.encodeAuto 4
-                printfn "AUTO ENCODED %s" json
+                // printfn "AUTO ENCODED %s" json
                 let r2 = Decode.Auto.DecodeString<Record9>(json)
                 equal 5 r2.a
                 equal "bar" r2.b
@@ -1301,7 +1301,7 @@ Expecting a string but instead got: 12
                     lenInner 0 xs
                 let li = Cons(1, Cons(2, Cons(3, Nil)))
                 let json = Encode.encodeAuto 4 li
-                printfn "AUTO ENCODED MYLIST %s" json
+                // printfn "AUTO ENCODED MYLIST %s" json
                 let li2 = Decode.Auto.DecodeString(json, typeof< MyList<int> >) :?> MyList<int>
                 len li2 |> equal 3
                 match li with
@@ -1377,6 +1377,13 @@ Expecting a string but instead got: 12
                 let value = DateTime.UtcNow
                 let json = Encode.encodeAuto 4 value
                 let res = Decode.Auto.DecodeString<DateTime>(json)
+                // printfn "SOURCE %A JSON %s OUTPUT %A (kind %A)" value json res res.Kind
+                let res =
+                    // TODO: Fable and .NET return different kinds when decoding DateTime, review
+                    match res.Kind with
+                    | DateTimeKind.Utc -> res
+                    | DateTimeKind.Local -> res.ToUniversalTime()
+                    | _ (* Unespecified *) -> res.ToLocalTime().ToUniversalTime()
                 equal value.Date res.Date
                 equal value.Hour res.Hour
                 equal value.Minute res.Minute

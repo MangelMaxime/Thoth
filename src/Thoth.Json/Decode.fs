@@ -248,6 +248,7 @@ module Decode =
 
     let datetime : Decoder<System.DateTime> =
         fun path value ->
+            // TODO: Fable already includes a regex check when using System.DateTime so this shouldn't be necessary
             if Helpers.isString value && ISO_8601.Match(Helpers.asString value).Success then
                 System.DateTime.Parse(Helpers.asString value) |> Ok
             else

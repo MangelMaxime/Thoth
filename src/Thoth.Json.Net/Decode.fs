@@ -236,6 +236,7 @@ module Decode =
         fun path token ->
             if token.Type = JTokenType.Date then
                 try
+                    // TODO: Is correct to always use en-US here? (and in the "else" branch)
                     System.DateTime.Parse(token.Value<string>(), new  System.Globalization.CultureInfo("en-US")) |> Ok
                 with
                     | _ ->
