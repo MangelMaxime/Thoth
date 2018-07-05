@@ -8,7 +8,23 @@ module Decode =
     open Fable.Core.JsInterop
     open Fable.Import
 
-    module Helpers =
+    type ErrorReason =
+        | BadPrimitive of string * obj
+        | BadType of string * obj
+        | BadTypeAt of string * obj
+        | BadPrimitiveExtra of string * obj * string
+        | BadField of string * obj
+        | BadPath of string * obj * string
+        | TooSmallArray of string * obj
+        | FailMessage of string
+        | BadOneOf of string list
+        | Direct of string
+
+    type DecoderError = string * ErrorReason
+
+    type Decoder<'T> = string -> obj -> Result<'T, DecoderError>
+
+    module private Helpers =
         [<Emit("typeof $0")>]
         let jsTypeof (_ : obj) : string = jsNative
 
@@ -51,21 +67,10 @@ module Decode =
         let inline asString (o: obj): string = unbox o
         let inline asArray (o: obj): obj[] = unbox o
 
-    type ErrorReason =
-        | BadPrimitive of string * obj
-        | BadType of string * obj
-        | BadTypeAt of string * obj
-        | BadPrimitiveExtra of string * obj * string
-        | BadField of string * obj
-        | BadPath of string * obj * string
-        | TooSmallArray of string * obj
-        | FailMessage of string
-        | BadOneOf of string list
-        | Direct of string
-
-    type DecoderError = string * ErrorReason
-
-    type Decoder<'T> = string -> obj -> Result<'T, DecoderError>
+        // Regex copied from: https://www.myintervals.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
+        let ISO_8601 = System.Text.RegularExpressions.Regex("^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$")
+        let failDate path token = (path, BadPrimitive("a date in ISO 8601 format", token)) |> Error
+        let inline isDate (o: obj) = isString o && ISO_8601.IsMatch(asString o)
 
     let private genericMsg msg value newLine =
         try
@@ -252,18 +257,19 @@ module Decode =
     let datetime : Decoder<System.DateTime> =
         fun path value ->
             try
-                if Helpers.isString value && ISO_8601.IsMatch(Helpers.asString value)
+                if Helpers.isDate value
                 then System.DateTime.Parse(Helpers.asString value) |> Ok
-                else failDate path value
-            with _ -> failDate path value
+                else Helpers.failDate path value
+            with _ -> Helpers.failDate path value
 
     let datetimeOffset : Decoder<System.DateTimeOffset> =
         fun path value ->
             try
-                if Helpers.isString value && ISO_8601.IsMatch(Helpers.asString value)
+                if Helpers.isDate value
                 then System.DateTimeOffset.Parse(Helpers.asString value) |> Ok
-                else failDate path value
-            with _ -> failDate path value
+                else Helpers.failDate path value
+            with _ -> Helpers.failDate path value
+
 
     /////////////////////////
     // Object primitives ///

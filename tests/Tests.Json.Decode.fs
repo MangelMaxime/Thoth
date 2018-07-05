@@ -1266,6 +1266,7 @@ Expecting a string but instead got: 12
                 let res = Decode.Auto.DecodeString<int>(json)
                 equal value res
 
+            // TODO: Use an int64 value that exceeds int32 capacity (also for uint64)
             testCase "Auto decoders works for int64" <| fun _ ->
                 let value = 12L
                 let json = Encode.encodeAuto 4 value
