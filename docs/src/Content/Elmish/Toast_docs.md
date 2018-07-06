@@ -25,7 +25,7 @@ open Elmish
 open Thoth.Elmish
 
 Program.mkProgram init update view
-|> Program.withToast Toast.render
+|> Toast.Program.withToast Toast.render
 |> Program.run
 ```
 
