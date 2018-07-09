@@ -222,6 +222,165 @@ let tests : Test =
                 equal expected actual
         ]
 
+        testList "object decoder" [
+
+            testCase "field.Required works" <| fun _ ->
+                let json = """{ "name": "maxime", "age": 25 }"""
+                let expected = Ok("maxime")
+
+                let actual =
+                    decodeString (object <| fun { field = field } -> field.Required "name" string) json
+
+                equal expected actual
+
+            testCase "field.Required returns error if field is missing" <| fun _ ->
+                let json = """{ "name": "maxime", "age": 25 }"""
+                let expected =
+                    Error(
+                        """
+Expecting an object with a field named `height` but instead got:
+{
+    "name": "maxime",
+    "age": 25
+}
+                        """.Trim())
+
+                let actual =
+                    decodeString (object <| fun { field = field } -> field.Required "height" string) json
+
+                equal expected actual
+
+            testCase "field.Required returns Error if type is incorrect" <| fun _ ->
+                let json = """{ "name": "maxime", "age": 25 }"""
+                let expected = Error("""Expecting an int but instead got: "maxime" """.Trim())
+
+                let actual =
+                    decodeString (object <| fun { field = field } -> field.Required "name" int) json
+
+                equal expected actual
+
+
+            testCase "field.Optional works" <| fun _ ->
+                let json = """{ "name": "maxime", "age": 25 }"""
+                let expected = Ok (Some "maxime")
+
+                let actual =
+                    decodeString (object <| fun { field = field } -> field.Optional "name" string) json
+
+                equal expected actual
+
+            testCase "field.Optional returns Ok None if field is missing" <| fun _ ->
+                let json = """{ "name": "maxime", "age": 25 }"""
+                let expected = Ok None
+
+                let actual =
+                    decodeString (object <| fun { field = field } -> field.Optional "height" string) json
+
+                equal expected actual
+
+            testCase "field.Optional returns Error if type is incorrect" <| fun _ ->
+                let json = """{ "name": "maxime", "age": 25 }"""
+                let expected = Error("""Expecting an int but instead got: "maxime" """.Trim())
+
+                let actual =
+                    decodeString (object <| fun { field = field } -> field.Optional "name" int) json
+
+                equal expected actual
+
+
+            testCase "at.Required works" <| fun _ ->
+
+                let json = """{ "user": { "name": "maxime", "age": 25 } }"""
+                let expected = Ok "maxime"
+
+                let actual =
+                    decodeString (object <| fun { at = at } -> at.Required ["user"; "name"] string) json
+
+                equal expected actual
+
+            testCase "at.Required returns Error if non-object in path" <| fun _ ->
+                let json = """{ "user": "maxime" }"""
+                let expected =
+                    Error(
+                        """
+Expecting an object at `user` but instead got:
+"maxime"
+                        """.Trim())
+
+                let actual =
+                    decodeString (object <| fun { at = at } -> at.Required ["user"; "name"] string) json
+
+                equal expected actual
+
+            testCase "at.Required returns Error if field missing" <| fun _ ->
+                let json = """{ "user": { "name": "maxime", "age": 25 } }"""
+                let expected =
+                    Error(
+                        """
+Expecting an object with path `user.firstname` but instead got:
+{
+    "user": {
+        "name": "maxime",
+        "age": 25
+    }
+}
+Node `firstname` is unkown.
+                        """.Trim())
+
+                let actual =
+                    decodeString (object <| fun { at = at } -> at.Required ["user"; "firstname"] string) json
+
+                equal expected actual
+
+            testCase "at.Required returns Error if type is incorrect" <| fun _ ->
+                let json = """{ "user": { "name": "maxime", "age": 25 } }"""
+                let expected = Error("""Expecting an int but instead got: "maxime" """.Trim())
+
+                let actual =
+                    decodeString (object <| fun { at = at } -> at.Required ["user"; "name"] int) json
+
+                equal expected actual
+
+
+            testCase "at.Optional works" <| fun _ ->
+
+                let json = """{ "user": { "name": "maxime", "age": 25 } }"""
+                let expected = Ok (Some "maxime")
+
+                let actual =
+                    decodeString (object <| fun { at = at } -> at.Optional ["user"; "name"] string) json
+
+                equal expected actual
+
+            testCase "at.Optional returns Ok None if non-object in path" <| fun _ ->
+                let json = """{ "user": "maxime" }"""
+                let expected = Ok None
+
+                let actual =
+                    decodeString (object <| fun { at = at } -> at.Optional ["user"; "name"] string) json
+
+                equal expected actual
+
+            testCase "at.Optional returns Ok None if field missing" <| fun _ ->
+                let json = """{ "user": { "name": "maxime", "age": 25 } }"""
+                let expected = Ok None
+
+                let actual =
+                    decodeString (object <| fun { at = at } -> at.Optional ["user"; "firstname"] string) json
+
+                equal expected actual
+
+            testCase "at.Optional returns Error if type is incorrect" <| fun _ ->
+                let json = """{ "user": { "name": "maxime", "age": 25 } }"""
+                let expected = Error("""Expecting an int but instead got: "maxime" """.Trim())
+
+                let actual =
+                    decodeString (object <| fun { at = at } -> at.Optional ["user"; "name"] int) json
+
+                equal expected actual
+
+        ]
+
         testList "Object primitives" [
 
             testCase "field works" <| fun _ ->
@@ -273,6 +432,20 @@ Expecting an object with path `user.firstname` but instead got:
     }
 }
 Node `firstname` is unkown.
+                        """.Trim())
+
+                let actual =
+                    decodeString (at ["user"; "firstname"] string) json
+
+                equal expected actual
+
+            testCase "at output an error if non-object in path" <| fun _ ->
+                let json = """{ "user": "maxime" }"""
+                let expected =
+                    Error(
+                        """
+Expecting an object at `user` but instead got:
+"maxime"
                         """.Trim())
 
                 let actual =
