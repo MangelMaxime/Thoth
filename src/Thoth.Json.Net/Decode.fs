@@ -7,8 +7,23 @@ module Decode =
     open Newtonsoft.Json.Linq
     open System.IO
 
-    module Helpers =
+    type ErrorReason =
+        | BadPrimitive of string * JToken
+        | BadPrimitiveExtra of string * JToken * string
+        | BadField of string * JToken
+        | BadType of string * JToken
+        | BadTypeAt of string * JToken
+        | BadPath of string * JToken * string
+        | TooSmallArray of string * JToken
+        | FailMessage of string
+        | BadOneOf of string list
+        | Direct of string
 
+    type DecoderError = string * ErrorReason
+
+    type Decoder<'T> = string -> JToken -> Result<'T, DecoderError>
+
+    module private Helpers =
         let anyToString (token: JToken) : string =
             use stream = new StringWriter(NewLine = "\n")
             use jsonWriter = new JsonTextWriter(
@@ -31,21 +46,10 @@ module Decode =
         let inline asString (token: JToken): string = token.Value<string>()
         let inline asArray (token: JToken): JToken[] = token.Value<JArray>().Values() |> Seq.toArray
 
-    type ErrorReason =
-        | BadPrimitive of string * JToken
-        | BadPrimitiveExtra of string * JToken * string
-        | BadField of string * JToken
-        | BadType of string * JToken
-        | BadTypeAt of string * JToken
-        | BadPath of string * JToken * string
-        | TooSmallArray of string * JToken
-        | FailMessage of string
-        | BadOneOf of string list
-        | Direct of string
-
-    type DecoderError = string * ErrorReason
-
-    type Decoder<'T> = string -> JToken -> Result<'T, DecoderError>
+        // Regex copied from: https://www.myintervals.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
+        let ISO_8601 = System.Text.RegularExpressions.Regex("^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$")
+        let failDate path token = (path, BadPrimitive("a date in ISO 8601 format", token)) |> Error
+        let inline isDate (token: JToken) = token.Type = JTokenType.Date || (token.Type = JTokenType.String && ISO_8601.IsMatch(asString token))
 
     let private genericMsg msg value newLine =
         try
@@ -229,33 +233,21 @@ module Decode =
             else
                 (path, BadPrimitive("a decimal", value)) |> Error
 
-    // Regex copied from: https://www.myintervals.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
-    let ISO_8601 = System.Text.RegularExpressions.Regex("^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$")
-
     let datetime : Decoder<System.DateTime> =
         fun path token ->
-            if token.Type = JTokenType.Date then
-                try
-                    System.DateTime.Parse(token.Value<string>(), new  System.Globalization.CultureInfo("en-US")) |> Ok
-                with
-                    | _ ->
-                        (path, BadPrimitive("a datetime in ISO 8601 format", token)) |> Error
-            else
-                if token.Type = JTokenType.String && ISO_8601.Match(Helpers.asString token).Success then
-                    System.DateTime.Parse(Helpers.asString token, new  System.Globalization.CultureInfo("en-US")) |> Ok
-                else
-                    (path, BadPrimitive("a datetime in ISO 8601 format", token)) |> Error
+            try
+                if Helpers.isDate token
+                then System.DateTime.Parse(Helpers.asString token, new System.Globalization.CultureInfo("en-US")) |> Ok
+                else Helpers.failDate path token
+            with _ -> Helpers.failDate path token
 
-    // let datetimeOffset : Decoder<System.DateTimeOffset> =
-    //     fun path token ->
-    //         // Using Helpers.isString fails because Json.NET directly assigns Date type
-    //         if token.Type = JTokenType.Date then
-    //             token.Value<System.DateTime>() |> System.DateTimeOffset |> Ok
-    //         else
-    //             if token.Type = JTokenType.String && ISO_8601.Match(Helpers.asString token).Success then
-    //                 System.DateTimeOffset.Parse(Helpers.asString token) |> Ok
-    //             else
-    //                 (path, BadPrimitive("a date in ISO 8601 format with offset", token)) |> Error
+    let datetimeOffset : Decoder<System.DateTimeOffset> =
+        fun path token ->
+            try
+                if Helpers.isDate token
+                then System.DateTimeOffset.Parse(Helpers.asString token, new System.Globalization.CultureInfo("en-US")) |> Ok
+                else Helpers.failDate path token
+            with _ -> Helpers.failDate path token
 
     /////////////////////////
     // Object primitives ///
@@ -693,7 +685,42 @@ module Decode =
                         | Error er -> Error er
                         | Ok result -> FSharpValue.MakeUnion(ucis.[1], [|result; acc|]) |> Ok)
 
-    let rec private makeUnion t isCamelCase name (path : string) (values: JToken[]) =
+    let rec private genericMap isCamelCase (t: System.Type) =
+        let keyType   = t.GenericTypeArguments.[0]
+        let valueType = t.GenericTypeArguments.[1]
+        let keyDecoder   = autoDecoder isCamelCase keyType
+        let valueDecoder = autoDecoder isCamelCase valueType
+        let tupleType = typedefof<obj * obj>.MakeGenericType([|keyType; valueType|])
+        let listType = typedefof< ResizeArray<obj> >.MakeGenericType([|tupleType|])
+        let addMethod = listType.GetMethod("Add")
+        fun (path : string)  (value: JToken) ->
+            if not (Helpers.isArray value) then
+                (path, BadPrimitive ("an array", value)) |> Error
+            else
+                let values = value.Value<JArray>()
+                let empty = System.Activator.CreateInstance(listType)
+                (Ok empty, values) ||> Seq.fold (fun acc value ->
+                    match acc with
+                    | Error _ -> acc
+                    | Ok acc ->
+                        if not (Helpers.isArray value) then
+                            (path, BadPrimitive ("an array", value)) |> Error
+                        else
+                            let kv = value.Value<JArray>()
+                            // TODO: How do we add the index to the path?
+                            match keyDecoder.Decode(path, kv.[0]), valueDecoder.Decode(path, kv.[1]) with
+                            | Error er, _ -> Error er
+                            | _, Error er -> Error er
+                            | Ok key, Ok value ->
+                                addMethod.Invoke(acc, [|FSharpValue.MakeTuple([|key; value|], tupleType)|]) |> ignore
+                                Ok acc)
+                |> function
+                    | Error er -> Error er
+                    | Ok kvs ->
+                        let mapType = typedefof< Map<string, obj> >.MakeGenericType([|keyType; valueType|])
+                        System.Activator.CreateInstance(mapType, kvs) |> Ok
+
+    and private makeUnion t isCamelCase name (path : string) (values: JToken[]) =
         match FSharpType.GetUnionCases(t) |> Array.tryFind (fun x -> x.Name = name) with
         | None -> (path, FailMessage("Cannot find case " + name + " in " + t.FullName)) |> Error
         | Some uci ->
@@ -757,15 +784,11 @@ module Decode =
                 then autoDecoder isCamelCase t.GenericTypeArguments.[0] |> genericOption t |> boxDecoder
                 elif fullname = typedefof<obj list>.FullName
                 then autoDecoder isCamelCase t.GenericTypeArguments.[0] |> genericList t |> boxDecoder
-                // elif fullname = typedefof< Map<string, obj> >.FullName
-                // then
-                //     let decoder = t.GenericTypeArguments.[1] |> autoDecoder isCamelCase
-                //     (array (tuple2 string decoder.BoxedDecoder) >> Result.map Map) |> boxDecoder // TODO: fails
+                elif fullname = typedefof< Map<string, obj> >.FullName
+                then genericMap isCamelCase t |> boxDecoder
                 else autoDecodeRecordsAndUnions t isCamelCase
         else
             let fullname = t.FullName
-            // TODO: Fable will compile typeof<bool>.FullName as strings
-            // but for .NET maybe it's better to cache a dictionary
             if fullname = typeof<bool>.FullName
             then boxDecoder bool
             elif fullname = typeof<string>.FullName
@@ -784,44 +807,46 @@ module Decode =
             then boxDecoder bigint
             elif fullname = typeof<System.DateTime>.FullName
             then boxDecoder datetime
-            // elif fullname = typeof<System.DateTimeOffset>.FullName
-            // then boxDecoder datetimeOffset
+            elif fullname = typeof<System.DateTimeOffset>.FullName
+            then boxDecoder datetimeOffset
             elif fullname = typeof<System.Guid>.FullName
             then boxDecoder guid
             elif fullname = typeof<obj>.FullName
             then boxDecoder (fun _ v ->
-                if v.Type = JTokenType.Null then
-                    Ok null
-                else
-                    Ok v)
+                if v.Type = JTokenType.Null
+                then Ok null
+                else Ok v)
             else autoDecodeRecordsAndUnions t isCamelCase
 
     type Auto =
-        // static member GenerateDecoder<'T> (?isCamelCase : bool): Decoder<'T> =
-        //     let serializer = JsonSerializer()
-        //     serializer.Converters.Add(Converters.CacheConverter.Singleton)
-        //     if defaultArg isCamelCase false then
-        //         serializer.ContractResolver <- new Serialization.CamelCasePropertyNamesContractResolver()
+        static member GenerateDecoder<'T> (?isCamelCase : bool): Decoder<'T> =
+            // let serializer = JsonSerializer()
+            // serializer.Converters.Add(Converters.CacheConverter.Singleton)
+            // if defaultArg isCamelCase false then
+            //     serializer.ContractResolver <- new Serialization.CamelCasePropertyNamesContractResolver()
+            // fun path token ->
+            //     token.ToObject<'T>(serializer) |> Ok
 
-        //     fun path token ->
-        //         token.ToObject<'T>(serializer) |> Ok
+            let decoderCrate = autoDecoder (defaultArg isCamelCase false) typeof<'T>
+            fun path token ->
+                match decoderCrate.Decode(path, token) with
+                | Ok x -> Ok(x :?> 'T)
+                | Error er -> Error er
 
         static member DecodeString<'T>(json: string, ?isCamelCase : bool): 'T =
             // let settings = JsonSerializerSettings(Converters = [|Converters.CacheConverter.Singleton|])
             // if defaultArg isCamelCase false then
             //     settings.ContractResolver <- new Serialization.CamelCasePropertyNamesContractResolver()
-
             // JsonConvert.DeserializeObject<'T>(json, settings)
 
-            let isCamelCase = defaultArg isCamelCase false
-            let decoder = autoDecoder isCamelCase typeof<'T>
-            match decodeString decoder.BoxedDecoder json with
-            | Ok x -> x :?> 'T
+            let decoder = Auto.GenerateDecoder(?isCamelCase=isCamelCase)
+            match decodeString decoder json with
+            | Ok x -> x
             | Error msg -> failwith msg
 
-        static member DecodeString(json: string, t: System.Type, ?isCamelCase : bool): 'T =
+        static member DecodeString(json: string, t: System.Type, ?isCamelCase : bool): obj =
             let isCamelCase = defaultArg isCamelCase false
             let decoder = autoDecoder isCamelCase t
             match decodeString decoder.BoxedDecoder json with
-            | Ok x -> x :?> 'T
+            | Ok x -> x
             | Error msg -> failwith msg

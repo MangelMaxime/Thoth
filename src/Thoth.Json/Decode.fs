@@ -8,7 +8,23 @@ module Decode =
     open Fable.Core.JsInterop
     open Fable.Import
 
-    module Helpers =
+    type ErrorReason =
+        | BadPrimitive of string * obj
+        | BadType of string * obj
+        | BadTypeAt of string * obj
+        | BadPrimitiveExtra of string * obj * string
+        | BadField of string * obj
+        | BadPath of string * obj * string
+        | TooSmallArray of string * obj
+        | FailMessage of string
+        | BadOneOf of string list
+        | Direct of string
+
+    type DecoderError = string * ErrorReason
+
+    type Decoder<'T> = string -> obj -> Result<'T, DecoderError>
+
+    module private Helpers =
         [<Emit("typeof $0")>]
         let jsTypeof (_ : obj) : string = jsNative
 
@@ -51,21 +67,10 @@ module Decode =
         let inline asString (o: obj): string = unbox o
         let inline asArray (o: obj): obj[] = unbox o
 
-    type ErrorReason =
-        | BadPrimitive of string * obj
-        | BadType of string * obj
-        | BadTypeAt of string * obj
-        | BadPrimitiveExtra of string * obj * string
-        | BadField of string * obj
-        | BadPath of string * obj * string
-        | TooSmallArray of string * obj
-        | FailMessage of string
-        | BadOneOf of string list
-        | Direct of string
-
-    type DecoderError = string * ErrorReason
-
-    type Decoder<'T> = string -> obj -> Result<'T, DecoderError>
+        // Regex copied from: https://www.myintervals.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
+        let ISO_8601 = System.Text.RegularExpressions.Regex("^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$")
+        let failDate path token = (path, BadPrimitive("a date in ISO 8601 format", token)) |> Error
+        let inline isDate (o: obj) = isString o && ISO_8601.IsMatch(asString o)
 
     let private genericMsg msg value newLine =
         try
@@ -246,19 +251,25 @@ module Decode =
     // Regex copied from: https://www.myintervals.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
     let ISO_8601 = System.Text.RegularExpressions.Regex("^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$")
 
+    let private failDate path token =
+        (path, BadPrimitive("a date in ISO 8601 format", token)) |> Error
+
     let datetime : Decoder<System.DateTime> =
         fun path value ->
-            if Helpers.isString value && ISO_8601.Match(Helpers.asString value).Success then
-                System.DateTime.Parse(Helpers.asString value) |> Ok
-            else
-                (path, BadPrimitive("a datetime in ISO 8601 format", value)) |> Error
+            try
+                if Helpers.isDate value
+                then System.DateTime.Parse(Helpers.asString value) |> Ok
+                else Helpers.failDate path value
+            with _ -> Helpers.failDate path value
 
-    // let datetimeOffset : Decoder<System.DateTimeOffset> =
-    //     fun path value ->
-    //         if Helpers.isString value && ISO_8601.Match(Helpers.asString value).Success then
-    //             System.DateTimeOffset.Parse(Helpers.asString value) |> Ok
-    //         else
-    //             (path, BadPrimitive("a date in ISO 8601 format with offset", value)) |> Error
+    let datetimeOffset : Decoder<System.DateTimeOffset> =
+        fun path value ->
+            try
+                if Helpers.isDate value
+                then System.DateTimeOffset.Parse(Helpers.asString value) |> Ok
+                else Helpers.failDate path value
+            with _ -> Helpers.failDate path value
+
 
     /////////////////////////
     // Object primitives ///
@@ -639,6 +650,9 @@ module Decode =
     let inline private unboxDecoder (d: BoxedDecoder): Decoder<'T> =
         !!d // d >> Result.map unbox
 
+    // This is used to force Fable use a generic comparer for map keys
+    let private toMap<'key, 'value when 'key: comparison> (xs: ('key*'value) seq) = Map.ofSeq xs
+
     let private autoObject (decoders: (string * BoxedDecoder)[]) (path : string) (value: obj) =
         if not (Helpers.isObject value) then
             (path, BadPrimitive ("an object", value)) |> Error
@@ -718,10 +732,14 @@ module Decode =
                 then t.GenericTypeArguments.[0] |> (autoDecoder isCamelCase) |> option |> boxDecoder
                 elif fullname = typedefof<obj list>.FullName
                 then t.GenericTypeArguments.[0] |> (autoDecoder isCamelCase) |> list |> boxDecoder
-                // elif fullname = typedefof< Map<string, obj> >.FullName
-                // then
-                    // let decoder = t.GenericTypeArguments.[1] |> autoDecoder isCamelCase
-                    // (array (tuple2 string decoder) >> Result.map Map) |> boxDecoder
+                elif fullname = typedefof< Map<string, obj> >.FullName
+                then
+                    let decoder1 = t.GenericTypeArguments.[0] |> autoDecoder isCamelCase
+                    let decoder2 = t.GenericTypeArguments.[1] |> autoDecoder isCamelCase
+                    fun path value ->
+                        match array (tuple2 decoder1 decoder2) path value with
+                        | Error er -> Error er
+                        | Ok ar -> toMap (unbox ar) |> box |> Ok
                 else autoDecodeRecordsAndUnions t isCamelCase
         else
             let fullname = t.FullName
@@ -743,8 +761,8 @@ module Decode =
             then boxDecoder bigint
             elif fullname = typeof<System.DateTime>.FullName
             then boxDecoder datetime
-            // elif fullname = typeof<System.DateTimeOffset>.FullName
-            // then boxDecoder datetimeOffset
+            elif fullname = typeof<System.DateTimeOffset>.FullName
+            then boxDecoder datetimeOffset
             elif fullname = typeof<System.Guid>.FullName
             then boxDecoder guid
             elif fullname = typeof<obj>.FullName
