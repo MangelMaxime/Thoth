@@ -160,7 +160,6 @@ module Encode =
         stream.ToString()
 
     let encodeAuto (space: int) (value: obj) : string =
-        // TODO: Can we set indentation space?
         let format = if space = 0 then Formatting.None else Formatting.Indented
         let settings = JsonSerializerSettings(Converters = [|Converters.CacheConverter.Singleton|],
                                               Formatting = format)

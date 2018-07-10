@@ -187,7 +187,7 @@ let tests : Test =
                 #else
                 let expected : Result<float, string>= Error "Given an invalid JSON: Unexpected character encountered while parsing value: m. Path '', line 0, position 0."
                 #endif
-                let actual = Decode.decodeString Decode.float "maxime"
+                let actual = Decode.fromString Decode.float "maxime"
 
                 equal expected actual
         ]
@@ -197,70 +197,70 @@ let tests : Test =
             testCase "a string works" <| fun _ ->
                 let expected = Ok("maxime")
                 let actual =
-                    Decode.decodeString Decode.string "\"maxime\""
+                    Decode.fromString Decode.string "\"maxime\""
 
                 equal expected actual
 
             testCase "a float works" <| fun _ ->
                 let expected = Ok(1.2)
                 let actual =
-                    Decode.decodeString Decode.float "1.2"
+                    Decode.fromString Decode.float "1.2"
 
                 equal expected actual
 
             testCase "a float from int works" <| fun _ ->
                 let expected = Ok(1.0)
                 let actual =
-                    Decode.decodeString Decode.float "1"
+                    Decode.fromString Decode.float "1"
 
                 equal expected actual
 
             testCase "a bool works" <| fun _ ->
                 let expected = Ok(true)
                 let actual =
-                    Decode.decodeString Decode.bool "true"
+                    Decode.fromString Decode.bool "true"
 
                 equal expected actual
 
             testCase "an invalid bool output an error" <| fun _ ->
                 let expected = Error("Error at: `$`\nExpecting a boolean but instead got: 2")
                 let actual =
-                    Decode.decodeString Decode.bool "2"
+                    Decode.fromString Decode.bool "2"
 
                 equal expected actual
 
             testCase "an int works" <| fun _ ->
                 let expected = Ok(25)
                 let actual =
-                    Decode.decodeString Decode.int "25"
+                    Decode.fromString Decode.int "25"
 
                 equal expected actual
 
             testCase "an invalid int [invalid range: too big] output an error" <| fun _ ->
                 let expected = Error("Error at: `$`\nExpecting an int but instead got: 2147483648\nReason: Value was either too large or too small for an int")
                 let actual =
-                    Decode.decodeString Decode.int "2147483648"
+                    Decode.fromString Decode.int "2147483648"
 
                 equal expected actual
 
             testCase "an invalid int [invalid range: too small] output an error" <| fun _ ->
                 let expected = Error("Error at: `$`\nExpecting an int but instead got: -2147483649\nReason: Value was either too large or too small for an int")
                 let actual =
-                    Decode.decodeString Decode.int "-2147483649"
+                    Decode.fromString Decode.int "-2147483649"
 
                 equal expected actual
 
             testCase "an int64 works from number" <| fun _ ->
                 let expected = Ok 1000L
                 let actual =
-                    Decode.decodeString Decode.int64 "1000"
+                    Decode.fromString Decode.int64 "1000"
 
                 equal expected actual
 
             testCase "an int64 works from string" <| fun _ ->
                 let expected = Ok 99L
                 let actual =
-                    Decode.decodeString Decode.int64 "\"99\""
+                    Decode.fromString Decode.int64 "\"99\""
 
                 equal expected actual
 
@@ -273,21 +273,21 @@ Expecting an int64 but instead got: "maxime"
 Reason: Input string was not in a correct format.
                         """.Trim())
                 let actual =
-                    Decode.decodeString Decode.int64 "\"maxime\""
+                    Decode.fromString Decode.int64 "\"maxime\""
 
                 equal expected actual
 
             testCase "an uint64 works from number" <| fun _ ->
                 let expected = Ok 1000UL
                 let actual =
-                    Decode.decodeString Decode.uint64 "1000"
+                    Decode.fromString Decode.uint64 "1000"
 
                 equal expected actual
 
             testCase "an uint64 works from string" <| fun _ ->
                 let expected = Ok 1000UL
                 let actual =
-                    Decode.decodeString Decode.uint64 "\"1000\""
+                    Decode.fromString Decode.uint64 "\"1000\""
 
                 equal expected actual
 
@@ -300,21 +300,21 @@ Expecting an uint64 but instead got: "maxime"
 Reason: Input string was not in a correct format.
                         """.Trim())
                 let actual =
-                    Decode.decodeString Decode.uint64 "\"maxime\""
+                    Decode.fromString Decode.uint64 "\"maxime\""
 
                 equal expected actual
 
             testCase "an bigint works from number" <| fun _ ->
                 let expected = Ok 12I
                 let actual =
-                    Decode.decodeString Decode.bigint "12"
+                    Decode.fromString Decode.bigint "12"
 
                 equal expected actual
 
             testCase "an bigint works from string" <| fun _ ->
                 let expected = Ok 12I
                 let actual =
-                    Decode.decodeString Decode.bigint "\"12\""
+                    Decode.fromString Decode.bigint "\"12\""
 
                 equal expected actual
 
@@ -326,14 +326,14 @@ Error at: `$`
 Expecting a bigint but instead got: "maxime"
                         """.Trim())
                 let actual =
-                    Decode.decodeString Decode.bigint "\"maxime\""
+                    Decode.fromString Decode.bigint "\"maxime\""
 
                 equal expected actual
 
             testCase "a datetime works" <| fun _ ->
                 let expected = Ok (new DateTime(2018, 10, 1, 11, 12, 55, DateTimeKind.Utc))
                 let actual =
-                    Decode.decodeString Decode.datetime "\"2018-10-01T11:12:55.00Z\""
+                    Decode.fromString Decode.datetime "\"2018-10-01T11:12:55.00Z\""
 
                 equal expected actual
 
@@ -346,7 +346,7 @@ Expecting a date in ISO 8601 format but instead got: "invalid_string"
                         """.Trim())
 
                 let actual =
-                    Decode.decodeString Decode.datetime "\"invalid_string\""
+                    Decode.fromString Decode.datetime "\"invalid_string\""
 
                 equal expected actual
 
@@ -356,7 +356,7 @@ Expecting a date in ISO 8601 format but instead got: "invalid_string"
                 let expected = Ok (localDate)
                 let json = sprintf "\"%s\"" (localDate.ToString("O"))
                 let actual =
-                    Decode.decodeString Decode.datetime json
+                    Decode.fromString Decode.datetime json
 
                 equal expected actual
 
@@ -366,7 +366,7 @@ Expecting a date in ISO 8601 format but instead got: "invalid_string"
                     |> Ok
                 let json = "\"2018-07-02T12:23:45+02:00\""
                 let actual =
-                    Decode.decodeString Decode.datetimeOffset json
+                    Decode.fromString Decode.datetimeOffset json
                 equal expected actual
 
             testCase "a datetimeOffset returns Error if invalid format" <| fun _ ->
@@ -378,7 +378,7 @@ Expecting a date in ISO 8601 format but instead got: "2018-1-1"
                         """.Trim())
                 let json = "\"2018-1-1\""
                 let actual =
-                    Decode.decodeString Decode.datetimeOffset json
+                    Decode.fromString Decode.datetimeOffset json
 
                 equal expected actual
         ]
@@ -390,7 +390,7 @@ Expecting a date in ISO 8601 format but instead got: "2018-1-1"
                 let expected = Ok("maxime")
 
                 let actual =
-                    Decode.decodeString (Decode.field "name" Decode.string) json
+                    Decode.fromString (Decode.field "name" Decode.string) json
 
                 equal expected actual
 
@@ -408,7 +408,7 @@ Expecting an object with a field named `height` but instead got:
                         """.Trim())
 
                 let actual =
-                    Decode.decodeString (Decode.field "height" Decode.float) json
+                    Decode.fromString (Decode.field "height" Decode.float) json
 
                 equal expected actual
 
@@ -418,7 +418,7 @@ Expecting an object with a field named `height` but instead got:
                 let expected = Ok "maxime"
 
                 let actual =
-                    Decode.decodeString (Decode.at ["user"; "name"] Decode.string) json
+                    Decode.fromString (Decode.at ["user"; "name"] Decode.string) json
 
                 equal expected actual
 
@@ -439,7 +439,7 @@ Node `firstname` is unkown.
                         """.Trim())
 
                 let actual =
-                    Decode.decodeString (Decode.at ["user"; "firstname"] Decode.string) json
+                    Decode.fromString (Decode.at ["user"; "firstname"] Decode.string) json
 
                 equal expected actual
 
@@ -448,7 +448,7 @@ Node `firstname` is unkown.
                 let expected = Ok("alfonso")
 
                 let actual =
-                    Decode.decodeString (Decode.index 1 Decode.string) json
+                    Decode.fromString (Decode.index 1 Decode.string) json
 
                 equal expected actual
 
@@ -467,7 +467,7 @@ Expecting a longer array. Need index `5` but there are only `3` entries.
                         """.Trim())
 
                 let actual =
-                    Decode.decodeString (Decode.index 5 Decode.string) json
+                    Decode.fromString (Decode.index 5 Decode.string) json
 
                 equal expected actual
 
@@ -481,7 +481,7 @@ Expecting an array but instead got: 1
                         """.Trim())
 
                 let actual =
-                    Decode.decodeString (Decode.index 5 Decode.string) json
+                    Decode.fromString (Decode.index 5 Decode.string) json
 
                 equal expected actual
 
@@ -494,7 +494,7 @@ Expecting an array but instead got: 1
                 let expected = Ok([1; 2; 3])
 
                 let actual =
-                    Decode.decodeString (Decode.list Decode.int) "[1, 2, 3]"
+                    Decode.fromString (Decode.list Decode.int) "[1, 2, 3]"
 
                 equal expected actual
 
@@ -506,14 +506,14 @@ Expecting an array but instead got: 1
                     |> Encode.list)
                 |> Encode.list
                 |> Encode.encode 4
-                |> Decode.decodeString (Decode.list (Decode.list Decode.string))
+                |> Decode.fromString (Decode.list (Decode.list Decode.string))
                 |> function Ok v -> equal [["maxime2"]] v | Error er -> failwith er
 
             testCase "an invalid list output an error" <| fun _ ->
                 let expected = Error("Error at: `$`\nExpecting a list but instead got: 1")
 
                 let actual =
-                    Decode.decodeString (Decode.list Decode.int) "1"
+                    Decode.fromString (Decode.list Decode.int) "1"
 
                 equal expected actual
 
@@ -526,7 +526,7 @@ Expecting an array but instead got: 1
                 let expected = Ok([1; 2; 3] |> List.toArray)
 
                 let actual =
-                    Decode.decodeString (Decode.array Decode.int) "[1, 2, 3]"
+                    Decode.fromString (Decode.array Decode.int) "[1, 2, 3]"
 
                 equal expected actual
 
@@ -534,7 +534,7 @@ Expecting an array but instead got: 1
                 let expected = Error("Error at: `$`\nExpecting an array but instead got: 1")
 
                 let actual =
-                    Decode.decodeString (Decode.array Decode.int) "1"
+                    Decode.fromString (Decode.array Decode.int) "1"
 
                 equal expected actual
 
@@ -542,7 +542,7 @@ Expecting an array but instead got: 1
                 let expected = Ok([("a", 1) ; ("b", 2) ; ("c", 3)])
 
                 let actual =
-                    Decode.decodeString (Decode.keyValuePairs Decode.int) """{ "a": 1, "b": 2, "c": 3 }"""
+                    Decode.fromString (Decode.keyValuePairs Decode.int) """{ "a": 1, "b": 2, "c": 3 }"""
 
                 equal expected actual
 
@@ -550,7 +550,7 @@ Expecting an array but instead got: 1
                 let expected = Ok(Map.ofList([("a", 1) ; ("b", 2) ; ("c", 3)]))
 
                 let actual =
-                    Decode.decodeString (Decode.dict Decode.int) """{ "a": 1, "b": 2, "c": 3 }"""
+                    Decode.fromString (Decode.dict Decode.int) """{ "a": 1, "b": 2, "c": 3 }"""
 
                 equal expected actual
 
@@ -563,7 +563,7 @@ Expecting an array but instead got: 1
                         (Decode.field "b" Decode.float)
 
                 let actual =
-                    Decode.decodeString (Decode.dict decodePoint)
+                    Decode.fromString (Decode.dict decodePoint)
                         """
 {
     "a":
@@ -590,7 +590,7 @@ Expecting an array but instead got: 1
                 let expected = Error("Error at: `$`\nExpecting an object but instead got: 1")
 
                 let actual =
-                    Decode.decodeString (Decode.dict Decode.int) "1"
+                    Decode.fromString (Decode.dict Decode.int) "1"
 
                 equal expected actual
 
@@ -605,7 +605,7 @@ Expecting an array but instead got: 1
                     Decode.oneOf [ Decode.int; Decode.nil 0 ]
 
                 let actual =
-                    Decode.decodeString (Decode.list badInt) "[1,2,null,4]"
+                    Decode.fromString (Decode.list badInt) "[1,2,null,4]"
 
                 equal expected actual
 
@@ -627,7 +627,7 @@ Expecting an object but instead got:
                     Decode.oneOf [ Decode.string; Decode.field "test" Decode.string ]
 
                 let actual =
-                    Decode.decodeString (Decode.list badInt) "[1,2,null,4]"
+                    Decode.fromString (Decode.list badInt) "[1,2,null,4]"
 
                 equal expected actual
 
@@ -636,17 +636,17 @@ Expecting an object but instead got:
 
                 let expectedValid = Ok(Some "maxime")
                 let actualValid =
-                    Decode.decodeString (Decode.option (Decode.field "name" Decode.string) ) json
+                    Decode.fromString (Decode.option (Decode.field "name" Decode.string) ) json
 
                 equal expectedValid actualValid
 
-                match Decode.decodeString (Decode.option (Decode.field "name" Decode.int) ) json with
+                match Decode.fromString (Decode.option (Decode.field "name" Decode.int) ) json with
                 | Error _ -> ()
                 | Ok _ -> failwith "Expected type error for `name` field"
 
                 let expectedMissingField = Ok(None)
                 let actualMissingField =
-                    Decode.decodeString (Decode.option (Decode.field "height" Decode.int) ) json
+                    Decode.fromString (Decode.option (Decode.field "height" Decode.int) ) json
 
                 equal expectedMissingField actualMissingField
 
@@ -657,21 +657,21 @@ Expecting an object but instead got:
             testCase "null works (test on an int)" <| fun _ ->
                 let expected = Ok(20)
                 let actual =
-                    Decode.decodeString (Decode.nil 20) "null"
+                    Decode.fromString (Decode.nil 20) "null"
 
                 equal expected actual
 
             testCase "null works (test on a boolean)" <| fun _ ->
                 let expected = Ok(false)
                 let actual =
-                    Decode.decodeString (Decode.nil false) "null"
+                    Decode.fromString (Decode.nil false) "null"
 
                 equal expected actual
 
             testCase "succeed works" <| fun _ ->
                 let expected = Ok(7)
                 let actual =
-                    Decode.decodeString (Decode.succeed 7) "true"
+                    Decode.fromString (Decode.succeed 7) "true"
 
                 equal expected actual
 
@@ -682,7 +682,7 @@ Expecting an object but instead got:
                 let expected = Error("Given an invalid JSON: Unexpected character encountered while parsing value: m. Path '', line 0, position 0.")
                 #endif
                 let actual =
-                    Decode.decodeString (Decode.succeed 7) "maxime"
+                    Decode.fromString (Decode.succeed 7) "maxime"
 
                 equal expected actual
 
@@ -690,7 +690,7 @@ Expecting an object but instead got:
                 let msg = "Failing because it's fun"
                 let expected = Error("Error at: `$`\nI run into a `fail` decoder: " + msg)
                 let actual =
-                    Decode.decodeString (Decode.fail msg) "true"
+                    Decode.fromString (Decode.fail msg) "true"
 
                 equal expected actual
 
@@ -710,7 +710,7 @@ Expecting an object but instead got:
                     |> Decode.andThen infoHelp
 
                 let actual =
-                    Decode.decodeString info """{ "version": 3, "data": 2 }"""
+                    Decode.fromString info """{ "version": 3, "data": 2 }"""
 
                 equal expected actual
 
@@ -740,7 +740,7 @@ Expecting an object with a field named `version` but instead got:
                     |> Decode.andThen infoHelp
 
                 let actual =
-                    Decode.decodeString info """{ "info": 3, "data": 2 }"""
+                    Decode.fromString info """{ "info": 3, "data": 2 }"""
 
                 equal expected actual
 
@@ -754,7 +754,7 @@ Expecting an object with a field named `version` but instead got:
                     Decode.map String.length Decode.string
 
                 let actual =
-                    Decode.decodeString stringLength "\"maxime\""
+                    Decode.fromString stringLength "\"maxime\""
                 equal expected actual
 
 
@@ -767,7 +767,7 @@ Expecting an object with a field named `version` but instead got:
                         (Decode.field "b" Decode.float)
 
                 let actual =
-                    Decode.decodeString decodePoint jsonRecord
+                    Decode.fromString decodePoint jsonRecord
 
                 equal expected actual
 
@@ -783,7 +783,7 @@ Expecting an object with a field named `version` but instead got:
                         (Decode.field "c" Decode.float)
 
                 let actual =
-                    Decode.decodeString decodePoint jsonRecord
+                    Decode.fromString decodePoint jsonRecord
 
                 equal expected actual
 
@@ -801,7 +801,7 @@ Expecting an object with a field named `version` but instead got:
                         (Decode.field "d" Decode.float)
 
                 let actual =
-                    Decode.decodeString decodePoint jsonRecord
+                    Decode.fromString decodePoint jsonRecord
 
                 equal expected actual
 
@@ -821,7 +821,7 @@ Expecting an object with a field named `version` but instead got:
                         (Decode.field "e" Decode.float)
 
                 let actual =
-                    Decode.decodeString decodePoint jsonRecord
+                    Decode.fromString decodePoint jsonRecord
 
                 equal expected actual
 
@@ -843,7 +843,7 @@ Expecting an object with a field named `version` but instead got:
                         (Decode.field "f" Decode.float)
 
                 let actual =
-                    Decode.decodeString decodePoint jsonRecord
+                    Decode.fromString decodePoint jsonRecord
 
                 equal expected actual
 
@@ -867,7 +867,7 @@ Expecting an object with a field named `version` but instead got:
                         (Decode.field "g" Decode.float)
 
                 let actual =
-                    Decode.decodeString decodePoint jsonRecord
+                    Decode.fromString decodePoint jsonRecord
 
                 equal expected actual
 
@@ -893,7 +893,7 @@ Expecting an object with a field named `version` but instead got:
                         (Decode.field "h" Decode.float)
 
                 let actual =
-                    Decode.decodeString decodePoint jsonRecord
+                    Decode.fromString decodePoint jsonRecord
 
                 equal expected actual
 
@@ -906,7 +906,7 @@ Expecting an object with a field named `version` but instead got:
                         (Decode.field "b" Decode.float)
 
                 let actual =
-                    Decode.decodeString decodePoint jsonRecordInvalid
+                    Decode.fromString decodePoint jsonRecordInvalid
 
                 equal expected actual
 
@@ -925,7 +925,7 @@ Expecting an object with a field named `version` but instead got:
                         )
 
                 let actual =
-                    Decode.decodeString decoder json
+                    Decode.fromString decoder json
 
                 equal expected actual
 
@@ -948,7 +948,7 @@ Expecting an object with a field named `name` but instead got:
                         )
 
                 let actual =
-                    Decode.decodeString decoder json
+                    Decode.fromString decoder json
 
                 equal expected actual
 
@@ -968,7 +968,7 @@ Expecting a string but instead got: 12
                         )
 
                 let actual =
-                    Decode.decodeString decoder json
+                    Decode.fromString decoder json
 
                 equal expected actual
 
@@ -983,7 +983,7 @@ Expecting a string but instead got: 12
                         )
 
                 let actual =
-                    Decode.decodeString decoder json
+                    Decode.fromString decoder json
 
                 equal expected actual
 
@@ -998,7 +998,7 @@ Expecting a string but instead got: 12
                         )
 
                 let actual =
-                    Decode.decodeString decoder json
+                    Decode.fromString decoder json
 
                 equal expected actual
 
@@ -1013,7 +1013,7 @@ Expecting a string but instead got: 12
                         )
 
                 let actual =
-                    Decode.decodeString decoder json
+                    Decode.fromString decoder json
 
                 equal expected actual
 
@@ -1033,7 +1033,7 @@ Expecting a string but instead got: 12
                         )
 
                 let actual =
-                    Decode.decodeString decoder json
+                    Decode.fromString decoder json
 
                 equal expected actual
 
@@ -1050,7 +1050,7 @@ Expecting a string but instead got: 12
                         )
 
                 let actual =
-                    Decode.decodeString decoder json
+                    Decode.fromString decoder json
 
                 equal expected actual
 
@@ -1071,7 +1071,7 @@ Expecting an object at `user` but instead got:
                         )
 
                 let actual =
-                    Decode.decodeString decoder json
+                    Decode.fromString decoder json
 
                 equal expected actual
 
@@ -1098,7 +1098,7 @@ Node `firstname` is unkown.
                         )
 
                 let actual =
-                    Decode.decodeString decoder json
+                    Decode.fromString decoder json
 
                 equal expected actual
 
@@ -1118,7 +1118,7 @@ Expecting a string but instead got: 12
                         )
 
                 let actual =
-                    Decode.decodeString decoder json
+                    Decode.fromString decoder json
 
                 equal expected actual
 
@@ -1134,7 +1134,7 @@ Expecting a string but instead got: 12
                         )
 
                 let actual =
-                    Decode.decodeString decoder json
+                    Decode.fromString decoder json
 
                 equal expected actual
 
@@ -1149,7 +1149,7 @@ Expecting a string but instead got: 12
                         )
 
                 let actual =
-                    Decode.decodeString decoder json
+                    Decode.fromString decoder json
 
                 equal expected actual
 
@@ -1164,7 +1164,7 @@ Expecting a string but instead got: 12
                         )
 
                 let actual =
-                    Decode.decodeString decoder json
+                    Decode.fromString decoder json
 
                 equal expected actual
 
@@ -1184,7 +1184,7 @@ Expecting a string but instead got: 12
                         )
 
                 let actual =
-                    Decode.decodeString decoder json
+                    Decode.fromString decoder json
 
                 equal expected actual
 
@@ -1203,7 +1203,7 @@ Expecting a string but instead got: 12
                         )
 
                 let actual =
-                    Decode.decodeString
+                    Decode.fromString
                         userDecoder
                         """{ "id": 67, "email": "user@mail.com" }"""
 
@@ -1212,7 +1212,7 @@ Expecting a string but instead got: 12
         ]
 
         testList "Auto" [
-            testCase "Auto.Decode.decodeString works" <| fun _ ->
+            testCase "Auto.Decode.fromString works" <| fun _ ->
                 let json =
                     { a = 5
                       b = "bar"
@@ -1222,7 +1222,7 @@ Expecting a string but instead got: 12
                       f = System.DateTime.Now
                     } |> Encode.encodeAuto 4
                 // printfn "AUTO ENCODED %s" json
-                let r2 = Decode.Auto.DecodeString<Record9>(json)
+                let r2 = Decode.Auto.FromString<Record9>(json)
                 equal 5 r2.a
                 equal "bar" r2.b
                 equal [false, 3; true, 5; false, 10] r2.c
@@ -1240,7 +1240,7 @@ Expecting a string but instead got: 12
                 let li = Cons(1, Cons(2, Cons(3, Nil)))
                 let json = Encode.encodeAuto 4 li
                 // printfn "AUTO ENCODED MYLIST %s" json
-                let li2 = Decode.Auto.DecodeString(json, typeof< MyList<int> >) :?> MyList<int>
+                let li2 = Decode.Auto.FromString(json, typeof< MyList<int> >) :?> MyList<int>
                 len li2 |> equal 3
                 match li with
                 | Cons(i1, Cons(i2, Cons(i3, Nil))) -> i1 + i2 + i3
@@ -1251,62 +1251,62 @@ Expecting a string but instead got: 12
             testCase "Auto decoders works for string" <| fun _ ->
                 let value = "maxime"
                 let json = Encode.encodeAuto 4 value
-                let res = Decode.Auto.DecodeString<string>(json)
+                let res = Decode.Auto.FromString<string>(json)
                 equal value res
 
             testCase "Auto decoders works for guid" <| fun _ ->
                 let value = Guid.NewGuid()
                 let json = Encode.encodeAuto 4 value
-                let res = Decode.Auto.DecodeString<Guid>(json)
+                let res = Decode.Auto.FromString<Guid>(json)
                 equal value res
 
             testCase "Auto decoders works for int" <| fun _ ->
                 let value = 12
                 let json = Encode.encodeAuto 4 value
-                let res = Decode.Auto.DecodeString<int>(json)
+                let res = Decode.Auto.FromString<int>(json)
                 equal value res
 
             // TODO: Use an int64 value that exceeds int32 capacity (also for uint64)
             testCase "Auto decoders works for int64" <| fun _ ->
                 let value = 12L
                 let json = Encode.encodeAuto 4 value
-                let res = Decode.Auto.DecodeString<int64>(json)
+                let res = Decode.Auto.FromString<int64>(json)
                 equal value res
 
             testCase "Auto decoders works for uint64" <| fun _ ->
                 let value = 12UL
                 let json = Encode.encodeAuto 4 value
-                let res = Decode.Auto.DecodeString<uint64>(json)
+                let res = Decode.Auto.FromString<uint64>(json)
                 equal value res
 
             testCase "Auto decoders works for bigint" <| fun _ ->
                 let value = 12I
                 let json = Encode.encodeAuto 4 value
-                let res = Decode.Auto.DecodeString<bigint>(json)
+                let res = Decode.Auto.FromString<bigint>(json)
                 equal value res
 
             testCase "Auto decoders works for bool" <| fun _ ->
                 let value = false
                 let json = Encode.encodeAuto 4 value
-                let res = Decode.Auto.DecodeString<bool>(json)
+                let res = Decode.Auto.FromString<bool>(json)
                 equal value res
 
             testCase "Auto decoders works for float" <| fun _ ->
                 let value = 12.
                 let json = Encode.encodeAuto 4 value
-                let res = Decode.Auto.DecodeString<float>(json)
+                let res = Decode.Auto.FromString<float>(json)
                 equal value res
 
             testCase "Auto decoders works for decimal" <| fun _ ->
                 let value = 0.7833M
                 let json = Encode.encodeAuto 4 value
-                let res = Decode.Auto.DecodeString<decimal>(json)
+                let res = Decode.Auto.FromString<decimal>(json)
                 equal value res
 
             testCase "Auto decoders works for datetime" <| fun _ ->
                 let value = DateTime.Now
                 let json = Encode.encodeAuto 4 value
-                let res = Decode.Auto.DecodeString<DateTime>(json)
+                let res = Decode.Auto.FromString<DateTime>(json)
                 equal value.Date res.Date
                 equal value.Hour res.Hour
                 equal value.Minute res.Minute
@@ -1315,7 +1315,7 @@ Expecting a string but instead got: 12
             testCase "Auto decoders works for datetime UTC" <| fun _ ->
                 let value = DateTime.UtcNow
                 let json = Encode.encodeAuto 4 value
-                let res = Decode.Auto.DecodeString<DateTime>(json)
+                let res = Decode.Auto.FromString<DateTime>(json)
                 // printfn "SOURCE %A JSON %s OUTPUT %A (kind %A)" value json res res.Kind
                 let res =
                     // TODO: Fable and .NET return different kinds when decoding DateTime, review
@@ -1331,7 +1331,7 @@ Expecting a string but instead got: 12
             testCase "Auto decoders works for datetimeOffset" <| fun _ ->
                 let value = DateTimeOffset.Now
                 let json = Encode.encodeAuto 4 value
-                let res = Decode.Auto.DecodeString<DateTimeOffset>(json).ToLocalTime()
+                let res = Decode.Auto.FromString<DateTimeOffset>(json).ToLocalTime()
                 equal value.Date res.Date
                 equal value.Hour res.Hour
                 equal value.Minute res.Minute
@@ -1340,7 +1340,7 @@ Expecting a string but instead got: 12
             testCase "Auto decoders works for datetimeOffset UTC" <| fun _ ->
                 let value = DateTimeOffset.UtcNow
                 let json = Encode.encodeAuto 4 value
-                let res = Decode.Auto.DecodeString<DateTimeOffset>(json).ToUniversalTime()
+                let res = Decode.Auto.FromString<DateTimeOffset>(json).ToUniversalTime()
                 // printfn "SOURCE %A JSON %s OUTPUT %A" value json res
                 equal value.Date res.Date
                 equal value.Hour res.Hour
@@ -1350,42 +1350,42 @@ Expecting a string but instead got: 12
             testCase "Auto decoders works for list" <| fun _ ->
                 let value = [1; 2; 3; 4]
                 let json = Encode.encodeAuto 4 value
-                let res = Decode.Auto.DecodeString<int list>(json)
+                let res = Decode.Auto.FromString<int list>(json)
                 equal value res
 
             testCase "Auto decoders works for array" <| fun _ ->
                 let value = [| 1; 2; 3; 4 |]
                 let json = Encode.encodeAuto 4 value
-                let res = Decode.Auto.DecodeString<int array>(json)
+                let res = Decode.Auto.FromString<int array>(json)
                 equal value res
 
             testCase "Auto decoders works for option None" <| fun _ ->
                 let value = None
                 let json = Encode.encodeAuto 4 value
-                let res = Decode.Auto.DecodeString<int option>(json)
+                let res = Decode.Auto.FromString<int option>(json)
                 equal value res
 
             testCase "Auto decoders works for option Some" <| fun _ ->
                 let value = Some 5
                 let json = Encode.encodeAuto 4 value
-                let res = Decode.Auto.DecodeString<int option>(json)
+                let res = Decode.Auto.FromString<int option>(json)
                 equal value res
 
             testCase "Auto decoders works for null" <| fun _ ->
                 let value = null
                 let json = Encode.encodeAuto 4 value
-                let res = Decode.Auto.DecodeString<obj>(json)
+                let res = Decode.Auto.FromString<obj>(json)
                 equal value res
 
             testCase "Auto decoders works even if type is determined by the compiler" <| fun _ ->
                 let value = [1; 2; 3; 4]
                 let json = Encode.encodeAuto 4 value
-                let res = Decode.Auto.DecodeString<_>(json)
+                let res = Decode.Auto.FromString<_>(json)
                 equal value res
 
-            testCase "Auto.decodeString works with camelCase" <| fun _ ->
+            testCase "Auto.FromString works with camelCase" <| fun _ ->
                 let json = """{ "id" : 0, "name": "maxime", "email": "mail@domain.com", "followers": 0 }"""
-                let user = Decode.Auto.DecodeString<User>(json, isCamelCase=true)
+                let user = Decode.Auto.FromString<User>(json, isCamelCase=true)
                 equal "maxime" user.Name
                 equal 0 user.Id
                 equal 0 user.Followers

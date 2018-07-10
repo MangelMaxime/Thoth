@@ -121,7 +121,7 @@ module Decode =
                 | ex ->
                     Error (path, (Direct ex.Message))
 
-    let decodeValue (path : string) (decoder : Decoder<'T>) =
+    let fromValue (path : string) (decoder : Decoder<'T>) =
         fun value ->
             match decodeValueError path decoder value with
             | Ok success ->
@@ -129,11 +129,11 @@ module Decode =
             | Error error ->
                 Error (errorToString error)
 
-    let decodeString (decoder : Decoder<'T>) =
+    let fromString (decoder : Decoder<'T>) =
         fun value ->
             try
                 let json = Newtonsoft.Json.Linq.JValue.Parse value
-                decodeValue "$" decoder json
+                fromValue "$" decoder json
             with
                 | ex ->
                     Error("Given an invalid JSON: " + ex.Message)
@@ -390,7 +390,7 @@ module Decode =
             let rec runner (decoders : Decoder<'value> list) (errors : string list) =
                 match decoders with
                 | head::tail ->
-                    match decodeValue path head value with
+                    match fromValue path head value with
                     | Ok v ->
                         Ok v
                     | Error error -> runner tail (errors @ [error])
@@ -421,7 +421,7 @@ module Decode =
 
     let andThen (cb: 'a -> Decoder<'b>) (decoder : Decoder<'a>) : Decoder<'b> =
         fun path value ->
-            match decodeValue path decoder value with
+            match fromValue path decoder value with
             | Error error -> failwith error
             | Ok result ->
                 cb result path value
@@ -582,11 +582,11 @@ module Decode =
                 member __.Required =
                     { new IRequiredGetter with
                         member __.Field (fieldName : string) (decoder : Decoder<_>) =
-                            match decodeValue path (field fieldName decoder) v with
+                            match fromValue path (field fieldName decoder) v with
                             | Ok v -> v
                             | Error msg -> failwith msg
                         member __.At (fieldNames : string list) (decoder : Decoder<_>) =
-                            match decodeValue path (at fieldNames decoder) v with
+                            match fromValue path (at fieldNames decoder) v with
                             | Ok v -> v
                             | Error msg -> failwith msg }
                 member __.Optional =
@@ -707,8 +707,7 @@ module Decode =
                             (path, BadPrimitive ("an array", value)) |> Error
                         else
                             let kv = value.Value<JArray>()
-                            // TODO: How do we add the index to the path?
-                            match keyDecoder.Decode(path, kv.[0]), valueDecoder.Decode(path, kv.[1]) with
+                            match keyDecoder.Decode(path + "[0]", kv.[0]), valueDecoder.Decode(path + "[1]", kv.[1]) with
                             | Error er, _ -> Error er
                             | _, Error er -> Error er
                             | Ok key, Ok value ->
@@ -820,33 +819,21 @@ module Decode =
 
     type Auto =
         static member GenerateDecoder<'T> (?isCamelCase : bool): Decoder<'T> =
-            // let serializer = JsonSerializer()
-            // serializer.Converters.Add(Converters.CacheConverter.Singleton)
-            // if defaultArg isCamelCase false then
-            //     serializer.ContractResolver <- new Serialization.CamelCasePropertyNamesContractResolver()
-            // fun path token ->
-            //     token.ToObject<'T>(serializer) |> Ok
-
             let decoderCrate = autoDecoder (defaultArg isCamelCase false) typeof<'T>
             fun path token ->
                 match decoderCrate.Decode(path, token) with
                 | Ok x -> Ok(x :?> 'T)
                 | Error er -> Error er
 
-        static member DecodeString<'T>(json: string, ?isCamelCase : bool): 'T =
-            // let settings = JsonSerializerSettings(Converters = [|Converters.CacheConverter.Singleton|])
-            // if defaultArg isCamelCase false then
-            //     settings.ContractResolver <- new Serialization.CamelCasePropertyNamesContractResolver()
-            // JsonConvert.DeserializeObject<'T>(json, settings)
-
+        static member FromString<'T>(json: string, ?isCamelCase : bool): 'T =
             let decoder = Auto.GenerateDecoder(?isCamelCase=isCamelCase)
-            match decodeString decoder json with
+            match fromString decoder json with
             | Ok x -> x
             | Error msg -> failwith msg
 
-        static member DecodeString(json: string, t: System.Type, ?isCamelCase : bool): obj =
+        static member FromString(json: string, t: System.Type, ?isCamelCase : bool): obj =
             let isCamelCase = defaultArg isCamelCase false
             let decoder = autoDecoder isCamelCase t
-            match decodeString decoder.BoxedDecoder json with
+            match fromString decoder.BoxedDecoder json with
             | Ok x -> x
             | Error msg -> failwith msg

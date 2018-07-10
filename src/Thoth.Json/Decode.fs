@@ -141,7 +141,7 @@ module Decode =
                 | ex ->
                     Error (path, (Direct ex.Message))
 
-    let decodeValue (path : string) (decoder : Decoder<'T>) =
+    let fromValue (path : string) (decoder : Decoder<'T>) =
         fun value ->
             match decodeValueError path decoder value with
             | Ok success ->
@@ -149,11 +149,11 @@ module Decode =
             | Error error ->
                 Error (errorToString error)
 
-    let decodeString (decoder : Decoder<'T>) =
+    let fromString (decoder : Decoder<'T>) =
         fun value ->
             try
                 let json = JS.JSON.parse value
-                decodeValue "$" decoder json
+                fromValue "$" decoder json
             with
                 | ex when Helpers.isSyntaxError ex ->
                     Error("Given an invalid JSON: " + ex.Message)
@@ -412,7 +412,7 @@ module Decode =
             let rec runner (decoders : Decoder<'value> list) (errors : string list) =
                 match decoders with
                 | head::tail ->
-                    match decodeValue path head value with
+                    match fromValue path head value with
                     | Ok v ->
                         Ok v
                     | Error error -> runner tail (errors @ [error])
@@ -443,7 +443,7 @@ module Decode =
 
     let andThen (cb: 'a -> Decoder<'b>) (decoder : Decoder<'a>) : Decoder<'b> =
         fun path value ->
-            match decodeValue path decoder value with
+            match fromValue path decoder value with
             | Error error ->
                 failwith error
             | Ok result ->
@@ -605,11 +605,11 @@ module Decode =
                 member __.Required =
                     { new IRequiredGetter with
                         member __.Field (fieldName : string) (decoder : Decoder<_>) =
-                            match decodeValue path (field fieldName decoder) v with
+                            match fromValue path (field fieldName decoder) v with
                             | Ok v -> v
                             | Error msg -> failwith msg
                         member __.At (fieldNames : string list) (decoder : Decoder<_>) =
-                            match decodeValue path (at fieldNames decoder) v with
+                            match fromValue path (at fieldNames decoder) v with
                             | Ok v -> v
                             | Error msg -> failwith msg }
                 member __.Optional =
@@ -774,15 +774,15 @@ module Decode =
             let isCamelCase = defaultArg isCamelCase false
             resolver.Value.ResolveType() |> (autoDecoder isCamelCase) |> unboxDecoder
 
-        static member DecodeString<'T>(json: string, ?isCamelCase : bool, [<Inject>] ?resolver: ITypeResolver<'T>): 'T =
+        static member FromString<'T>(json: string, ?isCamelCase : bool, [<Inject>] ?resolver: ITypeResolver<'T>): 'T =
             let decoder = Auto.GenerateDecoder(?isCamelCase=isCamelCase, ?resolver=resolver)
-            match decodeString decoder json with
+            match fromString decoder json with
             | Ok x -> x
             | Error msg -> failwith msg
 
-        static member DecodeString(json: string, t: System.Type, ?isCamelCase : bool): obj =
+        static member FromString(json: string, t: System.Type, ?isCamelCase : bool): obj =
             let isCamelCase = defaultArg isCamelCase false
             let decoder = autoDecoder isCamelCase t
-            match decodeString decoder json with
+            match fromString decoder json with
             | Ok x -> x
             | Error msg -> failwith msg
