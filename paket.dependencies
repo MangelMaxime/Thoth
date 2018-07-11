@@ -2,8 +2,8 @@ source https://www.nuget.org/api/v2
 
 storage:none
 
-clitool dotnet-fable 2.0.0-alpha-029
-nuget Fable.Core 2.0.0-alpha-011
+clitool dotnet-fable >= 2.0.0-alpha-029
+nuget Fable.Core >= 2.0.0-alpha-011
 nuget FSharp.Core redirects:force
 nuget Fable.Import.Browser
 nuget Newtonsoft.Json >= 11.0.2
