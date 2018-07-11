@@ -176,7 +176,7 @@ let tests : Test =
                 b?child <- a
 
                 let expected : Result<float, string>= Error "Error at: `$`\nExpecting a float but decoder failed. Couldn\'t report given value due to circular structure. "
-                let actual = Decode.decodeValue "$" Decode.float b
+                let actual = Decode.fromValue "$" Decode.float b
 
                 equal expected actual
             #endif
@@ -505,7 +505,7 @@ Expecting an array but instead got: 1
                     |> List.map Encode.string
                     |> Encode.list)
                 |> Encode.list
-                |> Encode.encode 4
+                |> Encode.toString 4
                 |> Decode.fromString (Decode.list (Decode.list Decode.string))
                 |> function Ok v -> equal [["maxime2"]] v | Error er -> failwith er
 
