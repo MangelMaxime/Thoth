@@ -18,10 +18,14 @@ open Fake.IO.FileSystemOperators
 open Fake.Tools.Git
 open Fake.JavaScript
 
-#if MONO
-// prevent incorrect output encoding (e.g. https://github.com/fsharp/FAKE/issues/1196)
-System.Console.OutputEncoding <- System.Text.Encoding.UTF8
-#endif
+let versionFromGlobalJson : DotNet.CliInstallOptions -> DotNet.CliInstallOptions = (fun o ->
+        { o with Version = DotNet.Version (DotNet.getSDKVersionFromGlobalJson()) }
+    )
+
+let dotnetSdk = lazy DotNet.install versionFromGlobalJson
+let inline dtntWorkDir wd =
+    DotNet.Options.lift dotnetSdk.Value
+    >> DotNet.Options.withWorkingDirectory wd
 
 let srcFiles =
     !! "./src/Thoth.Json/Thoth.Json.fsproj"
@@ -31,6 +35,8 @@ let srcFiles =
 
 let testsGlob = "tests/**/*.fsproj"
 let docFile = "./docs/Docs.fsproj"
+
+let root = __SOURCE_DIRECTORY__
 
 module Util =
 
@@ -119,15 +125,15 @@ Target.create "DotnetRestore" (fun _ ->
 ))
 
 
-let dotnet workingDir command args =
-    let result =
-        DotNet.exec (fun p ->
-                { p with WorkingDirectory = workingDir
-                         DotNetCliPath = "dotnet" } )
-            command
-            args
+// let dotnet workingDir command args =
+//     let result =
+//         DotNet.exec (fun p ->
+//                 { p with WorkingDirectory = workingDir
+//                          DotNetCliPath = "dotnet" } )
+//             command
+//             args
 
-    if not result.OK then failwithf "dotnet failed with code %i" result.ExitCode
+//     if not result.OK then failwithf "dotnet failed with code %i" result.ExitCode
 
 let build project framework =
     DotNet.build (fun p ->
@@ -138,7 +144,9 @@ Target.create "MochaTest" (fun _ ->
     |> Seq.iter(fun proj ->
         let projDir = proj |> Path.getDirectory
         //Compile to JS
-        dotnet projDir "fable" "fable-splitter -- -c tests/splitter.config.js"
+        let result = DotNet.exec (dtntWorkDir projDir) "fable" "fable-splitter -- -c tests/splitter.config.js"
+
+        if not result.OK then failwithf "Build of tests project failed."
 
         //Run mocha tests
         let projDirOutput = projDir </> "bin"
@@ -146,8 +154,8 @@ Target.create "MochaTest" (fun _ ->
     )
 )
 
-let testNetFrameworkDir = "tests" </> "bin" </> "Release" </> "net461"
-let testNetCoreDir = "tests" </> "bin" </> "Release" </> "netcoreapp2.0"
+let testNetFrameworkDir = root </> "tests" </> "bin" </> "Release" </> "net461"
+let testNetCoreDir = root </> "tests" </> "bin" </> "Release" </> "netcoreapp2.0"
 
 Target.create "ExpectoTest" (fun _ ->
     build "tests/Thoth.Tests.fsproj" "netcoreapp2.0"
@@ -158,10 +166,11 @@ Target.create "ExpectoTest" (fun _ ->
     else
         run (testNetFrameworkDir </> "Thoth.Tests.exe") "" ""
 
-    dotnet testNetCoreDir "" "Thoth.Tests.dll"
+    let result = DotNet.exec (dtntWorkDir testNetCoreDir) "" "Thoth.Tests.dll"
+
+    if not result.OK then failwithf "Expecto for netcore tests failed."
 )
 
-let root = __SOURCE_DIRECTORY__
 let docs = root </> "docs"
 let docsContent = docs </> "src" </> "Content"
 let buildMain = docs </> "build" </> "src" </> "Main.js"
@@ -196,7 +205,9 @@ Target.create "Docs.Watch" (fun _ ->
         let projDir = proj |> Path.getDirectory
 
         [ async {
-            dotnet projDir "fable" "yarn-run fable-splitter --port free -- -c docs/splitter.config.js -w"
+            let result = DotNet.exec (dtntWorkDir projDir) "fable" "yarn-run fable-splitter --port free -- -c docs/splitter.config.js -w"
+
+            if not result.OK then failwithf "Docs.Watch fable watch mode failed."
           }
           async {
             Yarn.exec "run node-sass --output-style compressed --watch --output docs/public/ docs/scss/main.scss" id
@@ -230,7 +241,9 @@ Target.create "Docs.Build" (fun _ ->
     |> Seq.iter (fun proj ->
         let projDir = proj |> Path.getDirectory
 
-        dotnet projDir "fable" "yarn-run fable-splitter --port free -- -c docs/splitter.config.js -p"
+        let result = DotNet.exec (dtntWorkDir projDir) "fable" "yarn-run fable-splitter --port free -- -c docs/splitter.config.js -p"
+
+        if not result.OK then failwithf "Fable build failed."
         buildSass ()
         applyAutoPrefixer ()
     )
@@ -241,22 +254,26 @@ Target.create "Watch" (fun _ ->
     |> Seq.iter(fun proj ->
         let projDir = proj |> Path.getDirectory
         //Compile to JS
-        dotnet projDir "fable" "fable-splitter -- -c tests/splitter.config.js -w"
+        let result = DotNet.exec (dtntWorkDir projDir) "fable" "fable-splitter -- -c tests/splitter.config.js -w"
+
+        if not result.OK then failwithf "Fable watch failed for tests."
     )
 )
 
 Target.create "Build.Demos" (fun _ ->
     Yarn.install (fun o -> { o with WorkingDirectory = "./demos/Thoth.Elmish.Demo/" })
 
-    dotnet
-        ("demos" </> "Thoth.Elmish.Demo")
-        "restore"
-        ""
 
-    dotnet
-        ("demos" </> "Thoth.Elmish.Demo")
-        "fable"
-        "webpack --port free -- -p"
+    DotNet.restore (dtntWorkDir (root </> "demos" </> "Thoth.Elmish.Demo")) ""
+
+
+    let result =
+        DotNet.exec
+            (dtntWorkDir (root </> "demos" </> "Thoth.Elmish.Demo"))
+            "fable"
+            "fable-splitter -- -c tests/splitter.config.js -w"
+
+    if not result.OK then failwithf "Fable build failed for demos."
 )
 
 let needsPublishing (versionRegex: Regex) (releaseNotes: ReleaseNotes.ReleaseNotes) projFile =
@@ -297,12 +314,16 @@ let pushNuget (releaseNotes: ReleaseNotes.ReleaseNotes) (projFile: string) =
                 Common = { p.Common with DotNetCliPath = "dotnet" } } )
             projFile
 
-        Directory.GetFiles(projDir </> "bin" </> "Release", "*.nupkg")
-        |> Array.find (fun nupkg -> nupkg.Contains(releaseNotes.NugetVersion))
-        |> (fun nupkg ->
-            (Path.GetFullPath nupkg, nugetKey)
-            ||> sprintf "push %s -s nuget.org -k %s")
-        |> dotnet "" "nuget"
+        let files =
+            Directory.GetFiles(projDir </> "bin" </> "Release", "*.nupkg")
+            |> Array.find (fun nupkg -> nupkg.Contains(releaseNotes.NugetVersion))
+            |> fun x -> [x]
+
+        Paket.pushFiles (fun o ->
+            { o with ApiKey = nugetKey
+                     PublishUrl = "https://www.nuget.org/api/v2/package" })
+            files
+
 
 Target.create "Publish" (fun _ ->
     srcFiles
