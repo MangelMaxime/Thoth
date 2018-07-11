@@ -6,7 +6,7 @@ clitool dotnet-fable
 nuget FSharp.Core redirects:force
 nuget Fable.Core
 nuget Fable.Import.Browser
-nuget Newtonsoft.Json 11.0.1
+nuget Newtonsoft.Json >= 11.0.1
 nuget Expecto
 nuget Fable.Elmish
 nuget Fable.PowerPack
@@ -60,4 +60,4 @@ group Demos
     nuget Fulma
     nuget Thoth.Elmish
     nuget Fulma.Extensions prerelease
-nuget Fable.Import.HMR
+    nuget Fable.Import.HMR
