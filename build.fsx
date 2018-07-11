@@ -291,13 +291,10 @@ let pushNuget (releaseNotes: ReleaseNotes.ReleaseNotes) (projFile: string) =
         (versionRegex, projFile) ||> Util.replaceLines (fun line _ ->
             versionRegex.Replace(line, "<Version>" + releaseNotes.NugetVersion + "</Version>") |> Some)
 
-        let pkgReleaseNotes = sprintf "/p:PackageReleaseNotes=\"%s\"" (String.toLines releaseNotes.Notes)
-
         DotNet.pack (fun p ->
             { p with
                 Configuration = DotNet.Release
-                Common = { p.Common with CustomParams = Some pkgReleaseNotes
-                                         DotNetCliPath = "dotnet" } } )
+                Common = { p.Common with DotNetCliPath = "dotnet" } } )
             projFile
 
         Directory.GetFiles(projDir </> "bin" </> "Release", "*.nupkg")
