@@ -27,6 +27,7 @@ let srcFiles =
     !! "./src/Thoth.Json/Thoth.Json.fsproj"
     ++ "./src/Thoth.Json.Net/Thoth.Json.Net.fsproj"
     ++ "./src/Thoth.Elmish/Thoth.Elmish.fsproj"
+    ++ "./src/Thoth.Elmish.Toast/Thoth.Elmish.Toast.fsproj"
 
 let testsGlob = "tests/**/*.fsproj"
 let docFile = "./docs/Docs.fsproj"
@@ -219,7 +220,7 @@ Target.create "Docs.Setup" (fun _ ->
     Shell.copyDir "./docs/public/fonts" "./node_modules/font-awesome/fonts" (fun _ -> true)
     Shell.copyFile "./docs/scss/extra/highlight.js/atom-one-light.css" "./node_modules/highlight.js/styles/atom-one-light.css"
     // Copy demos file
-    Shell.copyFile "./docs/public/demos" "./demos/Thoth.Elmish.Demo/output/demo.js"
+    Shell.copyDir "./docs/public/demos" "./demos/Thoth.Elmish.Demo/output/" (fun _ -> true)
 
     DotNet.restore id docFile
 )

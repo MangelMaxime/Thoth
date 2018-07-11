@@ -20,3 +20,7 @@ module Json =
 module Elmish =
 
     let [<Literal>] Debouncer = Host + "elmish/" + "debouncer.html"
+
+    module Toast =
+        let [<Literal>] Docs = Host + "elmish/" + "toast_docs.html"
+        let [<Literal>] Demo = Host + "elmish/" + "toast_demo.html"

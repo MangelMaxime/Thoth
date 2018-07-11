@@ -28,8 +28,15 @@
     "webpack-dev-server": "^3.1.4"
   },
   "dependencies": {
+    "babel-plugin-transform-class-properties": "^6.24.1",
     "babel-polyfill": "^6.26.0",
+    "babel-preset-react": "^6.24.1",
+    "bulma-checkradio": "^2.1.0",
+    "bulma-switch": "^2.0.0",
+    "bulma-tooltip": "^2.0.1",
+    "clipboard": "^2.0.1",
     "font-awesome": "^4.7.0",
+    "prop-types": "^15.6.2",
     "react": "^16.4.0",
     "react-dom": "^16.4.0"
   }

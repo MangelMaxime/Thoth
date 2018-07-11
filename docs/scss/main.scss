@@ -1,8 +1,17 @@
 @import "./../../node_modules/bulma/sass/utilities/initial-variables";
+@import "./../../node_modules/bulma/sass/utilities/functions";
 
 // Bulma customization
 $body-size: 14px;
-$primary: #2D3947;
+
+$thoth-primary: #2D3947;
+$thoth-primary-invert: findColorInvert($thoth-primary);
+
+@import "./../../node_modules/bulma/sass/utilities/derived-variables";
+$addColors: (
+    "thoth-primary": ($thoth-primary, $thoth-primary-invert)
+);
+$colors: map-merge($colors, $addColors);
 
 $navbar-item-color: $white;
 
@@ -10,8 +19,13 @@ $fa-font-path: "./fonts/";
 @import './../../node_modules/font-awesome/scss/font-awesome';
 
 @import './../../node_modules/bulma/bulma';
+@import './../../node_modules/bulma-switch/dist/css/bulma-switch.sass';
+@import './../../node_modules/bulma-checkradio/dist/css/bulma-checkradio.sass';
+@import './../../node_modules/bulma-tooltip/dist/css/bulma-tooltip.sass';
 
 @import "./extra/highlight.js/atom-one-light";
+
+@import "./toast.scss";
 
 .bd-special-shadow {
 	background-image: linear-gradient(rgba(0, 0, 0, 0.2), transparent);

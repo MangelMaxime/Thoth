@@ -10,6 +10,8 @@ nuget Newtonsoft.Json 11.0.2
 nuget Expecto
 nuget Fable.Elmish
 nuget Fable.PowerPack
+nuget Fable.React
+nuget Fable.Import.HMR
 
 # Save Newtonsoft pkg in repo dir so we
 # can access it with F# interactive
@@ -64,3 +66,5 @@ group Demos
     nuget Fable.React
     nuget Fulma
     nuget Thoth.Elmish
+    nuget Fulma.Extensions prerelease
+nuget Fable.Import.HMR

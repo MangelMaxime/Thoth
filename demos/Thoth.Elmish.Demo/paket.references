@@ -8,5 +8,6 @@ group Demos
     Fable.PowerPack
     Fable.React
     Fulma
+    Fulma.Extensions
     dotnet-fable
     Thoth.Elmish

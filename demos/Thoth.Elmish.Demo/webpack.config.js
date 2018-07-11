@@ -13,7 +13,11 @@ var babelOptions = fableUtils.resolveBabelOptions({
                 "browsers": ["last 2 versions"]
             },
             "modules": false
-        }]
+        }],
+        "react"
+    ],
+    plugins: [
+        "transform-class-properties"
     ]
 });
 
@@ -30,7 +34,7 @@ module.exports = {
             // We don't output style because it's already included by the docs
             demo: [
                 "babel-polyfill",
-                resolve('./Thoth.Elmish.Demo.fsproj'),
+                resolve('./Thoth.Elmish.Demo.fsproj')
             ]
         } : {
             demo: [
@@ -40,11 +44,27 @@ module.exports = {
             ]
         },
     mode: isProduction ? "production" : "development",
+    optimization: {
+        splitChunks: {
+            cacheGroups: {
+                commons: {
+                    test: /node_modules/,
+                    name: "vendors",
+                    chunks: "all"
+                }
+            }
+        },
+    },
     output: {
         path: resolve('./output'),
         filename: '[name].js'
     },
-    plugins: commonPlugins,
+    plugins: isProduction ?
+        commonPlugins
+        : commonPlugins.concat([
+            new webpack.HotModuleReplacementPlugin(),
+            new webpack.NamedModulesPlugin()
+        ]),
     resolve: {
         modules: [
             "node_modules/",
@@ -54,7 +74,9 @@ module.exports = {
     devServer: {
         contentBase: resolve('./html/'),
         publicPath: "/",
-        port: 8080
+        port: 8080,
+        hot: true,
+        inline: true
     },
     module: {
         rules: [
@@ -78,8 +100,9 @@ module.exports = {
                 },
             },
             {
-                test: /\.s?[ac]ss$/,
+                test: /\.(sass|scss)$/,
                 use: [
+                    'style-loader',
                     'css-loader',
                     'sass-loader',
                 ],
@@ -89,7 +112,7 @@ module.exports = {
                 use: ['style-loader', 'css-loader']
             },
             {
-                test: /\.(png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)(\?.*$|$)/,
+                test: /\.(png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$/,
                 use: ["file-loader"]
             }
         ]

@@ -5,7 +5,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="src/Debouncer.fs" />
+    <Compile Include="src/Toast.fs" />
     <Compile Include="src/App.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Thoth.Elmish.Toast/Thoth.Elmish.Toast.fsproj" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

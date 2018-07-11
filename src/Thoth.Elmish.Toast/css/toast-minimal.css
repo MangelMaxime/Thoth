@@ -1,0 +1,84 @@
+/*
+    This style is dedicated to the `simpleToastRender` implementation
+*/
+
+.toast-container .toast {
+    padding: 1rem;
+    display: flex;
+    color: white;
+    position: relative;
+}
+
+.toast-container.is-info .toast {
+    background-color: #34b1eb;
+}
+
+.toast-container.dismiss-on-click.is-info .toast:hover {
+    background-color: #0e9cdd;
+}
+
+.toast-container.is-warning .toast {
+    background-color: #f3d52a;
+}
+
+.toast-container.dismiss-on-click.is-warning .toast:hover {
+    background-color: #e9cd2c;
+}
+
+.toast-container.is-success .toast {
+    background-color: #2fe03e;
+}
+
+.toast-container.dismiss-on-click.is-success .toast:hover {
+    background-color: #22c530;
+}
+
+.toast-container.is-error .toast {
+    background-color: #eb3434;
+}
+
+.toast-container.dismiss-on-click.is-error .toast:hover {
+    background-color: #d33838;
+}
+
+.toast-container .toast .close-button {
+    position: absolute;
+    top: 0px;
+    right: 10px;
+    border-radius: 100%;
+    color: #fff;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.toast-container .toast .close-button:after {
+    content: "\00d7";
+}
+
+.toast-container .toast .close-button:hover,
+.toast-container .toast .close-button:focus {
+    cursor: pointer;
+    text-decoration: none;
+    color: #000;
+    opacity: 0.5;
+}
+
+.toast-container .toast .toast-layout-icon {
+    width: 20%;
+    float: left;
+    margin: auto;
+}
+
+.toast-container .toast .toast-layout-content {
+    width: 100%;
+}
+
+.toast-container .toast .toast-layout-content .toast-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    display: block;
+}
+
+.toast-container .toast .toast-layout-content .toast-message {
+    display: block;
+}

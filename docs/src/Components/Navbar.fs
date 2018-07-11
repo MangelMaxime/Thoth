@@ -82,7 +82,14 @@ module Components.Navbar
         Navbar.Dropdown.div [ ]
             [ Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Elmish.Debouncer)
                               Navbar.Item.Props [ Href Route.Elmish.Debouncer ] ]
-                [ str "Debouncer" ] ]
+                [ str "Debouncer" ]
+              Navbar.divider [ ] [ ]
+              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Elmish.Toast.Docs)
+                              Navbar.Item.Props [ Href Route.Elmish.Toast.Docs ] ]
+                [ str "Toast - Docs" ]
+              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Elmish.Toast.Demo)
+                              Navbar.Item.Props [ Href Route.Elmish.Toast.Demo ] ]
+                [ str "Toast - Demo" ] ]
 
     let private navbarMenu pageUrl =
         Navbar.menu [ Navbar.Menu.Props [ Id "navMenu" ] ]
@@ -110,7 +117,7 @@ module Components.Navbar
                   span [ ] [ ] ] ]
 
     let render pageUrl =
-        Navbar.navbar [ Navbar.Color IsPrimary
+        Navbar.navbar [ Navbar.Color (IsCustomColor "thoth-primary")
                         Navbar.CustomClass "is-fixed-top" ]
             [ shadow
               Container.container [ ]
