@@ -16,21 +16,21 @@ let tests : Test =
                 let expected = "\"maxime\""
                 let actual =
                     Encode.string "maxime"
-                    |> Encode.encode 0
+                    |> Encode.toString 0
                 equal expected actual
 
             testCase "an int works" <| fun _ ->
                 let expected = "1"
                 let actual =
                     Encode.int 1
-                    |> Encode.encode 0
+                    |> Encode.toString 0
                 equal expected actual
 
             testCase "a float works" <| fun _ ->
                 let expected = "1.2"
                 let actual =
                     Encode.float 1.2
-                    |> Encode.encode 0
+                    |> Encode.toString 0
                 equal expected actual
 
             testCase "an array works" <| fun _ ->
@@ -40,7 +40,7 @@ let tests : Test =
                     Encode.array
                         [| Encode.string "maxime"
                            Encode.int 2
-                        |] |> Encode.encode 0
+                        |] |> Encode.toString 0
                 equal expected actual
 
             testCase "a list works" <| fun _ ->
@@ -50,21 +50,21 @@ let tests : Test =
                     Encode.list
                         [ Encode.string "maxime"
                           Encode.int 2
-                        ] |> Encode.encode 0
+                        ] |> Encode.toString 0
                 equal expected actual
 
             testCase "a bool works" <| fun _ ->
                 let expected = "false"
                 let actual =
                     Encode.bool false
-                    |> Encode.encode 0
+                    |> Encode.toString 0
                 equal expected actual
 
             testCase "a null works" <| fun _ ->
                 let expected = "null"
                 let actual =
                     Encode.nil
-                    |> Encode.encode 0
+                    |> Encode.toString 0
                 equal expected actual
 
             testCase "an object works" <| fun _ ->
@@ -74,7 +74,7 @@ let tests : Test =
                     Encode.object
                         [ ("firstname", Encode.string "maxime")
                           ("age", Encode.int 25)
-                        ] |> Encode.encode 0
+                        ] |> Encode.toString 0
                 equal expected actual
 
             testCase "a dict works" <| fun _ ->
@@ -87,7 +87,7 @@ let tests : Test =
                           ("c", Encode.int 3)
                         ]
                     |> Encode.dict
-                    |> Encode.encode 0
+                    |> Encode.toString 0
                 equal expected actual
 
             testCase "using pretty space works" <| fun _ ->
@@ -97,7 +97,7 @@ let tests : Test =
                     Encode.object
                         [ ("firstname", Encode.string "maxime")
                           ("age", Encode.int 25)
-                        ] |> Encode.encode 4
+                        ] |> Encode.toString 4
                 equal expected actual
 
             testCase "complexe structure works" <| fun _ ->
@@ -112,7 +112,7 @@ let tests : Test =
                                         [ "street", Encode.string "main road"
                                           "city", Encode.string "Bordeaux"
                                         ])
-                        ] |> Encode.encode 4
+                        ] |> Encode.toString 4
                 equal expected actual
 
             testCase "option with a value `Some ...` works" <| fun _ ->
@@ -122,7 +122,7 @@ let tests : Test =
                     Encode.object
                         [ ("id", Encode.int 1)
                           ("operator", Encode.option Encode.string (Some "maxime"))
-                        ] |> Encode.encode 0
+                        ] |> Encode.toString 0
 
                 equal expected actual
 
@@ -133,7 +133,7 @@ let tests : Test =
                     Encode.object
                         [ ("id", Encode.int 1)
                           ("operator", Encode.option Encode.string None)
-                        ] |> Encode.encode 0
+                        ] |> Encode.toString 0
 
                 equal expected actual
 

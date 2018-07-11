@@ -158,6 +158,12 @@ module Decode =
                 | ex when Helpers.isSyntaxError ex ->
                     Error("Given an invalid JSON: " + ex.Message)
 
+    [<System.Obsolete("Please use fromValue instead")>]
+    let decodeValue (path : string) (decoder : Decoder<'T>) = fromValue path decoder
+
+    [<System.Obsolete("Please use fromString instead")>]
+    let decodeString (path : string) (decoder : Decoder<'T>) = fromValue path decoder
+
     //////////////////
     // Primitives ///
     ////////////////
@@ -770,17 +776,17 @@ module Decode =
             else autoDecodeRecordsAndUnions t isCamelCase
 
     type Auto =
-        static member GenerateDecoder<'T>(?isCamelCase : bool, [<Inject>] ?resolver: ITypeResolver<'T>): Decoder<'T> =
+        static member generateDecoder<'T>(?isCamelCase : bool, [<Inject>] ?resolver: ITypeResolver<'T>): Decoder<'T> =
             let isCamelCase = defaultArg isCamelCase false
             resolver.Value.ResolveType() |> (autoDecoder isCamelCase) |> unboxDecoder
 
-        static member FromString<'T>(json: string, ?isCamelCase : bool, [<Inject>] ?resolver: ITypeResolver<'T>): 'T =
-            let decoder = Auto.GenerateDecoder(?isCamelCase=isCamelCase, ?resolver=resolver)
+        static member fromString<'T>(json: string, ?isCamelCase : bool, [<Inject>] ?resolver: ITypeResolver<'T>): 'T =
+            let decoder = Auto.generateDecoder(?isCamelCase=isCamelCase, ?resolver=resolver)
             match fromString decoder json with
             | Ok x -> x
             | Error msg -> failwith msg
 
-        static member FromString(json: string, t: System.Type, ?isCamelCase : bool): obj =
+        static member fromString(json: string, t: System.Type, ?isCamelCase : bool): obj =
             let isCamelCase = defaultArg isCamelCase false
             let decoder = autoDecoder isCamelCase t
             match fromString decoder json with

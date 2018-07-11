@@ -138,6 +138,12 @@ module Decode =
                 | ex ->
                     Error("Given an invalid JSON: " + ex.Message)
 
+    [<System.Obsolete("Please use fromValue instead")>]
+    let decodeValue (path : string) (decoder : Decoder<'T>) = fromValue path decoder
+
+    [<System.Obsolete("Please use fromString instead")>]
+    let decodeString (path : string) (decoder : Decoder<'T>) = fromValue path decoder
+
     //////////////////
     // Primitives ///
     ////////////////
@@ -818,20 +824,20 @@ module Decode =
             else autoDecodeRecordsAndUnions t isCamelCase
 
     type Auto =
-        static member GenerateDecoder<'T> (?isCamelCase : bool): Decoder<'T> =
+        static member generateDecoder<'T> (?isCamelCase : bool): Decoder<'T> =
             let decoderCrate = autoDecoder (defaultArg isCamelCase false) typeof<'T>
             fun path token ->
                 match decoderCrate.Decode(path, token) with
                 | Ok x -> Ok(x :?> 'T)
                 | Error er -> Error er
 
-        static member FromString<'T>(json: string, ?isCamelCase : bool): 'T =
-            let decoder = Auto.GenerateDecoder(?isCamelCase=isCamelCase)
+        static member fromString<'T>(json: string, ?isCamelCase : bool): 'T =
+            let decoder = Auto.generateDecoder(?isCamelCase=isCamelCase)
             match fromString decoder json with
             | Ok x -> x
             | Error msg -> failwith msg
 
-        static member FromString(json: string, t: System.Type, ?isCamelCase : bool): obj =
+        static member fromString(json: string, t: System.Type, ?isCamelCase : bool): obj =
             let isCamelCase = defaultArg isCamelCase false
             let decoder = autoDecoder isCamelCase t
             match fromString decoder.BoxedDecoder json with

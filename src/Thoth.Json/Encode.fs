@@ -151,20 +151,36 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let encode (space: int) (value: Value) : string =
+    let toString (space: int) (value: Value) : string =
         JS.JSON.stringify(value, !!null, space)
 
-    let encodeAuto (space: int) (value: obj) : string =
-        JS.JSON.stringify(value, (fun _ v ->
-            match v with
-            // Match string before so it's not considered an IEnumerable
-            | :? string -> v
-            | :? System.Collections.IEnumerable ->
-                if JS.Array.isArray(v)
-                then v
-                else JS.Array.from(v :?> JS.Iterable<obj>) |> box
-            | _ -> v
-        ), space)
+    module Auto =
+
+        let toString (space: int) (value: obj) : string =
+            JS.JSON.stringify(value, (fun _ v ->
+                match v with
+                // Match string before so it's not considered an IEnumerable
+                | :? string -> v
+                | :? System.Collections.IEnumerable ->
+                    if JS.Array.isArray(v)
+                    then v
+                    else JS.Array.from(v :?> JS.Iterable<obj>) |> box
+                | _ -> v
+            ), space)
+
+    ///**Description**
+    /// Convert a `Value` into a prettified string.
+    ///**Parameters**
+    ///  * `space` - parameter of type `int` - Amount of indentation
+    ///  * `value` - parameter of type `obj` - Value to convert
+    ///
+    ///**Output Type**
+    ///  * `string`
+    ///
+    ///**Exceptions**
+    ///
+    [<System.Obsolete("Please use toString instead")>]
+    let encode (space: int) (value: Value) : string = toString space value
 
     ///**Description**
     /// Encode an option

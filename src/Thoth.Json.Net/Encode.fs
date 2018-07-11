@@ -148,7 +148,7 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let encode (space: int) (token: JToken) : string =
+    let toString (space: int) (token: JToken) : string =
         let format = if space = 0 then Formatting.None else Formatting.Indented
         use stream = new StringWriter(NewLine = "\n")
         use jsonWriter = new JsonTextWriter(
@@ -159,11 +159,26 @@ module Encode =
         token.WriteTo(jsonWriter)
         stream.ToString()
 
-    let encodeAuto (space: int) (value: obj) : string =
-        let format = if space = 0 then Formatting.None else Formatting.Indented
-        let settings = JsonSerializerSettings(Converters = [|Converters.CacheConverter.Singleton|],
-                                              Formatting = format)
-        JsonConvert.SerializeObject(value, settings)
+    module Auto =
+        let toString (space: int) (value: obj) : string =
+            let format = if space = 0 then Formatting.None else Formatting.Indented
+            let settings = JsonSerializerSettings(Converters = [|Converters.CacheConverter.Singleton|],
+                                                  Formatting = format)
+            JsonConvert.SerializeObject(value, settings)
+
+    ///**Description**
+    /// Convert a `Value` into a prettified string.
+    ///**Parameters**
+    ///  * `space` - parameter of type `int` - Amount of indentation
+    ///  * `value` - parameter of type `obj` - Value to convert
+    ///
+    ///**Output Type**
+    ///  * `string`
+    ///
+    ///**Exceptions**
+    ///
+    [<System.Obsolete("Please use toString instead")>]
+    let encode (space: int) (token: JToken) : string = toString space token
 
     ///**Description**
     /// Encode an option
