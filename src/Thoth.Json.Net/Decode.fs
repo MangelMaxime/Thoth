@@ -142,7 +142,7 @@ module Decode =
     let decodeValue (path : string) (decoder : Decoder<'T>) = fromValue path decoder
 
     [<System.Obsolete("Please use fromString instead")>]
-    let decodeString (path : string) (decoder : Decoder<'T>) = fromValue path decoder
+    let decodeString (decoder : Decoder<'T>) = fromString decoder
 
     //////////////////
     // Primitives ///

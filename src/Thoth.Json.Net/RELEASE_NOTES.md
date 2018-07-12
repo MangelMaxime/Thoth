@@ -1,3 +1,7 @@
+#### 2.0.0-beta-002
+
+* Fix `Decode.decodeString` signature
+
 #### 2.0.0-beta-001
 
 * Mark `Encode.encode`, `Decode.decodeString`, `Decode.decodeValue` as obsoletes
