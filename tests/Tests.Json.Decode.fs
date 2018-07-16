@@ -1222,7 +1222,7 @@ Expecting a string but instead got: 12
                       f = System.DateTime.Now
                     } |> Encode.Auto.toString 4
                 // printfn "AUTO ENCODED %s" json
-                let r2 = Decode.Auto.fromString<Record9>(json)
+                let r2 = Decode.Auto.unsafeFromString<Record9>(json)
                 equal 5 r2.a
                 equal "bar" r2.b
                 equal [false, 3; true, 5; false, 10] r2.c
@@ -1240,7 +1240,7 @@ Expecting a string but instead got: 12
                 let li = Cons(1, Cons(2, Cons(3, Nil)))
                 let json = Encode.Auto.toString 4 li
                 // printfn "AUTO ENCODED MYLIST %s" json
-                let li2 = Decode.Auto.fromString(json, typeof< MyList<int> >) :?> MyList<int>
+                let li2 = Decode.Auto.unsafeFromString<MyList<int>>(json)
                 len li2 |> equal 3
                 match li with
                 | Cons(i1, Cons(i2, Cons(i3, Nil))) -> i1 + i2 + i3
@@ -1251,62 +1251,62 @@ Expecting a string but instead got: 12
             testCase "Auto decoders works for string" <| fun _ ->
                 let value = "maxime"
                 let json = Encode.Auto.toString 4 value
-                let res = Decode.Auto.fromString<string>(json)
+                let res = Decode.Auto.unsafeFromString<string>(json)
                 equal value res
 
             testCase "Auto decoders works for guid" <| fun _ ->
                 let value = Guid.NewGuid()
                 let json = Encode.Auto.toString 4 value
-                let res = Decode.Auto.fromString<Guid>(json)
+                let res = Decode.Auto.unsafeFromString<Guid>(json)
                 equal value res
 
             testCase "Auto decoders works for int" <| fun _ ->
                 let value = 12
                 let json = Encode.Auto.toString 4 value
-                let res = Decode.Auto.fromString<int>(json)
+                let res = Decode.Auto.unsafeFromString<int>(json)
                 equal value res
 
             // TODO: Use an int64 value that exceeds int32 capacity (also for uint64)
             testCase "Auto decoders works for int64" <| fun _ ->
                 let value = 12L
                 let json = Encode.Auto.toString 4 value
-                let res = Decode.Auto.fromString<int64>(json)
+                let res = Decode.Auto.unsafeFromString<int64>(json)
                 equal value res
 
             testCase "Auto decoders works for uint64" <| fun _ ->
                 let value = 12UL
                 let json = Encode.Auto.toString 4 value
-                let res = Decode.Auto.fromString<uint64>(json)
+                let res = Decode.Auto.unsafeFromString<uint64>(json)
                 equal value res
 
             testCase "Auto decoders works for bigint" <| fun _ ->
                 let value = 12I
                 let json = Encode.Auto.toString 4 value
-                let res = Decode.Auto.fromString<bigint>(json)
+                let res = Decode.Auto.unsafeFromString<bigint>(json)
                 equal value res
 
             testCase "Auto decoders works for bool" <| fun _ ->
                 let value = false
                 let json = Encode.Auto.toString 4 value
-                let res = Decode.Auto.fromString<bool>(json)
+                let res = Decode.Auto.unsafeFromString<bool>(json)
                 equal value res
 
             testCase "Auto decoders works for float" <| fun _ ->
                 let value = 12.
                 let json = Encode.Auto.toString 4 value
-                let res = Decode.Auto.fromString<float>(json)
+                let res = Decode.Auto.unsafeFromString<float>(json)
                 equal value res
 
             testCase "Auto decoders works for decimal" <| fun _ ->
                 let value = 0.7833M
                 let json = Encode.Auto.toString 4 value
-                let res = Decode.Auto.fromString<decimal>(json)
+                let res = Decode.Auto.unsafeFromString<decimal>(json)
                 equal value res
 
             testCase "Auto decoders works for datetime" <| fun _ ->
                 let value = DateTime.Now
                 let json = Encode.Auto.toString 4 value
-                let res = Decode.Auto.fromString<DateTime>(json)
+                let res = Decode.Auto.unsafeFromString<DateTime>(json)
                 equal value.Date res.Date
                 equal value.Hour res.Hour
                 equal value.Minute res.Minute
@@ -1315,7 +1315,7 @@ Expecting a string but instead got: 12
             testCase "Auto decoders works for datetime UTC" <| fun _ ->
                 let value = DateTime.UtcNow
                 let json = Encode.Auto.toString 4 value
-                let res = Decode.Auto.fromString<DateTime>(json)
+                let res = Decode.Auto.unsafeFromString<DateTime>(json)
                 // printfn "SOURCE %A JSON %s OUTPUT %A (kind %A)" value json res res.Kind
                 let res =
                     // TODO: Fable and .NET return different kinds when decoding DateTime, review
@@ -1331,7 +1331,7 @@ Expecting a string but instead got: 12
             testCase "Auto decoders works for datetimeOffset" <| fun _ ->
                 let value = DateTimeOffset.Now
                 let json = Encode.Auto.toString 4 value
-                let res = Decode.Auto.fromString<DateTimeOffset>(json).ToLocalTime()
+                let res = Decode.Auto.unsafeFromString<DateTimeOffset>(json).ToLocalTime()
                 equal value.Date res.Date
                 equal value.Hour res.Hour
                 equal value.Minute res.Minute
@@ -1340,7 +1340,7 @@ Expecting a string but instead got: 12
             testCase "Auto decoders works for datetimeOffset UTC" <| fun _ ->
                 let value = DateTimeOffset.UtcNow
                 let json = Encode.Auto.toString 4 value
-                let res = Decode.Auto.fromString<DateTimeOffset>(json).ToUniversalTime()
+                let res = Decode.Auto.unsafeFromString<DateTimeOffset>(json).ToUniversalTime()
                 // printfn "SOURCE %A JSON %s OUTPUT %A" value json res
                 equal value.Date res.Date
                 equal value.Hour res.Hour
@@ -1350,45 +1350,51 @@ Expecting a string but instead got: 12
             testCase "Auto decoders works for list" <| fun _ ->
                 let value = [1; 2; 3; 4]
                 let json = Encode.Auto.toString 4 value
-                let res = Decode.Auto.fromString<int list>(json)
+                let res = Decode.Auto.unsafeFromString<int list>(json)
                 equal value res
 
             testCase "Auto decoders works for array" <| fun _ ->
                 let value = [| 1; 2; 3; 4 |]
                 let json = Encode.Auto.toString 4 value
-                let res = Decode.Auto.fromString<int array>(json)
+                let res = Decode.Auto.unsafeFromString<int array>(json)
                 equal value res
 
             testCase "Auto decoders works for option None" <| fun _ ->
                 let value = None
                 let json = Encode.Auto.toString 4 value
-                let res = Decode.Auto.fromString<int option>(json)
+                let res = Decode.Auto.unsafeFromString<int option>(json)
                 equal value res
 
             testCase "Auto decoders works for option Some" <| fun _ ->
                 let value = Some 5
                 let json = Encode.Auto.toString 4 value
-                let res = Decode.Auto.fromString<int option>(json)
+                let res = Decode.Auto.unsafeFromString<int option>(json)
                 equal value res
 
             testCase "Auto decoders works for null" <| fun _ ->
                 let value = null
                 let json = Encode.Auto.toString 4 value
-                let res = Decode.Auto.fromString<obj>(json)
+                let res = Decode.Auto.unsafeFromString<obj>(json)
                 equal value res
 
             testCase "Auto decoders works even if type is determined by the compiler" <| fun _ ->
                 let value = [1; 2; 3; 4]
                 let json = Encode.Auto.toString 4 value
-                let res = Decode.Auto.fromString<_>(json)
+                let res = Decode.Auto.unsafeFromString<_>(json)
                 equal value res
 
-            testCase "Auto.FromString works with camelCase" <| fun _ ->
+            testCase "Auto.fromString works with camelCase" <| fun _ ->
                 let json = """{ "id" : 0, "name": "maxime", "email": "mail@domain.com", "followers": 0 }"""
-                let user = Decode.Auto.fromString<User>(json, isCamelCase=true)
+                let user = Decode.Auto.unsafeFromString<User>(json, isCamelCase=true)
                 equal "maxime" user.Name
                 equal 0 user.Id
                 equal 0 user.Followers
                 equal "mail@domain.com" user.Email
+
+            testCase "Auto.fromString works with camelCase" <| fun _ ->
+                let json = """{ "id" : 0, "name": "maxime", "email": "mail@domain.com", "followers": 0 }"""
+                let user = Decode.Auto.fromString<User>(json, isCamelCase=true)
+                let expected = Ok { Id = 0; Name = "maxime"; Email = "mail@domain.com"; Followers = 0 }
+                equal expected user
         ]
     ]

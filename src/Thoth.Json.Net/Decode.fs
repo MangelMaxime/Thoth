@@ -831,15 +831,12 @@ module Decode =
                 | Ok x -> Ok(x :?> 'T)
                 | Error er -> Error er
 
-        static member fromString<'T>(json: string, ?isCamelCase : bool): 'T =
+        static member fromString<'T>(json: string, ?isCamelCase : bool): Result<'T, string> =
+            let decoder = Auto.generateDecoder(?isCamelCase=isCamelCase)
+            fromString decoder json
+
+        static member unsafeFromString<'T>(json: string, ?isCamelCase : bool): 'T =
             let decoder = Auto.generateDecoder(?isCamelCase=isCamelCase)
             match fromString decoder json with
-            | Ok x -> x
-            | Error msg -> failwith msg
-
-        static member fromString(json: string, t: System.Type, ?isCamelCase : bool): obj =
-            let isCamelCase = defaultArg isCamelCase false
-            let decoder = autoDecoder isCamelCase t
-            match fromString decoder.BoxedDecoder json with
             | Ok x -> x
             | Error msg -> failwith msg

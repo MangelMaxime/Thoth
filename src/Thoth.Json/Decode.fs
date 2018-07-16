@@ -780,15 +780,12 @@ module Decode =
             let isCamelCase = defaultArg isCamelCase false
             resolver.Value.ResolveType() |> (autoDecoder isCamelCase) |> unboxDecoder
 
-        static member fromString<'T>(json: string, ?isCamelCase : bool, [<Inject>] ?resolver: ITypeResolver<'T>): 'T =
+        static member fromString<'T>(json: string, ?isCamelCase : bool, [<Inject>] ?resolver: ITypeResolver<'T>): Result<'T, string> =
             let decoder = Auto.generateDecoder(?isCamelCase=isCamelCase, ?resolver=resolver)
-            match fromString decoder json with
-            | Ok x -> x
-            | Error msg -> failwith msg
+            fromString decoder json
 
-        static member fromString(json: string, t: System.Type, ?isCamelCase : bool): obj =
-            let isCamelCase = defaultArg isCamelCase false
-            let decoder = autoDecoder isCamelCase t
+        static member unsafeFromString<'T>(json: string, ?isCamelCase : bool, [<Inject>] ?resolver: ITypeResolver<'T>): 'T =
+            let decoder = Auto.generateDecoder(?isCamelCase=isCamelCase, ?resolver=resolver)
             match fromString decoder json with
             | Ok x -> x
             | Error msg -> failwith msg
