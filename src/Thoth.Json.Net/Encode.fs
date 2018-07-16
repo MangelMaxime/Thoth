@@ -24,6 +24,20 @@ module Encode =
         JValue(value) :> JToken
 
     ///**Description**
+    /// Encode a GUID
+    ///
+    ///**Parameters**
+    ///  * `value` - parameter of type `System.Guid`
+    ///
+    ///**Output Type**
+    ///  * `Value`
+    ///
+    ///**Exceptions**
+    ///
+    let guid (value : System.Guid) : JToken =
+        value.ToString() |> string
+
+    ///**Description**
     /// Encode an int
     ///
     ///**Parameters**
@@ -50,6 +64,22 @@ module Encode =
     ///
     let float (value : float) : JToken =
         JValue(value) :> JToken
+
+    ///**Description**
+    /// Encode a Decimal. (Currently decimal gets converted to float.)
+    ///
+    ///**Parameters**
+    ///  * `value` - parameter of type `decimal`
+    ///
+    ///**Output Type**
+    ///  * `Value`
+    ///
+    ///**Exceptions**
+    ///
+    let decimal (value : decimal) : JToken =
+        // TODO: This is OK for now because Fable just use JS number for decimals
+        // but in the future we should use another format to keep precision
+        FSharp.Core.Operators.float value |> float
 
     ///**Description**
     /// Encode null
