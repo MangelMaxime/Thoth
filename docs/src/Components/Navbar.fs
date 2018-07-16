@@ -68,14 +68,32 @@ module Components.Navbar
 
     let private navbarJson pageUrl =
         Navbar.Dropdown.div [ ]
-            [ Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.Decode)
-                              Navbar.Item.Props [ Href Route.Json.Decode ] ]
+            [ Navbar.Item.div [ ]
+                [ strong [ ]
+                    [ str "Version 2" ] ]
+              Navbar.divider [ ] [ ]
+              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v2.Decode)
+                              Navbar.Item.Props [ Href Route.Json.v2.Decode ] ]
                 [ str "Decode" ]
-              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.Encode )
-                              Navbar.Item.Props [ Href Route.Json.Encode ] ]
+              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v2.Encode )
+                              Navbar.Item.Props [ Href Route.Json.v2.Encode ] ]
                 [ str "Encode" ]
-              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.Net )
-                              Navbar.Item.Props [ Href Route.Json.Net ] ]
+              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v2.Net )
+                              Navbar.Item.Props [ Href Route.Json.v2.Net ] ]
+                [ str ".Net & NetCore" ]
+              Navbar.divider [ ] [ ]
+              Navbar.Item.div [ ]
+                [ strong [ ]
+                    [ str "Version 1" ] ]
+              Navbar.divider [ ] [ ]
+              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v1.Decode)
+                              Navbar.Item.Props [ Href Route.Json.v1.Decode ] ]
+                [ str "Decode" ]
+              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v1.Encode )
+                              Navbar.Item.Props [ Href Route.Json.v1.Encode ] ]
+                [ str "Encode" ]
+              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v1.Net )
+                              Navbar.Item.Props [ Href Route.Json.v1.Net ] ]
                 [ str ".Net & NetCore" ] ]
 
     let private navbarElmish pageUrl =

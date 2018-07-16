@@ -12,9 +12,15 @@ let [<Literal>] Index = Host + "index.html"
 [<RequireQualifiedAccess>]
 module Json =
 
-    let [<Literal>] Encode = Host + "json/" + "encode.html"
-    let [<Literal>] Decode = Host + "json/" + "decode.html"
-    let [<Literal>] Net = Host + "json/" + "net.html"
+    module v1 =
+        let [<Literal>] Encode = Host + "json/" + "v1/" + "encode.html"
+        let [<Literal>] Decode = Host + "json/" + "v1/" + "decode.html"
+        let [<Literal>] Net = Host + "json/" + "v1/" + "net.html"
+
+    module v2 =
+        let [<Literal>] Encode = Host + "json/" + "v2/" + "encode.html"
+        let [<Literal>] Decode = Host + "json/" + "v2/" + "decode.html"
+        let [<Literal>] Net = Host + "json/" + "v2/" + "net.html"
 
 [<RequireQualifiedAccess>]
 module Elmish =
