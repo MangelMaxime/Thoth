@@ -191,7 +191,7 @@ Auto decoder accept an optional argument `isCamelCase`:
 
 ```fsharp
 > let json = """{ "id" : 0, "name": "maxime", "email": "mail@domain.com", "followers": 0 }"""
-> Decode.Auto.fromString<User>(json)
+> Decode.Auto.fromString<User>(json, isCamelCase=true)
 val it : Result<User, string> = Ok { Id = 0; Name = "maxime"; Email = "mail@domain.com"; Followers = 0 }
 ```
 
