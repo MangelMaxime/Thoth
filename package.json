@@ -1,7 +1,7 @@
 {
     "private": true,
     "scripts": {
-        "fable-splitter": "node node_modules/fable-splitter/cli.js",
+        "fable-splitter": "node node_modules/fable-splitter/dist/cli.js",
         "node-sass": "node node_modules/node-sass/bin/node-sass",
         "server": "cd docs/public && reload -b"
     },
