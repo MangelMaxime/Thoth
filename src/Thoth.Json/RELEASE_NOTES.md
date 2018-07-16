@@ -1,3 +1,7 @@
+#### 2.0.0-beta-003
+
+* Make auto decoder safe by default
+
 #### 2.0.0-beta-002
 
 * Fix `Decode.decodeString` signature
