@@ -1,3 +1,11 @@
+<article class="message is-warning">
+  <div class="message-body">
+<strong>Version 2</strong> of Thoth.Json and Thoth.Json.Net are in <strong>alpha</strong> stage.
+
+They <strong>only support</strong> Fable 2.
+  </div>
+</article>
+
 # Encode
 
 Module for turning F# values into JSON values.
@@ -7,22 +15,22 @@ Module for turning F# values into JSON values.
 ## How to use it ?
 
 ```fsharp
-    open Thoth.Json.Encode
+    open Thoth.Json
 
     let person =
-        object
-            [ "firstname", string "maxime"
-              "surname", string "mangel"
-              "age", int 25
-              "address", object
-                            [ "street", string "main street"
-                              "city", string "Bordeaux" ]
+        Encode.object
+            [ "firstname", Encode.string "maxime"
+              "surname", Encode.string "mangel"
+              "age", Encode.int 25
+              "address", Encode.object
+                            [ "street", Encode.string "main street"
+                              "city", Encode.string "Bordeaux" ]
             ]
 
-    let compact = encode 0 person
+    let compact = Encode.toString 0 person
     // {"firstname":"maxime","surname":"mangel","age":25,"address":{"street":"main street","city":"Bordeaux"}}
 
-    let readable = encode 4 person
+    let readable = Encode.toString 4 person
     // {
     //     "firstname": "maxime",
     //     "surname": "mangel",
@@ -32,4 +40,27 @@ Module for turning F# values into JSON values.
     //         "city": "Bordeaux"
     //     }
     // }
+```
+
+## Auto encoder
+
+```fsharp
+type User =
+    { Id : int
+      Name : string
+      Email : string
+      Followers : int }
+
+let json =
+    { Id = 0
+      Name = "maxime"
+      Email = "mail@domain.com"
+      Followers = 0 }
+    |> Encode.Auto.toString 4
+// {
+//     "Id": 0,
+//     "Name": "maxime",
+//     "Email": "mail@domain.com",
+//     "Followers": 0
+// }
 ```

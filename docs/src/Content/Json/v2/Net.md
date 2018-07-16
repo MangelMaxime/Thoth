@@ -1,3 +1,11 @@
+<article class="message is-warning">
+  <div class="message-body">
+<strong>Version 2</strong> of Thoth.Json and Thoth.Json.Net are in <strong>alpha</strong> stage.
+
+They <strong>only support</strong> Fable 2.
+  </div>
+</article>
+
 # .Net & NetCore support
 
 You can share your decoders and encoders **between your client and server**.
@@ -20,17 +28,15 @@ type User =
       Email : string
       Followers : int }
 
-    static member Decoder =
-        Decode.decode
-            (fun id email name followers ->
-                { Id = id
-                  Name = name
-                  Email = email
-                  Followers = followers })
-            |> Decode.required "id" Decode.int
-            |> Decode.required "email" Decode.string
-            |> Decode.optional "name" Decode.string ""
-            |> Decode.hardcoded 0
+    static member Decoder : Decoder<User> =
+        Decode.object
+            (fun get ->
+                { Id = get.Required.Field "id" Decode.int
+                    Name = get.Optional.Field "name" Decode.string
+                            |> Option.defaultValue ""
+                    Email = get.Required.Field "email" Decode.string
+                    Followers = 0 }
+            )
 
     static member Encoder (user : User) =
         Encode.object
