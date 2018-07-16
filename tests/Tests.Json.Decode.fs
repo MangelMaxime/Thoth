@@ -1383,7 +1383,7 @@ Expecting a string but instead got: 12
                 let res = Decode.Auto.unsafeFromString<_>(json)
                 equal value res
 
-            testCase "Auto.fromString works with camelCase" <| fun _ ->
+            testCase "Auto.unsafeFromString works with camelCase" <| fun _ ->
                 let json = """{ "id" : 0, "name": "maxime", "email": "mail@domain.com", "followers": 0 }"""
                 let user = Decode.Auto.unsafeFromString<User>(json, isCamelCase=true)
                 equal "maxime" user.Name
