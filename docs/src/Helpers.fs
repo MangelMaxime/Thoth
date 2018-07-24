@@ -5,11 +5,12 @@ module Helpers
     open Fable.Import
     open Fable.Import.Node
     open Fable.Import.Node.Globals
+    open Fable.PowerPack
 
     let private templateCache = Dictionary<string, obj->string>()
     let private handleBarsCompile (_: string): obj->string = import "compile" "handlebars"
 
-    let makeHtml (_:string) : string = importMember "./js/utils.js"
+    let makeHtml (_:string) :  JS.Promise<string> = importMember "./js/utils.js"
 
     /// Resolves a path to prevent using location of target JS file
     /// Note the function is inline so `__dirname` will belong to the calling file
@@ -61,13 +62,18 @@ module Helpers
     open Fable.Helpers.React.Props
     open Fulma
 
-    [<Pojo>]
     type DangerousInnerHtml =
         { __html : string }
 
     let htmlFromMarkdown str =
-        div [ DangerouslySetInnerHTML { __html = makeHtml str } ] [ ]
+        promise {
+            let! html = makeHtml str
+            return div [ DangerouslySetInnerHTML { __html = html } ] [ ]
+        }
 
     let contentFromMarkdown str =
-        Content.content [ Content.Props [ DangerouslySetInnerHTML { __html = makeHtml str } ] ]
-            [ ]
+        promise {
+            let! html = makeHtml str
+            return Content.content [ Content.Props [ DangerouslySetInnerHTML { __html = html } ] ]
+                [ ]
+        }

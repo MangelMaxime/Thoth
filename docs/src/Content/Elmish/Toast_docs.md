@@ -20,7 +20,7 @@ You can see a demo on [this page](https://mangelmaxime.github.io/Thoth/elmish/to
 
 2. Attach the toast system to your Elmish program
 
-```fs
+```fsharp
 open Elmish
 open Thoth.Elmish
 
@@ -31,7 +31,7 @@ Program.mkProgram init update view
 
 3. You can now send `Toast` from any command in your program.
 
-```fs
+```fsharp
 let update msg model =
     match msg with
     | DemoInfo ->
@@ -65,7 +65,7 @@ Any time you want to send a toast you need to follow these rules:
 
 ### Status
 
-```fs
+```fsharp
 type Status =
     | Success
     | Warning
@@ -75,7 +75,7 @@ type Status =
 
 ### Position
 
-```fs
+```fsharp
 type Position =
     | BottomRight
     | BottomLeft

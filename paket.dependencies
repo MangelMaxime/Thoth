@@ -50,6 +50,9 @@ group Docs
     nuget Fable.Import.Node
     nuget Fulma prerelease
 
+    github akamud/vscode-theme-onelight themes/OneLight.json
+    github ionide/ionide-fsgrammar grammar/fsharp.json
+
 group Demos
     storage:none
     source https://www.nuget.org/api/v2

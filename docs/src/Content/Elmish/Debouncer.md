@@ -37,7 +37,7 @@ The following demo works like that:
 ## How to use ?
 
 1. Store the `Debouncer` instance in your model
-```fs
+```fsharp
 // Model definition
 type Model =
     { State : State
@@ -53,7 +53,7 @@ let init () =
 
 2. Register the message dedicated to the `Debouncer`
 
-```fs
+```fsharp
 // Msg definition
 type Msg =
     | DebouncerSelfMsg of Debouncer.SelfMessage<Msg> // This is the message used by the Debouncer
@@ -63,7 +63,7 @@ type Msg =
 
 3. Handle `DebouncerSelfMsg` in your update function
 
-```fs
+```fsharp
 let private msg model =
     match msg with
     | DebouncerSelfMsg debouncerMsg ->
@@ -75,7 +75,7 @@ let private msg model =
 
 4. Bounce `EndOfInput` each time the user types something in the input
 
-```fs
+```fsharp
 let private msg model =
     match msg with
     | ChangeValue newValue ->
@@ -89,7 +89,7 @@ let private msg model =
 ```
 
 `Debouncer.bounce` parameters:
-```fs
+```fsharp
 val bounce:
    delay       : TimeSpan        -> // Delay before trying to send `msgToSend`
    id          : Debouncer.Id    -> // Id used to identify the message in the debouncer. This is useful if you want to debounce a different message

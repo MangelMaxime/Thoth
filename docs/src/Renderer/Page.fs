@@ -6,24 +6,31 @@ module Renderer.Page
     open Fulma
     open Fable.Helpers.React
     open Fable.Helpers.React.Props
+    open Fable.PowerPack
 
     type PageConfig =
         { PageUrl : string
           Title : string option
           Body : string }
 
-    let private footer =
-        div [ ]
-            [ br [ ]
-              Footer.footer [ CustomClass "has-text-centered" ]
-                [ Container.container [ ]
-                    [ contentFromMarkdown
+    let private footer _ =
+        promise {
+            let! content =
+                contentFromMarkdown
                         """
 **Thoth** by [Maxime Mangel](https://twitter.com/MangelMaxime)
 
 Powered by [Fulma](https://mangelmaxime.github.io/Fulma/) and [Fable static-page-generator](https://github.com/fable-compiler/static-page-generator).
-                        """ ]
-                ] ]
+                        """
+
+            return div [ ]
+                [ br [ ]
+                  Footer.footer [ CustomClass "has-text-centered" ]
+                    [ Container.container [ ]
+                        [ content ]
+                    ] ]
+        }
+
 
     let private templatePath = resolve "${entryDir}/templates/template.hbs"
 
@@ -49,11 +56,16 @@ Powered by [Fulma](https://mangelmaxime.github.io/Fulma/) and [Fable static-page
             |> ofList
             |> parseReactStatic
 
-        [ "title" ==> title
-          "styles" ==> styleTags
-          "navbar" ==> ((Components.Navbar.render config.PageUrl) |> parseReactStatic)
-          "body" ==> config.Body
-          "footer" ==> (footer |> parseReactStatic)
-        ]
-        |> parseTemplate templatePath
-        |> writeFile outputFile
+        printfn "here"
+
+        promise {
+            let! footer = footer ()
+            [ "title" ==> title
+              "styles" ==> styleTags
+              "navbar" ==> ((Components.Navbar.render config.PageUrl) |> parseReactStatic)
+              "body" ==> config.Body
+              "footer" ==> (footer |> parseReactStatic)
+            ]
+            |> parseTemplate templatePath
+            |> writeFile outputFile
+        }

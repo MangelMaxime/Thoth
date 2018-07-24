@@ -229,7 +229,6 @@ Target.create "Docs.Setup" (fun _ ->
 
     // Copy files from node_modules allow us to manage them via yarn
     Shell.copyDir "./docs/public/fonts" "./node_modules/font-awesome/fonts" (fun _ -> true)
-    Shell.copyFile "./docs/scss/extra/highlight.js/atom-one-light.css" "./node_modules/highlight.js/styles/atom-one-light.css"
     // Copy demos file
     Shell.copyDir "./docs/public/demos" "./demos/Thoth.Elmish.Demo/output/" (fun _ -> true)
 
