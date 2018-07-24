@@ -1,0 +1,90 @@
+<!doctype html>
+<html class="has-navbar-fixed-top">
+
+<head>
+    <title>Thoth</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /> <link rel="stylesheet" type="text/css" href="https://mangelmaxime.github.io/Thoth/main.css"/>
+</head>
+
+<body>
+    <nav class="navbar is-fixed-top is-thoth-primary"><div class="bd-special-shadow" style="opacity:1;transform:scaleY(1)"></div><div class="container"><div class="navbar-brand"><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/index.html"><p class="title is-4">Thoth</p></a><a class="navbar-item is-hidden-desktop" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span></a><a class="navbar-item twitter is-hidden-desktop" href="https://twitter.com/MangelMaxime"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span></a><div class="navbar-burger"><span></span><span></span><span></span></div></div><div class="navbar-menu" id="navMenu"><div class="navbar-item is-hoverable has-dropdown"><div class="navbar-link">Json</div><div class="navbar-dropdown"><div class="navbar-item"><strong>Version 2</strong></div><div class="navbar-divider"></div><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v2/decode.html">Decode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v2/encode.html">Encode</a><a class="navbar-item is-active" href="https://mangelmaxime.github.io/Thoth/json/v2/net.html">.Net &amp; NetCore</a><div class="navbar-divider"></div><div class="navbar-item"><strong>Version 1</strong></div><div class="navbar-divider"></div><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v1/decode.html">Decode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v1/encode.html">Encode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v1/net.html">.Net &amp; NetCore</a></div></div><div class="navbar-item is-hoverable has-dropdown"><div class="navbar-link">Elmish</div><div class="navbar-dropdown"><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/elmish/debouncer.html">Debouncer</a><div class="navbar-divider"></div><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/elmish/toast_docs.html">Toast - Docs</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/elmish/toast_demo.html">Toast - Demo</a></div></div></div><div class="navbar-end"><a class="navbar-item is-hidden-mobile" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span></a><a class="navbar-item twitter is-hidden-mobile" href="https://twitter.com/MangelMaxime"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span></a><div class="navbar-item"><div class="field is-grouped"><p class="control"><a class="button twitter" href="https://twitter.com/intent/tweet?via=MangelMaxime&amp;text=Thoth%20is%20a%20set%20of%20several%20libraries%20for%20working%20with%20@FableCompiler%20applications" target="_blank"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span><span>Tweet</span></a></p><p class="control"><a class="button github" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span><span>Github</span></a></p></div></div></div></div></nav>
+    <div class="container">
+        <div class="content" style="margin: 1rem 0 0">
+            <article class="message is-warning">
+  <div class="message-body">
+<strong>Version 2</strong> of Thoth.Json and Thoth.Json.Net are in <strong>alpha</strong> stage.
+<p>They <strong>only support</strong> Fable 2.</p>
+  </div>
+</article>
+<h1><a href="#net-netcore-support" aria-hidden="true"><span class="anchor" id="net-netcore-support"></span>#</a> .Net &amp; NetCore support</h1>
+<p>You can share your decoders and encoders <strong>between your client and server</strong>.</p>
+<p>In order to use Thoth.Json API on .Net or NetCore you need to use the <code>Thoth.Json.Net</code> package.</p>
+<h2><a href="#code-sample" aria-hidden="true"><span class="anchor" id="code-sample"></span>#</a> Code sample</h2>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A0A1A7;font-style: italic">// By adding this condition, you can share your code between your client and server</span>
+<span>#if FABLE</span><span style="color: #A626A4">_</span><span>COMPILER</span>
+<span style="color: #A626A4">open</span><span> </span><span style="color: #4078F2">Thoth.Json</span>
+<span>#else</span>
+<span style="color: #A626A4">open</span><span> </span><span style="color: #4078F2">Thoth.Json.Net</span>
+<span>#endif</span>
+
+<span style="color: #A626A4">type</span><span> </span><span style="color: #C18401">User</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">{</span><span> Id </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">int</span>
+<span>      Name </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string</span>
+<span>      Email </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string</span>
+<span>      Followers </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">int </span><span style="color: #A626A4">}</span>
+
+<span>    </span><span style="color: #A626A4">static member</span><span> </span><span style="color: #E45649">Decoder</span><span style="color: #383A42"> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Decoder</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">User</span><span style="color: #A626A4">&gt;</span><span> </span><span style="color: #A626A4">=</span>
+<span>        Decode.object</span>
+<span>            </span><span style="color: #A626A4">(fun</span><span style="color: #383A42"> get </span><span style="color: #A626A4">-&gt;</span>
+<span>                </span><span style="color: #A626A4">{</span><span> Id </span><span style="color: #A626A4">=</span><span> get.Required.Field </span><span style="color: #50A14F">&quot;id&quot;</span><span> Decode.int</span>
+<span>                    Name </span><span style="color: #A626A4">=</span><span> get.Optional.Field </span><span style="color: #50A14F">&quot;name&quot;</span><span> Decode.string</span>
+<span>                            </span><span style="color: #A626A4">|&gt;</span><span> Option.defaultValue </span><span style="color: #50A14F">&quot;&quot;</span>
+<span>                    Email </span><span style="color: #A626A4">=</span><span> get.Required.Field </span><span style="color: #50A14F">&quot;email&quot;</span><span> Decode.string</span>
+<span>                    Followers </span><span style="color: #A626A4">=</span><span> </span><span style="color: #986801">0</span><span> </span><span style="color: #A626A4">}</span>
+<span>            </span><span style="color: #A626A4">)</span>
+
+<span>    </span><span style="color: #A626A4">static member</span><span> </span><span style="color: #E45649">Encoder</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">user </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">User</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>        Encode.object</span>
+<span>            </span><span style="color: #A626A4">[</span><span> </span><span style="color: #50A14F">&quot;id&quot;</span><span style="color: #A626A4">,</span><span> Encode.int user.Id</span>
+<span>              </span><span style="color: #50A14F">&quot;name&quot;</span><span style="color: #A626A4">,</span><span> Encode.string user.Name</span>
+<span>              </span><span style="color: #50A14F">&quot;email&quot;</span><span style="color: #A626A4">,</span><span> Encode.string user.Email</span>
+<span>              </span><span style="color: #50A14F">&quot;followers&quot;</span><span style="color: #A626A4">,</span><span> Encode.int user.Followers</span>
+<span>            </span><span style="color: #A626A4">]</span></code></pre>
+
+        </div>
+    </div>
+    <div><br/><div class="footer has-text-centered"><div class="container"><div class="content"><p><strong>Thoth</strong> by <a href="https://twitter.com/MangelMaxime">Maxime Mangel</a></p>
+<p>Powered by <a href="https://mangelmaxime.github.io/Fulma/">Fulma</a> and <a href="https://github.com/fable-compiler/static-page-generator">Fable static-page-generator</a>.</p>
+</div></div></div></div>
+    <script type="text/javascript">
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Get all "navbar-burger" elements
+            var $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+
+            // Check if there are any navbar burgers
+            if ($navbarBurgers.length > 0) {
+
+                // Add a click event on each of them
+                $navbarBurgers.forEach(function ($el) {
+                    $el.addEventListener('click', function () {
+
+                        var $target = document.getElementById("navMenu");
+
+                        // Toggle the class on both the "navbar-burger" and the "navbar-menu"
+                        $el.classList.toggle('is-active');
+                        $target.classList.toggle('is-active');
+
+                    });
+                });
+            }
+
+        });
+
+    </script>
+</body>
+
+</html>

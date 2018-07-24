@@ -1,0 +1,104 @@
+<!doctype html>
+<html class="has-navbar-fixed-top">
+
+<head>
+    <title>Thoth</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /> <link rel="stylesheet" type="text/css" href="https://mangelmaxime.github.io/Thoth/main.css"/>
+</head>
+
+<body>
+    <nav class="navbar is-fixed-top is-thoth-primary"><div class="bd-special-shadow" style="opacity:1;transform:scaleY(1)"></div><div class="container"><div class="navbar-brand"><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/index.html"><p class="title is-4">Thoth</p></a><a class="navbar-item is-hidden-desktop" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span></a><a class="navbar-item twitter is-hidden-desktop" href="https://twitter.com/MangelMaxime"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span></a><div class="navbar-burger"><span></span><span></span><span></span></div></div><div class="navbar-menu" id="navMenu"><div class="navbar-item is-hoverable has-dropdown"><div class="navbar-link">Json</div><div class="navbar-dropdown"><div class="navbar-item"><strong>Version 2</strong></div><div class="navbar-divider"></div><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v2/decode.html">Decode</a><a class="navbar-item is-active" href="https://mangelmaxime.github.io/Thoth/json/v2/encode.html">Encode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v2/net.html">.Net &amp; NetCore</a><div class="navbar-divider"></div><div class="navbar-item"><strong>Version 1</strong></div><div class="navbar-divider"></div><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v1/decode.html">Decode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v1/encode.html">Encode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v1/net.html">.Net &amp; NetCore</a></div></div><div class="navbar-item is-hoverable has-dropdown"><div class="navbar-link">Elmish</div><div class="navbar-dropdown"><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/elmish/debouncer.html">Debouncer</a><div class="navbar-divider"></div><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/elmish/toast_docs.html">Toast - Docs</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/elmish/toast_demo.html">Toast - Demo</a></div></div></div><div class="navbar-end"><a class="navbar-item is-hidden-mobile" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span></a><a class="navbar-item twitter is-hidden-mobile" href="https://twitter.com/MangelMaxime"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span></a><div class="navbar-item"><div class="field is-grouped"><p class="control"><a class="button twitter" href="https://twitter.com/intent/tweet?via=MangelMaxime&amp;text=Thoth%20is%20a%20set%20of%20several%20libraries%20for%20working%20with%20@FableCompiler%20applications" target="_blank"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span><span>Tweet</span></a></p><p class="control"><a class="button github" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span><span>Github</span></a></p></div></div></div></div></nav>
+    <div class="container">
+        <div class="content" style="margin: 1rem 0 0">
+            <article class="message is-warning">
+  <div class="message-body">
+<strong>Version 2</strong> of Thoth.Json and Thoth.Json.Net are in <strong>alpha</strong> stage.
+<p>They <strong>only support</strong> Fable 2.</p>
+  </div>
+</article>
+<h1><a href="#encode" aria-hidden="true"><span class="anchor" id="encode"></span>#</a> Encode</h1>
+<p>Module for turning F# values into JSON values.</p>
+<p><em>This module is inspired by <a href="http://package.elm-lang.org/packages/elm-lang/core/latest/Json-Encode">Json.Encode from Elm</a>.</em></p>
+<h2><a href="#how-to-use-it" aria-hidden="true"><span class="anchor" id="how-to-use-it"></span>#</a> How to use it ?</h2>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span>    </span><span style="color: #A626A4">open</span><span> </span><span style="color: #4078F2">Thoth.Json</span>
+
+<span>    </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">person</span><span> </span><span style="color: #A626A4">=</span>
+<span>        Encode.object</span>
+<span>            </span><span style="color: #A626A4">[</span><span> </span><span style="color: #50A14F">&quot;firstname&quot;</span><span style="color: #A626A4">,</span><span> Encode.string </span><span style="color: #50A14F">&quot;maxime&quot;</span>
+<span>              </span><span style="color: #50A14F">&quot;surname&quot;</span><span style="color: #A626A4">,</span><span> Encode.string </span><span style="color: #50A14F">&quot;mangel&quot;</span>
+<span>              </span><span style="color: #50A14F">&quot;age&quot;</span><span style="color: #A626A4">,</span><span> Encode.int </span><span style="color: #986801">25</span>
+<span>              </span><span style="color: #50A14F">&quot;address&quot;</span><span style="color: #A626A4">,</span><span> Encode.object</span>
+<span>                            </span><span style="color: #A626A4">[</span><span> </span><span style="color: #50A14F">&quot;street&quot;</span><span style="color: #A626A4">,</span><span> Encode.string </span><span style="color: #50A14F">&quot;main street&quot;</span>
+<span>                              </span><span style="color: #50A14F">&quot;city&quot;</span><span style="color: #A626A4">,</span><span> Encode.string </span><span style="color: #50A14F">&quot;Bordeaux&quot;</span><span> </span><span style="color: #A626A4">]</span>
+<span>            </span><span style="color: #A626A4">]</span>
+
+<span>    </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">compact</span><span> </span><span style="color: #A626A4">=</span><span> Encode.toString </span><span style="color: #986801">0</span><span> person</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">// {&quot;firstname&quot;:&quot;maxime&quot;,&quot;surname&quot;:&quot;mangel&quot;,&quot;age&quot;:25,&quot;address&quot;:{&quot;street&quot;:&quot;main street&quot;,&quot;city&quot;:&quot;Bordeaux&quot;}}</span>
+
+<span>    </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">readable</span><span> </span><span style="color: #A626A4">=</span><span> Encode.toString </span><span style="color: #986801">4</span><span> person</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">// {</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">//     &quot;firstname&quot;: &quot;maxime&quot;,</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">//     &quot;surname&quot;: &quot;mangel&quot;,</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">//     &quot;age&quot;: 25,</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">//     &quot;address&quot;: {</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">//         &quot;street&quot;: &quot;main street&quot;,</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">//         &quot;city&quot;: &quot;Bordeaux&quot;</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">//     }</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">// }</span></code></pre>
+<h2><a href="#auto-encoder" aria-hidden="true"><span class="anchor" id="auto-encoder"></span>#</a> Auto encoder</h2>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">type</span><span> </span><span style="color: #C18401">User</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">{</span><span> Id </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">int</span>
+<span>      Name </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string</span>
+<span>      Email </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string</span>
+<span>      Followers </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">int </span><span style="color: #A626A4">}</span>
+
+<span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">json</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">{</span><span> Id </span><span style="color: #A626A4">=</span><span> </span><span style="color: #986801">0</span>
+<span>      Name </span><span style="color: #A626A4">=</span><span> </span><span style="color: #50A14F">&quot;maxime&quot;</span>
+<span>      Email </span><span style="color: #A626A4">=</span><span> </span><span style="color: #50A14F">&quot;mail@domain.com&quot;</span>
+<span>      Followers </span><span style="color: #A626A4">=</span><span> </span><span style="color: #986801">0</span><span> </span><span style="color: #A626A4">}</span>
+<span>    </span><span style="color: #A626A4">|&gt;</span><span> Encode.Auto.toString </span><span style="color: #986801">4</span>
+<span style="color: #A0A1A7;font-style: italic">// {</span>
+<span style="color: #A0A1A7;font-style: italic">//     &quot;Id&quot;: 0,</span>
+<span style="color: #A0A1A7;font-style: italic">//     &quot;Name&quot;: &quot;maxime&quot;,</span>
+<span style="color: #A0A1A7;font-style: italic">//     &quot;Email&quot;: &quot;mail@domain.com&quot;,</span>
+<span style="color: #A0A1A7;font-style: italic">//     &quot;Followers&quot;: 0</span>
+<span style="color: #A0A1A7;font-style: italic">// }</span></code></pre>
+
+        </div>
+    </div>
+    <div><br/><div class="footer has-text-centered"><div class="container"><div class="content"><p><strong>Thoth</strong> by <a href="https://twitter.com/MangelMaxime">Maxime Mangel</a></p>
+<p>Powered by <a href="https://mangelmaxime.github.io/Fulma/">Fulma</a> and <a href="https://github.com/fable-compiler/static-page-generator">Fable static-page-generator</a>.</p>
+</div></div></div></div>
+    <script type="text/javascript">
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Get all "navbar-burger" elements
+            var $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+
+            // Check if there are any navbar burgers
+            if ($navbarBurgers.length > 0) {
+
+                // Add a click event on each of them
+                $navbarBurgers.forEach(function ($el) {
+                    $el.addEventListener('click', function () {
+
+                        var $target = document.getElementById("navMenu");
+
+                        // Toggle the class on both the "navbar-burger" and the "navbar-menu"
+                        $el.classList.toggle('is-active');
+                        $target.classList.toggle('is-active');
+
+                    });
+                });
+            }
+
+        });
+
+    </script>
+</body>
+
+</html>
