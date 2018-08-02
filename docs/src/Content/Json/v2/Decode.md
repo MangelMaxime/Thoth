@@ -197,4 +197,46 @@ val it : Result<User, string> = Ok { Id = 0; Name = "maxime"; Email = "mail@doma
 
 If you prefer not to deal with a `Result<'T, string>` type you can use `Decode.Auto.unsafeFromString`.
 - if the decoder succeed, it returns `'T`.
-- if the decoder failed, they it will throw an exception with the explanation in the `Message` property
+- if the decoder failed, it will throw an exception with the explanation in the `Message` property.
+
+Note auto decoders use reflection info, which in Fable 2 is generated in the call site. If you want to save some bytes in the generated JS code, it's recommended to cache decoders instead of using `Decode.Auto.fromString` directly.
+
+```fsharp
+// Instead of:
+let method1 json =
+    Decode.Auto.fromString<Foo> json
+
+let method2 json =
+    Decode.Auto.fromString<Foo> json
+
+// Do this:
+let fooDecoder = Decode.Auto.generateDecoder<Foo>()
+
+let method1 json =
+    Decode.fromString fooDecoder json
+
+let method2 json =
+    Decode.fromString fooDecoder json
+```
+
+For similar reasons, when possible it's better to compose decoders instead of generating them automatically.
+
+```fsharp
+// Instead of:
+type Group = { foo: Foo; bar: Bar }
+
+let fooDecoder = Decode.Auto.generateDecoder<Foo>()
+let barDecoder = Decode.Auto.generateDecoder<Bar>()
+
+let fooListDecoder = Decode.Auto.generateDecoder<Foo list>()
+let groupDecoder = Decode.Auto.generateDecoder<Group>()
+
+// Do this:
+let fooListDecoder: Decode.Decoder<Foo list> =
+    Decode.list fooDecoder
+
+let groupDecoder: Decode.Decoder<Group> =
+    Decode.object (fun get ->
+        { foo = get.Required.Field "foo" fooDecoder
+          bar = get.Required.Field "bar" barDecoder })
+```
