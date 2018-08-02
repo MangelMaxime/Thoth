@@ -7,6 +7,12 @@ open Thoth.Json.Net
 #endif
 open Util.Testing
 
+type User =
+    { Id : int
+      Name : string
+      Email : string
+      followers : int }
+
 let tests : Test =
     testList "Thoth.Json.Encode" [
 
@@ -135,6 +141,30 @@ let tests : Test =
                           ("operator", Encode.option Encode.string None)
                         ] |> Encode.toString 0
 
+                equal expected actual
+
+            testCase "by default, we keep the case defined in type" <| fun _ ->
+                let expected =
+                    """{"Id":0,"Name":"Maxime","Email":"mail@test.com","followers":33}"""
+                let value =
+                    { Id = 0
+                      Name = "Maxime"
+                      Email = "mail@test.com"
+                      followers = 33 }
+
+                let actual = Encode.Auto.toString(0, value)
+                equal expected actual
+
+            testCase "forceCamelCase works" <| fun _ ->
+                let expected =
+                    """{"id":0,"name":"Maxime","email":"mail@test.com","followers":33}"""
+                let value =
+                    { Id = 0
+                      Name = "Maxime"
+                      Email = "mail@test.com"
+                      followers = 33 }
+
+                let actual = Encode.Auto.toString(0, value, true)
                 equal expected actual
 
         ]

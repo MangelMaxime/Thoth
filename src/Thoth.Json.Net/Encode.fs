@@ -189,11 +189,15 @@ module Encode =
         token.WriteTo(jsonWriter)
         stream.ToString()
 
-    module Auto =
-        let toString (space: int) (value: obj) : string =
+    type Auto =
+        static member toString(space : int, value : obj, ?forceCamelCase : bool) : string =
             let format = if space = 0 then Formatting.None else Formatting.Indented
             let settings = JsonSerializerSettings(Converters = [|Converters.CacheConverter.Singleton|],
                                                   Formatting = format)
+
+            if defaultArg forceCamelCase false then
+                settings.ContractResolver <- Serialization.CamelCasePropertyNamesContractResolver()
+
             JsonConvert.SerializeObject(value, settings)
 
     ///**Description**

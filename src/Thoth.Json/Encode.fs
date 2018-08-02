@@ -184,9 +184,8 @@ module Encode =
     let toString (space: int) (value: Value) : string =
         JS.JSON.stringify(value, !!null, space)
 
-    module Auto =
-
-        let toString (space: int) (value: obj) : string =
+    type Auto =
+        static member toString(space : int, value : obj, ?forceCamelCase : bool) : string =
             JS.JSON.stringify(value, (fun _ v ->
                 match v with
                 // Match string before so it's not considered an IEnumerable
@@ -195,7 +194,14 @@ module Encode =
                     if JS.Array.isArray(v)
                     then v
                     else JS.Array.from(v :?> JS.Iterable<obj>) |> box
-                | _ -> v
+                | _ ->
+                    if defaultArg forceCamelCase false && Decode.Helpers.isObject v then
+                        let replacement = createObj []
+                        for key in Decode.Helpers.objectKeys v do
+                            replacement?(key.[..0].ToLowerInvariant() + key.[1..]) <- value?(key)
+                        replacement
+                    else
+                        v
             ), space)
 
     ///**Description**

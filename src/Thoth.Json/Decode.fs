@@ -24,7 +24,7 @@ module Decode =
 
     type Decoder<'T> = string -> obj -> Result<'T, DecoderError>
 
-    module private Helpers =
+    module internal Helpers =
         [<Emit("typeof $0")>]
         let jsTypeof (_ : obj) : string = jsNative
 
