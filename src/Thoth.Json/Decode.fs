@@ -387,17 +387,6 @@ module Decode =
                 |> Seq.toList
                 |> Ok
 
-    let tuple2 (decoder1: Decoder<'T1>) (decoder2: Decoder<'T2>) : Decoder<'T1 * 'T2> =
-        fun path value ->
-            if Helpers.isArray value then
-                let value = Helpers.asArray value
-                let a = unwrap path decoder1 value.[0]
-                let b = unwrap path decoder2 value.[1]
-                Ok(a, b)
-            else
-                (path, BadPrimitive ("a tuple", value))
-                |> Error
-
     //////////////////////////////
     // Inconsistent Structure ///
     ////////////////////////////
@@ -639,6 +628,163 @@ module Decode =
                             else
                                 failwith (errorToString (path, BadType ("an object", v))) }
             } |> Ok
+
+    ///////////////////////
+    // Tuples decoders ///
+    ////////////////////
+
+    let tuple2 (decoder1: Decoder<'T1>) (decoder2: Decoder<'T2>) : Decoder<'T1 * 'T2> =
+        index 0 decoder1
+        |> andThen (fun v1 ->
+            index 1 decoder2
+            |> andThen (fun v2 ->
+                succeed (v1, v2)
+            )
+        )
+
+    let tuple3 (decoder1: Decoder<'T1>)
+               (decoder2: Decoder<'T2>)
+               (decoder3: Decoder<'T3>) : Decoder<'T1 * 'T2 * 'T3> =
+        index 0 decoder1
+        |> andThen (fun v1 ->
+            index 1 decoder2
+            |> andThen (fun v2 ->
+                index 2 decoder3
+                |> andThen (fun v3 ->
+                    succeed (v1, v2, v3)
+                )
+            )
+        )
+
+    let tuple4 (decoder1: Decoder<'T1>)
+               (decoder2: Decoder<'T2>)
+               (decoder3: Decoder<'T3>)
+               (decoder4: Decoder<'T4>) : Decoder<'T1 * 'T2 * 'T3 * 'T4> =
+        index 0 decoder1
+        |> andThen (fun v1 ->
+            index 1 decoder2
+            |> andThen (fun v2 ->
+                index 2 decoder3
+                |> andThen (fun v3 ->
+                    index 3 decoder4
+                    |> andThen (fun v4 ->
+                        succeed (v1, v2, v3, v4)
+                    )
+                )
+            )
+        )
+
+    let tuple5 (decoder1: Decoder<'T1>)
+               (decoder2: Decoder<'T2>)
+               (decoder3: Decoder<'T3>)
+               (decoder4: Decoder<'T4>)
+               (decoder5: Decoder<'T5>) : Decoder<'T1 * 'T2 * 'T3 * 'T4 * 'T5> =
+        index 0 decoder1
+        |> andThen (fun v1 ->
+            index 1 decoder2
+            |> andThen (fun v2 ->
+                index 2 decoder3
+                |> andThen (fun v3 ->
+                    index 3 decoder4
+                    |> andThen (fun v4 ->
+                        index 4 decoder5
+                        |> andThen (fun v5 ->
+                            succeed (v1, v2, v3, v4, v5)
+                        )
+                    )
+                )
+            )
+        )
+
+    let tuple6 (decoder1: Decoder<'T1>)
+               (decoder2: Decoder<'T2>)
+               (decoder3: Decoder<'T3>)
+               (decoder4: Decoder<'T4>)
+               (decoder5: Decoder<'T5>)
+               (decoder6: Decoder<'T6>) : Decoder<'T1 * 'T2 * 'T3 * 'T4 * 'T5 * 'T6> =
+        index 0 decoder1
+        |> andThen (fun v1 ->
+            index 1 decoder2
+            |> andThen (fun v2 ->
+                index 2 decoder3
+                |> andThen (fun v3 ->
+                    index 3 decoder4
+                    |> andThen (fun v4 ->
+                        index 4 decoder5
+                        |> andThen (fun v5 ->
+                            index 5 decoder6
+                            |> andThen (fun v6 ->
+                                succeed (v1, v2, v3, v4, v5, v6)
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+    let tuple7 (decoder1: Decoder<'T1>)
+               (decoder2: Decoder<'T2>)
+               (decoder3: Decoder<'T3>)
+               (decoder4: Decoder<'T4>)
+               (decoder5: Decoder<'T5>)
+               (decoder6: Decoder<'T6>)
+               (decoder7: Decoder<'T7>) : Decoder<'T1 * 'T2 * 'T3 * 'T4 * 'T5 * 'T6 * 'T7> =
+        index 0 decoder1
+        |> andThen (fun v1 ->
+            index 1 decoder2
+            |> andThen (fun v2 ->
+                index 2 decoder3
+                |> andThen (fun v3 ->
+                    index 3 decoder4
+                    |> andThen (fun v4 ->
+                        index 4 decoder5
+                        |> andThen (fun v5 ->
+                            index 5 decoder6
+                            |> andThen (fun v6 ->
+                                index 6 decoder7
+                                |> andThen (fun v7 ->
+                                    succeed (v1, v2, v3, v4, v5, v6, v7)
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+    let tuple8 (decoder1: Decoder<'T1>)
+               (decoder2: Decoder<'T2>)
+               (decoder3: Decoder<'T3>)
+               (decoder4: Decoder<'T4>)
+               (decoder5: Decoder<'T5>)
+               (decoder6: Decoder<'T6>)
+               (decoder7: Decoder<'T7>)
+               (decoder8: Decoder<'T8>) : Decoder<'T1 * 'T2 * 'T3 * 'T4 * 'T5 * 'T6 * 'T7 * 'T8> =
+        index 0 decoder1
+        |> andThen (fun v1 ->
+            index 1 decoder2
+            |> andThen (fun v2 ->
+                index 2 decoder3
+                |> andThen (fun v3 ->
+                    index 3 decoder4
+                    |> andThen (fun v4 ->
+                        index 4 decoder5
+                        |> andThen (fun v5 ->
+                            index 5 decoder6
+                            |> andThen (fun v6 ->
+                                index 6 decoder7
+                                |> andThen (fun v7 ->
+                                    index 7 decoder8
+                                    |> andThen (fun v8 ->
+                                        succeed (v1, v2, v3, v4, v5, v6, v7, v8)
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
 
     //////////////////
     // Reflection ///
