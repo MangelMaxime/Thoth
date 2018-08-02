@@ -183,7 +183,8 @@ type CacheConverter(converters: JsonConverter[]) =
 let encodeWithConverter<'T> (converter: JsonConverter) (space: int) (value: obj) : string =
     let format = if space = 0 then Formatting.None else Formatting.Indented
     let settings = JsonSerializerSettings(Converters = [|converter|],
-                                          Formatting = format)
+                                          Formatting = format,
+                                          DateTimeZoneHandling = DateTimeZoneHandling.Utc )
     JsonConvert.SerializeObject(value, settings)
 
 let decodeStringWithConverter<'T> (converter: JsonConverter) (json: string): Result<'T, string> =

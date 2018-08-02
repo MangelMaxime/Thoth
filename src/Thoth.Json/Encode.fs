@@ -6,11 +6,13 @@ module Encode =
     open Fable.Import
     open Fable.Core.JsInterop
 
-    type Replacer = string -> obj -> obj
+    let inline internal padLeft2 c =  (fun (x: string) -> x.PadLeft(2, c)) << string
 
     /// **Description**
     /// Represents a JavaScript value
     type Value = interface end
+
+    type Encoder<'T> = 'T -> Value
 
     ///**Description**
     /// Encode a string
@@ -170,6 +172,144 @@ module Encode =
         |> Map.toList
         |> object
 
+    let bigint (value : bigint) : Value =
+        !!value.ToString()
+
+    let datetimeOffset (value : System.DateTimeOffset) : Value =
+        let offset =
+            let sign =
+                if value.Offset.Hours < 0 then
+                    "-"
+                else
+                    "+"
+            let hours = padLeft2 '0' (System.Math.Abs(value.Offset.Hours))
+            let minutes = padLeft2 '0' value.Offset.Minutes
+            sign + hours + ":" + minutes
+
+        Operators.string value.Year
+            + "-"
+            + padLeft2 '0' (Operators.string value.Month)
+            + "-"
+            + padLeft2 '0' (Operators.string value.Day)
+            + "T"
+            + padLeft2 '0' (Operators.string value.Hour)
+            + ":"
+            + padLeft2 '0' (Operators.string value.Minute)
+            + ":"
+            + padLeft2 '0' (Operators.string value.Second)
+            + offset
+        |> string
+
+    let int64 (value : int64) : Value =
+        !!value.ToString()
+
+    let uint64 (value : uint64) : Value =
+        !!value.ToString()
+
+    let tuple2
+            (enc1 : Encoder<'T1>)
+            (enc2 : Encoder<'T2>)
+            (v1, v2) : Value =
+        !![| enc1 v1
+             enc2 v2 |]
+
+    let tuple3
+            (enc1 : Encoder<'T1>)
+            (enc2 : Encoder<'T2>)
+            (enc3 : Encoder<'T3>)
+            (v1, v2, v3) : Value =
+        !![| enc1 v1
+             enc2 v2
+             enc3 v3 |]
+
+    let tuple4
+            (enc1 : Encoder<'T1>)
+            (enc2 : Encoder<'T2>)
+            (enc3 : Encoder<'T3>)
+            (enc4 : Encoder<'T4>)
+            (v1, v2, v3, v4) : Value =
+        !![| enc1 v1
+             enc2 v2
+             enc3 v3
+             enc4 v4 |]
+
+    let tuple5
+            (enc1 : Encoder<'T1>)
+            (enc2 : Encoder<'T2>)
+            (enc3 : Encoder<'T3>)
+            (enc4 : Encoder<'T4>)
+            (enc5 : Encoder<'T5>)
+            (v1, v2, v3, v4, v5) : Value =
+        !![| enc1 v1
+             enc2 v2
+             enc3 v3
+             enc4 v4
+             enc5 v5 |]
+
+    let tuple6
+            (enc1 : Encoder<'T1>)
+            (enc2 : Encoder<'T2>)
+            (enc3 : Encoder<'T3>)
+            (enc4 : Encoder<'T4>)
+            (enc5 : Encoder<'T5>)
+            (enc6 : Encoder<'T6>)
+            (v1, v2, v3, v4, v5, v6) : Value =
+        !![| enc1 v1
+             enc2 v2
+             enc3 v3
+             enc4 v4
+             enc5 v5
+             enc6 v6 |]
+
+    let tuple7
+            (enc1 : Encoder<'T1>)
+            (enc2 : Encoder<'T2>)
+            (enc3 : Encoder<'T3>)
+            (enc4 : Encoder<'T4>)
+            (enc5 : Encoder<'T5>)
+            (enc6 : Encoder<'T6>)
+            (enc7 : Encoder<'T7>)
+            (v1, v2, v3, v4, v5, v6, v7) : Value =
+        !![| enc1 v1
+             enc2 v2
+             enc3 v3
+             enc4 v4
+             enc5 v5
+             enc6 v6
+             enc7 v7 |]
+
+    let tuple8
+            (enc1 : Encoder<'T1>)
+            (enc2 : Encoder<'T2>)
+            (enc3 : Encoder<'T3>)
+            (enc4 : Encoder<'T4>)
+            (enc5 : Encoder<'T5>)
+            (enc6 : Encoder<'T6>)
+            (enc7 : Encoder<'T7>)
+            (enc8 : Encoder<'T8>)
+            (v1, v2, v3, v4, v5, v6, v7, v8) : Value =
+        !![| enc1 v1
+             enc2 v2
+             enc3 v3
+             enc4 v4
+             enc5 v5
+             enc6 v6
+             enc7 v7
+             enc8 v8 |]
+
+    /// **Description**
+    ///
+    /// **Parameters**
+    ///   * `value` - parameter of type `System.DateTime`
+    ///
+    /// **Output Type**
+    ///   * `Value`
+    ///
+    /// **Exceptions**
+    ///
+    let datetime (value : System.DateTime) : Value =
+        value.ToString("O") |> string
+
     ///**Description**
     /// Convert a `Value` into a prettified string.
     ///**Parameters**
@@ -183,6 +323,19 @@ module Encode =
     ///
     let toString (space: int) (value: Value) : string =
         JS.JSON.stringify(value, !!null, space)
+
+    ///**Description**
+    /// Encode an option
+    ///**Parameters**
+    ///  * `encoder` - parameter of type `'a -> Value`
+    ///
+    ///**Output Type**
+    ///  * `'a option -> Value`
+    ///
+    ///**Exceptions**
+    ///
+    let option (encoder : 'a -> Value) =
+        Option.map encoder >> Option.defaultWith (fun _ -> nil)
 
     type Auto =
         static member toString(space : int, value : obj, ?forceCamelCase : bool) : string =
@@ -217,16 +370,3 @@ module Encode =
     ///
     [<System.Obsolete("Please use toString instead")>]
     let encode (space: int) (value: Value) : string = toString space value
-
-    ///**Description**
-    /// Encode an option
-    ///**Parameters**
-    ///  * `encoder` - parameter of type `'a -> Value`
-    ///
-    ///**Output Type**
-    ///  * `'a option -> Value`
-    ///
-    ///**Exceptions**
-    ///
-    let option (encoder : 'a -> Value) =
-        Option.map encoder >> Option.defaultWith (fun _ -> nil)

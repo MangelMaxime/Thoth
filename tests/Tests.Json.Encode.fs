@@ -6,12 +6,26 @@ open Thoth.Json
 open Thoth.Json.Net
 #endif
 open Util.Testing
+open System
 
 type User =
     { Id : int
       Name : string
       Email : string
       followers : int }
+
+type SmallRecord =
+    { fieldA: string }
+
+    static member Decoder =
+        Decode.object (fun get ->
+            { fieldA = get.Required.Field "fieldA" Decode.string }
+        )
+
+    static member Encoder x =
+        Encode.object [
+            "fieldA", Encode.string x.fieldA
+        ]
 
 let tests : Test =
     testList "Thoth.Json.Encode" [
@@ -96,6 +110,174 @@ let tests : Test =
                     |> Encode.toString 0
                 equal expected actual
 
+            testCase "a bigint works" <| fun _ ->
+                let expected = "\"12\""
+                let actual =
+                    Encode.bigint 12I
+                    |> Encode.toString 0
+
+                equal expected actual
+
+            testCase "a datetime works" <| fun _ ->
+                #if FABLE_COMPILER
+                let expected = "\"2018-10-01T11:12:55.000Z\""
+                #else
+                let expected = "\"2018-10-01T11:12:55Z\""
+                #endif
+                let actual =
+                    DateTime(2018, 10, 1, 11, 12, 55, DateTimeKind.Utc)
+                    |> Encode.datetime
+                    |> Encode.toString 0
+
+                equal expected actual
+
+            testCase "a datetimeOffset works" <| fun _ ->
+                let expected = "\"2018-07-02T12:23:45+02:00\""
+                let actual =
+                    DateTimeOffset(2018, 7, 2, 12, 23, 45, 0, TimeSpan.FromHours(2.))
+                    |> Encode.datetimeOffset
+                    |> Encode.toString 0
+
+                equal expected actual
+
+            testCase "a decimal works" <| fun _ ->
+                let expected = "0.7833"
+                let actual =
+                    0.7833M
+                    |> Encode.decimal
+                    |> Encode.toString 0
+
+                equal expected actual
+
+            testCase "a guid works" <| fun _ ->
+                let expected = "\"1e5dee25-8558-4392-a9fb-aae03f81068f\""
+                let actual =
+                    Guid.Parse("1e5dee25-8558-4392-a9fb-aae03f81068f")
+                    |> Encode.guid
+                    |> Encode.toString 0
+
+                equal expected actual
+
+            testCase "a int64 works" <| fun _ ->
+                let expected = "\"7923209\""
+                let actual =
+                    7923209L
+                    |> Encode.int64
+                    |> Encode.toString 0
+
+                equal expected actual
+
+            testCase "a uint64 works" <| fun _ ->
+                let expected = "\"7923209\""
+                let actual =
+                    7923209UL
+                    |> Encode.uint64
+                    |> Encode.toString 0
+
+                equal expected actual
+
+            testCase "a tuple2 works" <| fun _ ->
+                let expected = """[1,"maxime"]"""
+                let actual =
+                    Encode.tuple2
+                        Encode.int
+                        Encode.string
+                        (1, "maxime")
+                    |> Encode.toString 0
+
+                equal expected actual
+
+            testCase "a tuple3 works" <| fun _ ->
+                let expected = """[1,"maxime",2.5]"""
+                let actual =
+                    Encode.tuple3
+                        Encode.int
+                        Encode.string
+                        Encode.float
+                        (1, "maxime", 2.5)
+                    |> Encode.toString 0
+
+                equal expected actual
+
+            testCase "a tuple4 works" <| fun _ ->
+                let expected = """[1,"maxime",2.5,{"fieldA":"test"}]"""
+                let actual =
+                    Encode.tuple4
+                        Encode.int
+                        Encode.string
+                        Encode.float
+                        SmallRecord.Encoder
+                        (1, "maxime", 2.5, { fieldA = "test" })
+                    |> Encode.toString 0
+
+                equal expected actual
+
+            testCase "a tuple5 works" <| fun _ ->
+                #if FABLE_COMPILER
+                let expected = """[1,"maxime",2.5,{"fieldA":"test"},"2018-10-01T11:12:55.000Z"]"""
+                #else
+                let expected = """[1,"maxime",2.5,{"fieldA":"test"},"2018-10-01T11:12:55Z"]"""
+                #endif
+                let actual =
+                    Encode.tuple5
+                        Encode.int
+                        Encode.string
+                        Encode.float
+                        SmallRecord.Encoder
+                        Encode.datetime
+                        (1, "maxime", 2.5, { fieldA = "test" }, DateTime(2018, 10, 1, 11, 12, 55, DateTimeKind.Utc))
+                    |> Encode.toString 0
+
+                equal expected actual
+
+            testCase "a tuple6 works" <| fun _ ->
+                let expected = """[1,"maxime",2.5,{"fieldA":"test"},false,null]"""
+                let actual =
+                    Encode.tuple6
+                        Encode.int
+                        Encode.string
+                        Encode.float
+                        SmallRecord.Encoder
+                        Encode.bool
+                        (fun _ -> Encode.nil)
+                        (1, "maxime", 2.5, { fieldA = "test" }, false, null)
+                    |> Encode.toString 0
+
+                equal expected actual
+
+            testCase "a tuple7 works" <| fun _ ->
+                let expected = """[1,"maxime",2.5,{"fieldA":"test"},false,null,true]"""
+                let actual =
+                    Encode.tuple7
+                        Encode.int
+                        Encode.string
+                        Encode.float
+                        SmallRecord.Encoder
+                        Encode.bool
+                        (fun _ -> Encode.nil)
+                        Encode.bool
+                        (1, "maxime", 2.5, { fieldA = "test" }, false, null, true)
+                    |> Encode.toString 0
+
+                equal expected actual
+
+            testCase "a tuple8 works" <| fun _ ->
+                let expected = """[1,"maxime",2.5,{"fieldA":"test"},false,null,true,98]"""
+                let actual =
+                    Encode.tuple8
+                        Encode.int
+                        Encode.string
+                        Encode.float
+                        SmallRecord.Encoder
+                        Encode.bool
+                        (fun _ -> Encode.nil)
+                        Encode.bool
+                        Encode.int
+                        (1, "maxime", 2.5, { fieldA = "test" }, false, null, true, 98)
+                    |> Encode.toString 0
+
+                equal expected actual
+
             testCase "using pretty space works" <| fun _ ->
                 let expected = "{\n    \"firstname\": \"maxime\",\n    \"age\": 25\n}"
 
@@ -170,3 +352,25 @@ let tests : Test =
         ]
 
     ]
+
+
+// Encode.bigint
+// Encode.datetime
+
+
+// Encode.datetimeOffset
+// Encode.decimal
+// Encode.guid
+// Encode.int64
+// Encode.keyValuePairs
+// Encode.list
+// Encode.nil
+// Encode.object
+// Encode.tuple2
+// Encode.tuple3
+// Encode.tuple4
+// Encode.tuple5
+// Encode.tuple6
+// Encode.tuple7
+// Encode.tuple8
+// Encode.uint64

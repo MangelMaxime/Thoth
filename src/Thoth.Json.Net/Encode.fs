@@ -7,7 +7,9 @@ module Encode =
     open Newtonsoft.Json.Linq
     open System.IO
 
-    type Replacer = string -> obj -> obj
+    let inline internal padLeft2 c =  (fun (x: string) -> x.PadLeft(2, c)) << string
+
+    type Encoder<'T> = 'T -> JToken
 
     ///**Description**
     /// Encode a string
@@ -166,6 +168,134 @@ module Encode =
         values
         |> Map.toList
         |> object
+
+    let bigint (value : bigint) : JToken =
+        JValue(Operators.string value) :> JToken
+
+    let int64 (value : int64) : JToken =
+        JValue(Operators.string value) :> JToken
+
+    let uint64 (value : uint64) : JToken =
+        JValue(Operators.string value) :> JToken
+
+    let datetime (value : System.DateTime) : JToken =
+        JValue(value) :> JToken
+
+    let datetimeOffset (value : System.DateTimeOffset) : JToken =
+        let offset =
+            let sign =
+                if value.Offset.Hours < 0 then
+                    "-"
+                else
+                    "+"
+            let hours = padLeft2 '0' (System.Math.Abs(value.Offset.Hours))
+            let minutes = padLeft2 '0' value.Offset.Minutes
+            sign + hours + ":" + minutes
+
+        Operators.string value.Year
+            + "-"
+            + padLeft2 '0' (Operators.string value.Month)
+            + "-"
+            + padLeft2 '0' (Operators.string value.Day)
+            + "T"
+            + padLeft2 '0' (Operators.string value.Hour)
+            + ":"
+            + padLeft2 '0' (Operators.string value.Minute)
+            + ":"
+            + padLeft2 '0' (Operators.string value.Second)
+            + offset
+        |> JValue :> JToken
+
+    let tuple2
+            (enc1 : Encoder<'T1>)
+            (enc2 : Encoder<'T2>)
+            (v1, v2) : JToken =
+        [| enc1 v1
+           enc2 v2 |] |> array
+
+    let tuple3
+            (enc1 : Encoder<'T1>)
+            (enc2 : Encoder<'T2>)
+            (enc3 : Encoder<'T3>)
+            (v1, v2, v3) : JToken =
+        [| enc1 v1
+           enc2 v2
+           enc3 v3 |] |> array
+
+    let tuple4
+            (enc1 : Encoder<'T1>)
+            (enc2 : Encoder<'T2>)
+            (enc3 : Encoder<'T3>)
+            (enc4 : Encoder<'T4>)
+            (v1, v2, v3, v4) : JToken =
+        [| enc1 v1
+           enc2 v2
+           enc3 v3
+           enc4 v4 |] |> array
+
+    let tuple5
+            (enc1 : Encoder<'T1>)
+            (enc2 : Encoder<'T2>)
+            (enc3 : Encoder<'T3>)
+            (enc4 : Encoder<'T4>)
+            (enc5 : Encoder<'T5>)
+            (v1, v2, v3, v4, v5) : JToken =
+        [| enc1 v1
+           enc2 v2
+           enc3 v3
+           enc4 v4
+           enc5 v5 |] |> array
+
+    let tuple6
+            (enc1 : Encoder<'T1>)
+            (enc2 : Encoder<'T2>)
+            (enc3 : Encoder<'T3>)
+            (enc4 : Encoder<'T4>)
+            (enc5 : Encoder<'T5>)
+            (enc6 : Encoder<'T6>)
+            (v1, v2, v3, v4, v5, v6) : JToken =
+        [| enc1 v1
+           enc2 v2
+           enc3 v3
+           enc4 v4
+           enc5 v5
+           enc6 v6 |] |> array
+
+    let tuple7
+            (enc1 : Encoder<'T1>)
+            (enc2 : Encoder<'T2>)
+            (enc3 : Encoder<'T3>)
+            (enc4 : Encoder<'T4>)
+            (enc5 : Encoder<'T5>)
+            (enc6 : Encoder<'T6>)
+            (enc7 : Encoder<'T7>)
+            (v1, v2, v3, v4, v5, v6, v7) : JToken =
+        [| enc1 v1
+           enc2 v2
+           enc3 v3
+           enc4 v4
+           enc5 v5
+           enc6 v6
+           enc7 v7 |] |> array
+
+    let tuple8
+            (enc1 : Encoder<'T1>)
+            (enc2 : Encoder<'T2>)
+            (enc3 : Encoder<'T3>)
+            (enc4 : Encoder<'T4>)
+            (enc5 : Encoder<'T5>)
+            (enc6 : Encoder<'T6>)
+            (enc7 : Encoder<'T7>)
+            (enc8 : Encoder<'T8>)
+            (v1, v2, v3, v4, v5, v6, v7, v8) : JToken =
+        [| enc1 v1
+           enc2 v2
+           enc3 v3
+           enc4 v4
+           enc5 v5
+           enc6 v6
+           enc7 v7
+           enc8 v8 |] |> array
 
     ///**Description**
     /// Convert a `Value` into a prettified string.
