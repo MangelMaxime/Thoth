@@ -199,6 +199,8 @@ If you prefer not to deal with a `Result<'T, string>` type you can use `Decode.A
 - if the decoder succeed, it returns `'T`.
 - if the decoder failed, it will throw an exception with the explanation in the `Message` property.
 
+#### Size optimization
+
 Note auto decoders use reflection info, which in Fable 2 is generated in the call site. If you want to save some bytes in the generated JS code, it's recommended to cache decoders instead of using `Decode.Auto.fromString` directly.
 
 ```fsharp
