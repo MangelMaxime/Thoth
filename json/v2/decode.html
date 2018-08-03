@@ -169,13 +169,48 @@ like <code>map2</code>, <code>map3</code>, ..., <code>map8</code>.</p>
 <p>If you prefer not to deal with a <code>Result&lt;'T, string&gt;</code> type you can use <code>Decode.Auto.unsafeFromString</code>.</p>
 <ul>
 <li>if the decoder succeed, it returns <code>'T</code>.</li>
-<li>if the decoder failed, they it will throw an exception with the explanation in the <code>Message</code> property</li>
+<li>if the decoder failed, it will throw an exception with the explanation in the <code>Message</code> property.</li>
 </ul>
+<h4><a href="#size-optimization" aria-hidden="true"><span class="anchor" id="size-optimization"></span>#</a> Size optimization</h4>
+<p>Note auto decoders use reflection info, which in Fable 2 is generated in the call site. If you want to save some bytes in the generated JS code, it's recommended to cache decoders instead of using <code>Decode.Auto.fromString</code> directly.</p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A0A1A7;font-style: italic">// Instead of:</span>
+<span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">method1</span><span style="color: #383A42"> json</span><span> </span><span style="color: #A626A4">=</span>
+<span>    Decode.Auto.fromString</span><span style="color: #A626A4">&lt;</span><span>Foo</span><span style="color: #A626A4">&gt;</span><span> json</span>
+
+<span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">method2</span><span style="color: #383A42"> json</span><span> </span><span style="color: #A626A4">=</span>
+<span>    Decode.Auto.fromString</span><span style="color: #A626A4">&lt;</span><span>Foo</span><span style="color: #A626A4">&gt;</span><span> json</span>
+
+<span style="color: #A0A1A7;font-style: italic">// Do this:</span>
+<span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">fooDecoder</span><span> </span><span style="color: #A626A4">=</span><span> Decode.Auto.generateDecoder</span><span style="color: #A626A4">&lt;</span><span>Foo</span><span style="color: #A626A4">&gt;</span><span style="color: #986801">()</span>
+
+<span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">method1</span><span style="color: #383A42"> json</span><span> </span><span style="color: #A626A4">=</span>
+<span>    Decode.fromString fooDecoder json</span>
+
+<span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">method2</span><span style="color: #383A42"> json</span><span> </span><span style="color: #A626A4">=</span>
+<span>    Decode.fromString fooDecoder json</span></code></pre>
+<p>For similar reasons, when possible it's better to compose decoders instead of generating them automatically.</p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A0A1A7;font-style: italic">// Instead of:</span>
+<span style="color: #A626A4">type</span><span> </span><span style="color: #C18401">Group</span><span> </span><span style="color: #A626A4">=</span><span> </span><span style="color: #A626A4">{</span><span> foo</span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Foo</span><span style="color: #A626A4">;</span><span> bar</span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Bar </span><span style="color: #A626A4">}</span>
+
+<span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">fooDecoder</span><span> </span><span style="color: #A626A4">=</span><span> Decode.Auto.generateDecoder</span><span style="color: #A626A4">&lt;</span><span>Foo</span><span style="color: #A626A4">&gt;</span><span style="color: #986801">()</span>
+<span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">barDecoder</span><span> </span><span style="color: #A626A4">=</span><span> Decode.Auto.generateDecoder</span><span style="color: #A626A4">&lt;</span><span>Bar</span><span style="color: #A626A4">&gt;</span><span style="color: #986801">()</span>
+
+<span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">fooListDecoder</span><span> </span><span style="color: #A626A4">=</span><span> Decode.Auto.generateDecoder</span><span style="color: #A626A4">&lt;</span><span>Foo list</span><span style="color: #A626A4">&gt;</span><span style="color: #986801">()</span>
+<span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">groupDecoder</span><span> </span><span style="color: #A626A4">=</span><span> Decode.Auto.generateDecoder</span><span style="color: #A626A4">&lt;</span><span>Group</span><span style="color: #A626A4">&gt;</span><span style="color: #986801">()</span>
+
+<span style="color: #A0A1A7;font-style: italic">// Do this:</span>
+<span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">fooListDecoder</span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Decode.Decoder</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">Foo list</span><span style="color: #A626A4">&gt;</span><span> </span><span style="color: #A626A4">=</span>
+<span>    Decode.list fooDecoder</span>
+
+<span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">groupDecoder</span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Decode.Decoder</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">Group</span><span style="color: #A626A4">&gt;</span><span> </span><span style="color: #A626A4">=</span>
+<span>    Decode.object </span><span style="color: #A626A4">(fun</span><span style="color: #383A42"> get </span><span style="color: #A626A4">-&gt;</span>
+<span>        </span><span style="color: #A626A4">{</span><span> foo </span><span style="color: #A626A4">=</span><span> get.Required.Field </span><span style="color: #50A14F">&quot;foo&quot;</span><span> fooDecoder</span>
+<span>          bar </span><span style="color: #A626A4">=</span><span> get.Required.Field </span><span style="color: #50A14F">&quot;bar&quot;</span><span> barDecoder </span><span style="color: #A626A4">})</span></code></pre>
 
         </div>
     </div>
     <div><br/><div class="footer has-text-centered"><div class="container"><div class="content"><p><strong>Thoth</strong> by <a href="https://twitter.com/MangelMaxime">Maxime Mangel</a></p>
-<p>Powered by <a href="https://mangelmaxime.github.io/Fulma/">Fulma</a> and <a href="https://github.com/fable-compiler/static-page-generator">Fable static-page-generator</a>.</p>
+<p>Powered by <a href="https://mangelmaxime.github.io/Fulma/">Fulma</a>, <a href="https://github.com/fable-compiler/static-page-generator">Fable static-page-generator</a> and <a href="https://github.com/MangelMaxime/Code-Lightner">Code-Lightner</a>.</p>
 </div></div></div></div>
     <script type="text/javascript">
 
