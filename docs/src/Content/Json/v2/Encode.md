@@ -51,12 +51,13 @@ type User =
       Email : string
       Followers : int }
 
-let json =
+let user =
     { Id = 0
       Name = "maxime"
       Email = "mail@domain.com"
       Followers = 0 }
-    |> Encode.Auto.toString 4
+
+let json = Encode.Auto.toString(4, user)
 // {
 //     "Id": 0,
 //     "Name": "maxime",
