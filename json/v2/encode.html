@@ -54,12 +54,13 @@
 <span>      Email </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string</span>
 <span>      Followers </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">int </span><span style="color: #A626A4">}</span>
 
-<span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">json</span><span> </span><span style="color: #A626A4">=</span>
+<span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">user</span><span> </span><span style="color: #A626A4">=</span>
 <span>    </span><span style="color: #A626A4">{</span><span> Id </span><span style="color: #A626A4">=</span><span> </span><span style="color: #986801">0</span>
 <span>      Name </span><span style="color: #A626A4">=</span><span> </span><span style="color: #50A14F">&quot;maxime&quot;</span>
 <span>      Email </span><span style="color: #A626A4">=</span><span> </span><span style="color: #50A14F">&quot;mail@domain.com&quot;</span>
 <span>      Followers </span><span style="color: #A626A4">=</span><span> </span><span style="color: #986801">0</span><span> </span><span style="color: #A626A4">}</span>
-<span>    </span><span style="color: #A626A4">|&gt;</span><span> Encode.Auto.toString </span><span style="color: #986801">4</span>
+
+<span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">json</span><span> </span><span style="color: #A626A4">=</span><span> Encode.Auto.toString</span><span style="color: #A626A4">(</span><span style="color: #986801">4</span><span style="color: #A626A4">,</span><span> user</span><span style="color: #A626A4">)</span>
 <span style="color: #A0A1A7;font-style: italic">// {</span>
 <span style="color: #A0A1A7;font-style: italic">//     &quot;Id&quot;: 0,</span>
 <span style="color: #A0A1A7;font-style: italic">//     &quot;Name&quot;: &quot;maxime&quot;,</span>
