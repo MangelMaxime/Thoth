@@ -2,8 +2,8 @@ source https://www.nuget.org/api/v2
 
 storage:none
 
-clitool dotnet-fable >= 2.0.0-alpha-029
-nuget Fable.Core >= 2.0.0-alpha-011
+clitool dotnet-fable prerelease
+nuget Fable.Core prerelease
 nuget FSharp.Core redirects:force
 nuget Fable.Import.Browser
 nuget Newtonsoft.Json >= 11.0.2
@@ -12,6 +12,7 @@ nuget Fable.Elmish
 nuget Fable.PowerPack
 nuget Fable.React
 nuget Fable.Import.HMR
+nuget Giraffe
 
 # Save Newtonsoft pkg in repo dir so we
 # can access it with F# interactive

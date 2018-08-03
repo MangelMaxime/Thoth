@@ -30,6 +30,7 @@ let inline dtntWorkDir wd =
 let srcFiles =
     !! "./src/Thoth.Json/Thoth.Json.fsproj"
     ++ "./src/Thoth.Json.Net/Thoth.Json.Net.fsproj"
+    ++ "./src/Thoth.Json.Giraffe/Thoth.Json.Giraffe.fsproj"
     ++ "./src/Thoth.Elmish/Thoth.Elmish.fsproj"
     ++ "./src/Thoth.Elmish.Toast/Thoth.Elmish.Toast.fsproj"
 

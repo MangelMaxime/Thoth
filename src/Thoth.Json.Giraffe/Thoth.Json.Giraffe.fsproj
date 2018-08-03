@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Description>JSON serializer for Giraffe implemented with Thoth.Json.Net</Description>
+        <PackageProjectUrl>https://github.com/MangelMaxime/Thoth</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/MangelMaxime/Thoth/blob/master/LICENSE.md</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/MangelMaxime/Thoth</RepositoryUrl>
+        <PackageTags>fsharp;json;Giraffe;ASP.NET;Core</PackageTags>
+        <Authors>Maxime Mangel</Authors>
+        <Version>1.0.0</Version>
+    </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.0</TargetFrameworks>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="../Thoth.Json.Net/Thoth.Json.Net.fsproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Include="./ThothSerializer.fs" />
+    </ItemGroup>
+    <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>
