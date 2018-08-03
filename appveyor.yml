@@ -1,13 +1,10 @@
 build:
   verbosity: detailed
 
-image: Visual Studio 2017
+image:
+  - Ubuntu
 
-install:
-  - ps: Install-Product node 8 x64
+stack: node 8
 
 build_script:
-  - cmd: fake.cmd build
-
-cache:
-- "%LOCALAPPDATA%\\Yarn"
+  - sh: ./fake.sh build
