@@ -1,3 +1,7 @@
+#### 2.0.0-beta-004
+
+* Add Encoders for all the equivalent Decoders
+
 #### 2.0.0-beta-003
 
 * Make auto decoder safe by default
