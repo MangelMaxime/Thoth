@@ -335,12 +335,14 @@ Expecting a bigint but instead got: "maxime"
 
                 equal expected actual
 
-            // testCase "a datetime works" <| fun _ ->
-            //     let expected = Ok (new DateTime(2018, 10, 1, 11, 12, 55, DateTimeKind.Utc))
-            //     let actual =
-            //         Decode.fromString Decode.datetime "\"2018-10-01T11:12:55.00Z\""
+            testCase "a datetime works" <| fun _ ->
+                let expected = new DateTime(2018, 10, 1, 11, 12, 55, DateTimeKind.Utc)
+                let actual =
+                    Decode.fromString Decode.datetime "\"2018-10-01T11:12:55.00Z\""
 
-            //     equal expected actual
+                match actual with
+                | Ok date -> equal (expected = date) true
+                | Error error -> failwith error
 
             testCase "a datetime output an error if invalid string" <| fun _ ->
                 let expected =
