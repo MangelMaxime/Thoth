@@ -10,7 +10,7 @@ module Encode =
 
     /// **Description**
     /// Represents a JavaScript value
-    type Value = interface end
+    type Value = obj
 
     type Encoder<'T> = 'T -> Value
 
@@ -26,7 +26,7 @@ module Encode =
     ///**Exceptions**
     ///
     let inline string (value : string) : Value =
-        !!value
+        box value
 
     ///**Description**
     /// Encode a GUID
@@ -54,7 +54,7 @@ module Encode =
     ///**Exceptions**
     ///
     let inline int (value : int) : Value =
-        !!value
+        box value
 
     ///**Description**
     /// Encode a Float. `Infinity` and `NaN` are encoded as `null`.
@@ -68,7 +68,7 @@ module Encode =
     ///**Exceptions**
     ///
     let inline float (value : float) : Value =
-        !!value
+        box value
 
     ///**Description**
     /// Encode a Decimal. (Currently decimal gets converted to float.)
@@ -97,7 +97,7 @@ module Encode =
     ///**Exceptions**
     ///
     let nil : Value =
-        !!null
+        box null
 
     ///**Description**
     /// Encode a bool
@@ -110,7 +110,7 @@ module Encode =
     ///**Exceptions**
     ///
     let inline bool (value : bool) : Value =
-        !!value
+        box value
 
     ///**Description**
     /// Encode an object
@@ -127,7 +127,7 @@ module Encode =
         let o = obj()
         for (key, value) in values do
             o?(key) <- value
-        !!o
+        box o
 
     ///**Description**
     /// Encode an array
@@ -141,7 +141,7 @@ module Encode =
     ///**Exceptions**
     ///
     let inline array (values : array<Value>) : Value =
-        !!values
+        box values
 
     ///**Description**
     /// Encode a list
@@ -155,7 +155,7 @@ module Encode =
     ///
     let inline list (values : Value list) : Value =
         // Don't use List.toArray as it may create a typed array
-        !!(JS.Array.from(box values :?> JS.Iterable<Value>))
+        box (JS.Array.from(box values :?> JS.Iterable<Value>))
 
     ///**Description**
     /// Encode a dictionary
@@ -173,7 +173,7 @@ module Encode =
         |> object
 
     let bigint (value : bigint) : Value =
-        !!value.ToString()
+        box (value.ToString())
 
     let datetimeOffset (value : System.DateTimeOffset) : Value =
         let offset =
@@ -201,26 +201,26 @@ module Encode =
         |> string
 
     let int64 (value : int64) : Value =
-        !!value.ToString()
+        box (value.ToString())
 
     let uint64 (value : uint64) : Value =
-        !!value.ToString()
+        box (value.ToString())
 
     let tuple2
             (enc1 : Encoder<'T1>)
             (enc2 : Encoder<'T2>)
             (v1, v2) : Value =
-        !![| enc1 v1
-             enc2 v2 |]
+        box [| enc1 v1
+               enc2 v2 |]
 
     let tuple3
             (enc1 : Encoder<'T1>)
             (enc2 : Encoder<'T2>)
             (enc3 : Encoder<'T3>)
             (v1, v2, v3) : Value =
-        !![| enc1 v1
-             enc2 v2
-             enc3 v3 |]
+        box [| enc1 v1
+               enc2 v2
+               enc3 v3 |]
 
     let tuple4
             (enc1 : Encoder<'T1>)
@@ -228,10 +228,10 @@ module Encode =
             (enc3 : Encoder<'T3>)
             (enc4 : Encoder<'T4>)
             (v1, v2, v3, v4) : Value =
-        !![| enc1 v1
-             enc2 v2
-             enc3 v3
-             enc4 v4 |]
+        box [| enc1 v1
+               enc2 v2
+               enc3 v3
+               enc4 v4 |]
 
     let tuple5
             (enc1 : Encoder<'T1>)
@@ -240,11 +240,11 @@ module Encode =
             (enc4 : Encoder<'T4>)
             (enc5 : Encoder<'T5>)
             (v1, v2, v3, v4, v5) : Value =
-        !![| enc1 v1
-             enc2 v2
-             enc3 v3
-             enc4 v4
-             enc5 v5 |]
+        box [| enc1 v1
+               enc2 v2
+               enc3 v3
+               enc4 v4
+               enc5 v5 |]
 
     let tuple6
             (enc1 : Encoder<'T1>)
@@ -254,12 +254,12 @@ module Encode =
             (enc5 : Encoder<'T5>)
             (enc6 : Encoder<'T6>)
             (v1, v2, v3, v4, v5, v6) : Value =
-        !![| enc1 v1
-             enc2 v2
-             enc3 v3
-             enc4 v4
-             enc5 v5
-             enc6 v6 |]
+        box [| enc1 v1
+               enc2 v2
+               enc3 v3
+               enc4 v4
+               enc5 v5
+               enc6 v6 |]
 
     let tuple7
             (enc1 : Encoder<'T1>)
@@ -270,13 +270,13 @@ module Encode =
             (enc6 : Encoder<'T6>)
             (enc7 : Encoder<'T7>)
             (v1, v2, v3, v4, v5, v6, v7) : Value =
-        !![| enc1 v1
-             enc2 v2
-             enc3 v3
-             enc4 v4
-             enc5 v5
-             enc6 v6
-             enc7 v7 |]
+        box [| enc1 v1
+               enc2 v2
+               enc3 v3
+               enc4 v4
+               enc5 v5
+               enc6 v6
+               enc7 v7 |]
 
     let tuple8
             (enc1 : Encoder<'T1>)
@@ -288,14 +288,14 @@ module Encode =
             (enc7 : Encoder<'T7>)
             (enc8 : Encoder<'T8>)
             (v1, v2, v3, v4, v5, v6, v7, v8) : Value =
-        !![| enc1 v1
-             enc2 v2
-             enc3 v3
-             enc4 v4
-             enc5 v5
-             enc6 v6
-             enc7 v7
-             enc8 v8 |]
+        box [| enc1 v1
+               enc2 v2
+               enc3 v3
+               enc4 v4
+               enc5 v5
+               enc6 v6
+               enc7 v7
+               enc8 v8 |]
 
     /// **Description**
     ///
