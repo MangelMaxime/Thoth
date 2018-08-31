@@ -1,3 +1,7 @@
+#### 2.0.0-beta-005
+
+* Make `Encode.Value` an alias of `obj` instead of an empty interface
+
 #### 2.0.0-beta-004
 
 * Add Encoders for all the equivalent Decoders
