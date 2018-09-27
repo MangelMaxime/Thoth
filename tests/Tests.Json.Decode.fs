@@ -120,6 +120,11 @@ type Record9 =
       f: System.DateTime
     }
 
+type Record10 =
+    { a: int
+      b: float option
+      c: string option }
+
 type User =
     { Id : int
       Name : string
@@ -1507,6 +1512,10 @@ Expecting a string but instead got: 12
                 equal None r2.d.[1]
                 equal -1.5 (Map.find "ah" r2.e).a
                 equal 2.   (Map.find "oh" r2.e).b
+
+            testCase "Auto.Decode.fromString works with optional members" <| fun _ ->
+                Decode.Auto.unsafeFromString<Record10> """{"a":5,"c":"foo"}"""
+                |> equal { a = 5; b = None; c = Some "foo" }
 
             testCase "Auto serialization works with recursive types" <| fun _ ->
                 let len xs =

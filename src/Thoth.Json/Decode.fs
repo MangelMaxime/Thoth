@@ -805,17 +805,24 @@ module Decode =
     // This is used to force Fable use a generic comparer for map keys
     let private toMap<'key, 'value when 'key: comparison> (xs: ('key*'value) seq) = Map.ofSeq xs
 
-    let private autoObject (decoders: (string * BoxedDecoder)[]) (path : string) (value: obj) =
+    let private autoObject (decoders: (string * bool * BoxedDecoder)[]) (path : string) (value: obj) =
         if not (Helpers.isObject value) then
             (path, BadPrimitive ("an object", value)) |> Error
         else
-            (decoders, Ok []) ||> Array.foldBack (fun (name, decoder) acc ->
+            (decoders, Ok []) ||> Array.foldBack (fun (name, isOptional, decoder) acc ->
                 match acc with
                 | Error _ -> acc
                 | Ok result ->
-                    // TODO!!! Optional types shouldn't be required
-                    field name decoder path value
-                    |> Result.map (fun v -> v::result))
+                    if isOptional then
+                        // TODO: Copied from IOptionalGetter.Field. Should we unify it?
+                        match decodeValueError path (field name decoder) value with
+                        | Ok v -> Ok(v::result)
+                        | Error (_, BadField _ )
+                        | Error (_, BadPrimitive (_, null)) -> Ok((box None)::result)
+                        | Error er -> Error er
+                    else
+                        field name decoder path value
+                        |> Result.map (fun v -> v::result))
 
     let private mixedArray msg (decoders: BoxedDecoder[]) (path: string) (values: obj[]): Result<obj list, DecoderError> =
         if decoders.Length <> values.Length then
@@ -846,11 +853,18 @@ module Decode =
                     FSharpType.GetRecordFields(t)
                     |> Array.map (fun fi ->
                         let name =
-                            if isCamelCase then
-                                fi.Name.[..0].ToLowerInvariant() + fi.Name.[1..]
-                            else
-                                fi.Name
-                        name, autoDecoder isCamelCase fi.PropertyType)
+                            if isCamelCase
+                            then fi.Name.[..0].ToLowerInvariant() + fi.Name.[1..]
+                            else fi.Name
+                        let isOptional, decoder =
+                            let t = fi.PropertyType
+                            if t.IsGenericType then
+                                let fullname = t.GetGenericTypeDefinition().FullName
+                                if fullname = typedefof<obj option>.FullName
+                                then true, t.GenericTypeArguments.[0] |> (autoDecoder isCamelCase) |> option |> boxDecoder
+                                else false, autoDecoder isCamelCase fi.PropertyType
+                            else false, autoDecoder isCamelCase fi.PropertyType
+                        name, isOptional, decoder)
                 autoObject decoders path value
                 |> Result.map (fun xs -> FSharpValue.MakeRecord(t, List.toArray xs))
         elif FSharpType.IsUnion(t) then

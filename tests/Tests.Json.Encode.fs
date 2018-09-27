@@ -349,6 +349,16 @@ let tests : Test =
                 let actual = Encode.Auto.toString(0, value, true)
                 equal expected actual
 
+            testCase "ignoreMembers works" <| fun _ ->
+                let expected =
+                    """{"Id":0,"Name":"Maxime","followers":33}"""
+                let value =
+                    { Id = 0
+                      Name = "Maxime"
+                      Email = "mail@test.com"
+                      followers = 33 }
+                let actual = Encode.Auto.toString(0, value, ignoreMembers=["Email"])
+                equal expected actual
         ]
 
     ]
