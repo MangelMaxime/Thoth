@@ -1,3 +1,7 @@
+#### 2.0.0
+
+* Release stable
+
 #### 2.0.0-beta-004
 
 * Add Encoders for all the equivalent Decoders

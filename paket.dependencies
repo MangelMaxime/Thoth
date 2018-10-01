@@ -2,8 +2,8 @@ source https://www.nuget.org/api/v2
 
 storage:none
 
-clitool dotnet-fable prerelease
-nuget Fable.Core prerelease
+clitool dotnet-fable
+nuget Fable.Core
 nuget FSharp.Core redirects:force
 nuget Fable.Import.Browser
 nuget Newtonsoft.Json >= 11.0.2
@@ -42,11 +42,11 @@ group Docs
     source https://www.nuget.org/api/v2
     framework: netstandard2.0
 
-    clitool dotnet-fable prerelease
+    clitool dotnet-fable
     nuget FSharp.Core redirects:force
-    nuget Fable.Core prerelease
+    nuget Fable.Core
     nuget Fable.Import.Browser
-    nuget Fable.React prerelease
+    nuget Fable.React
     nuget Fable.PowerPack
     nuget Fable.Import.Node
     nuget Fulma prerelease
