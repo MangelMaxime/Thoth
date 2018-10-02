@@ -1,25 +1,24 @@
 const path = require("path");
 const webpack = require("webpack");
-const fableUtils = require("fable-utils");
 
 function resolve(filePath) {
     return path.join(__dirname, filePath)
 }
 
-var babelOptions = fableUtils.resolveBabelOptions({
+var babelOptions = {
     presets: [
-        ["env", {
+        ["@babel/preset-env", {
             "targets": {
                 "browsers": ["last 2 versions"]
             },
             "modules": false
         }],
-        "react"
+        "@babel/react"
     ],
     plugins: [
-        "transform-class-properties"
+        "@babel/plugin-proposal-class-properties"
     ]
-});
+};
 
 var isProduction = process.argv.indexOf("-p") >= 0;
 console.log("Bundling for " + (isProduction ? "production" : "development") + "...");
@@ -33,14 +32,14 @@ module.exports = {
         {
             // We don't output style because it's already included by the docs
             demo: [
-                "babel-polyfill",
-                resolve('./Thoth.Elmish.Demo.fsproj')
+                "@babel/polyfill",
+                './Thoth.Elmish.Demo.fsproj'
             ]
         } : {
             demo: [
-                "babel-polyfill",
-                resolve('./Thoth.Elmish.Demo.fsproj'),
-                resolve('./src/scss/main.scss')
+                "@babel/polyfill",
+                './Thoth.Elmish.Demo.fsproj',
+                './src/scss/main.scss'
             ]
         },
     mode: isProduction ? "production" : "development",
@@ -65,14 +64,8 @@ module.exports = {
             new webpack.HotModuleReplacementPlugin(),
             new webpack.NamedModulesPlugin()
         ]),
-    resolve: {
-        modules: [
-            "node_modules/",
-            resolve("./node_modules")
-        ]
-    },
     devServer: {
-        contentBase: resolve('./html/'),
+        contentBase: './html/',
         publicPath: "/",
         port: 8080,
         hot: true,

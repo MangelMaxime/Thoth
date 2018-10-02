@@ -1,8 +1,6 @@
-<article class="message is-warning">
+<article class="message is-info">
   <div class="message-body">
-<strong>Version 2</strong> of Thoth.Json and Thoth.Json.Net are in <strong>alpha</strong> stage.
-
-They <strong>only support</strong> Fable 2.
+<strong>Version 2</strong> of Thoth.Json and Thoth.Json.Net <strong>only support</strong> Fable 2.
   </div>
 </article>
 

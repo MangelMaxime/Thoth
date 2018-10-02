@@ -271,7 +271,7 @@ Target.create "Build.Demos" (fun _ ->
         DotNet.exec
             (dtntWorkDir (root </> "demos" </> "Thoth.Elmish.Demo"))
             "fable"
-            "fable-splitter -- -c tests/splitter.config.js -w"
+            "webpack -- -p"
 
     if not result.OK then failwithf "Fable build failed for demos."
 )
