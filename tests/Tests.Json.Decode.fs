@@ -143,6 +143,10 @@ type SmallRecord =
 type SmallRecord2 =
     { optionalField : string option }
 
+type Model =
+    { User : User option
+      Field2 : int }
+
 type MyList<'T> =
     | Nil
     | Cons of 'T * MyList<'T>
@@ -167,6 +171,8 @@ let jsonRecordInvalid =
          "g": "invalid_a_field",
          "h": "invalid_a_field" }"""
 
+exception CustomException
+
 let tests : Test =
     testList "Thoth.Json.Decode" [
 
@@ -180,7 +186,7 @@ let tests : Test =
                 a?child <- b
                 b?child <- a
 
-                let expected : Result<float, string>= Error "Error at: `$`\nExpecting a float but decoder failed. Couldn\'t report given value due to circular structure. "
+                let expected : Result<float, string> = Error "Error at: `$`\nExpecting a float but decoder failed. Couldn\'t report given value due to circular structure. "
                 let actual = Decode.fromValue "$" Decode.float b
 
                 equal expected actual
@@ -188,11 +194,30 @@ let tests : Test =
 
             testCase "invalid json" <| fun _ ->
                 #if FABLE_COMPILER
-                let expected : Result<float, string>= Error "Given an invalid JSON: Unexpected token m in JSON at position 0"
+                let expected : Result<float, string> = Error "Given an invalid JSON: Unexpected token m in JSON at position 0"
                 #else
-                let expected : Result<float, string>= Error "Given an invalid JSON: Unexpected character encountered while parsing value: m. Path '', line 0, position 0."
+                let expected : Result<float, string> = Error "Given an invalid JSON: Unexpected character encountered while parsing value: m. Path '', line 0, position 0."
                 #endif
                 let actual = Decode.fromString Decode.float "maxime"
+
+                equal expected actual
+
+            testCase "user exceptions are not captured by the decoders" <| fun _ ->
+                let expected = true
+
+                let decoder =
+                    (fun _ _ ->
+                        raise CustomException
+                    )
+
+                let actual =
+                    try
+                        Decode.fromString decoder "\"maxime\""
+                        |> ignore // Ignore the result as we only want to trigger the decoder and capture the exception
+                        false
+                    with
+                        | CustomException ->
+                            true
 
                 equal expected actual
         ]
@@ -1286,6 +1311,31 @@ Expecting a string but instead got: 12
                     Decode.object
                         (fun get ->
                             { optionalField = get.Optional.Field "name" Decode.string }
+                        )
+
+                let actual =
+                    Decode.fromString decoder json
+
+                equal expected actual
+
+            testCase "nested get.Optional.Field > get.Required.Field returns None if field is null" <| fun _ ->
+                let json = """{ "user": null, "field2": 25 }"""
+                let expected = Ok({ User = None; Field2 = 25 })
+
+                let userDecoder =
+                    Decode.object
+                        (fun get ->
+                            { Id = get.Required.Field "id" Decode.int
+                              Name = get.Required.Field "name" Decode.string
+                              Email = get.Required.Field "email" Decode.string
+                              Followers = 0 }
+                        )
+
+                let decoder =
+                    Decode.object
+                        (fun get ->
+                            { User = get.Optional.Field "user" userDecoder
+                              Field2 = get.Required.Field "field2" Decode.int }
                         )
 
                 let actual =

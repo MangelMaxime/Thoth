@@ -17,7 +17,6 @@ module Decode =
         | TooSmallArray of string * JToken
         | FailMessage of string
         | BadOneOf of string list
-        | Direct of string
 
     type DecoderError = string * ErrorReason
 
@@ -86,24 +85,22 @@ module Decode =
                 "I run into the following problems:\n\n" + String.concat "\n" messages
             | FailMessage msg ->
                 "I run into a `fail` decoder: " + msg
-            | Direct msg ->
-                msg
 
         match error with
-        | BadOneOf _
-        | Direct _ ->
+        | BadOneOf _ ->
             // Don't need to show the path here because each error case will show it's own path
             reason
         | _ ->
             "Error at: `" + path + "`\n" + reason
 
+    exception DecoderException of DecoderError
 
     let unwrap (path : string) (decoder : Decoder<'T>) (value : JToken) : 'T =
         match decoder path value with
         | Ok success ->
             success
         | Error error ->
-            failwith (errorToString error)
+            raise (DecoderException error)
 
     ///////////////
     // Runners ///
@@ -118,8 +115,8 @@ module Decode =
                 | Error error ->
                     Error error
             with
-                | ex ->
-                    Error (path, (Direct ex.Message))
+                | DecoderException error ->
+                    Error error
 
     let fromValue (path : string) (decoder : Decoder<'T>) =
         fun value ->
@@ -135,8 +132,11 @@ module Decode =
                 let json = Newtonsoft.Json.Linq.JValue.Parse value
                 fromValue "$" decoder json
             with
-                | ex ->
+                | :? Newtonsoft.Json.JsonReaderException as ex ->
                     Error("Given an invalid JSON: " + ex.Message)
+                | DecoderException error ->
+                    errorToString error
+                    |> Error
 
     [<System.Obsolete("Please use fromValue instead")>]
     let decodeValue (path : string) (decoder : Decoder<'T>) = fromValue path decoder
@@ -416,8 +416,9 @@ module Decode =
 
     let andThen (cb: 'a -> Decoder<'b>) (decoder : Decoder<'a>) : Decoder<'b> =
         fun path value ->
-            match fromValue path decoder value with
-            | Error error -> failwith error
+            match decodeValueError path decoder value with
+            | Error error ->
+                raise (DecoderException error)
             | Ok result ->
                 cb result path value
 
@@ -577,33 +578,37 @@ module Decode =
                 member __.Required =
                     { new IRequiredGetter with
                         member __.Field (fieldName : string) (decoder : Decoder<_>) =
-                            match fromValue path (field fieldName decoder) v with
+                            match decodeValueError path (field fieldName decoder) v with
                             | Ok v -> v
-                            | Error msg -> failwith msg
+                            | Error error ->
+                                raise (DecoderException error)
                         member __.At (fieldNames : string list) (decoder : Decoder<_>) =
-                            match fromValue path (at fieldNames decoder) v with
+                            match decodeValueError path (at fieldNames decoder) v with
                             | Ok v -> v
-                            | Error msg -> failwith msg }
+                            | Error error ->
+                                raise (DecoderException error) }
                 member __.Optional =
                     { new IOptionalGetter with
                         member __.Field (fieldName : string) (decoder : Decoder<_>) =
                             match decodeValueError path (field fieldName decoder) v with
                             | Ok v -> Some v
                             | Error (_, BadField _ ) -> None
+                            | Error (_, BadType (_, jToken))
                             | Error (_, BadPrimitive (_, jToken)) when jToken.Type = JTokenType.Null -> None
                             | Error error ->
-                                failwith (errorToString error)
+                                raise (DecoderException error)
                         member __.At (fieldNames : string list) (decoder : Decoder<_>) =
                             if Helpers.isObject v then
                                 match decodeValueError path (at fieldNames decoder) v with
                                 | Ok v -> Some v
                                 | Error (_, BadPath _ )
                                 | Error (_, BadTypeAt _) -> None
-                                | Error (_, BadType (_, jToken)) when jToken.Type = JTokenType.Null -> None
+                                | Error (_, BadType (_, jToken))
+                                | Error (_, BadPrimitive (_, jToken)) when jToken.Type = JTokenType.Null -> None
                                 | Error error ->
-                                    failwith (errorToString error)
+                                    raise (DecoderException error)
                             else
-                                failwith (errorToString (path, BadType ("an object", v))) }
+                                raise (DecoderException (path, BadType ("an object", v))) }
             } |> Ok
 
     ///////////////////////

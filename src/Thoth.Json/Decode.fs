@@ -18,7 +18,6 @@ module Decode =
         | TooSmallArray of string * obj
         | FailMessage of string
         | BadOneOf of string list
-        | Direct of string
 
     type DecoderError = string * ErrorReason
 
@@ -107,23 +106,22 @@ module Decode =
                 "I run into the following problems:\n\n" + String.concat "\n" messages
             | FailMessage msg ->
                 "I run into a `fail` decoder: " + msg
-            | Direct msg ->
-                msg
 
         match error with
-        | BadOneOf _
-        | Direct _ ->
+        | BadOneOf _ ->
             // Don't need to show the path here because each error case will show it's own path
             reason
         | _ ->
             "Error at: `" + path + "`\n" + reason
+
+    exception DecoderException of DecoderError
 
     let unwrap (path : string) (decoder : Decoder<'T>) (value : obj) : 'T =
         match decoder path value with
         | Ok success ->
             success
         | Error error ->
-            failwith (errorToString error)
+            raise (DecoderException error)
 
     ///////////////
     // Runners ///
@@ -138,8 +136,8 @@ module Decode =
                 | Error error ->
                     Error error
             with
-                | ex ->
-                    Error (path, (Direct ex.Message))
+                | DecoderException error ->
+                    Error error
 
     let fromValue (path : string) (decoder : Decoder<'T>) =
         fun value ->
@@ -157,6 +155,9 @@ module Decode =
             with
                 | ex when Helpers.isSyntaxError ex ->
                     Error("Given an invalid JSON: " + ex.Message)
+                | DecoderException error ->
+                    errorToString error
+                    |> Error
 
     [<System.Obsolete("Please use fromValue instead")>]
     let decodeValue (path : string) (decoder : Decoder<'T>) = fromValue path decoder
@@ -438,9 +439,9 @@ module Decode =
 
     let andThen (cb: 'a -> Decoder<'b>) (decoder : Decoder<'a>) : Decoder<'b> =
         fun path value ->
-            match fromValue path decoder value with
+            match decodeValueError path decoder value with
             | Error error ->
-                failwith error
+                raise (DecoderException error)
             | Ok result ->
                 cb result path value
 
@@ -600,33 +601,37 @@ module Decode =
                 member __.Required =
                     { new IRequiredGetter with
                         member __.Field (fieldName : string) (decoder : Decoder<_>) =
-                            match fromValue path (field fieldName decoder) v with
+                            match decodeValueError path (field fieldName decoder) v with
                             | Ok v -> v
-                            | Error msg -> failwith msg
+                            | Error error ->
+                                raise (DecoderException error)
                         member __.At (fieldNames : string list) (decoder : Decoder<_>) =
-                            match fromValue path (at fieldNames decoder) v with
+                            match decodeValueError path (at fieldNames decoder) v with
                             | Ok v -> v
-                            | Error msg -> failwith msg }
+                            | Error error ->
+                                raise (DecoderException error) }
                 member __.Optional =
                     { new IOptionalGetter with
                         member __.Field (fieldName : string) (decoder : Decoder<_>) =
                             match decodeValueError path (field fieldName decoder) v with
                             | Ok v -> Some v
                             | Error (_, BadField _ )
+                            | Error (_, BadType (_, null))
                             | Error (_, BadPrimitive (_, null)) -> None
                             | Error error ->
-                                failwith (errorToString error)
+                                raise (DecoderException error)
                         member __.At (fieldNames : string list) (decoder : Decoder<_>) =
                             if Helpers.isObject v then
                                 match decodeValueError path (at fieldNames decoder) v with
                                 | Ok v -> Some v
                                 | Error (_, BadPath _ )
                                 | Error (_, BadType (_, null))
-                                | Error (_, BadTypeAt _) -> None
+                                | Error (_, BadTypeAt _)
+                                | Error (_, BadPrimitive (_, null)) -> None
                                 | Error error ->
-                                    failwith (errorToString error)
+                                    raise (DecoderException error)
                             else
-                                failwith (errorToString (path, BadType ("an object", v))) }
+                                raise (DecoderException (path, BadType ("an object", v))) }
             } |> Ok
 
     ///////////////////////
