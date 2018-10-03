@@ -1,3 +1,8 @@
+#### 2.1.0
+
+* Fix nested object builder (ex: get.Optional.Field > get.Required.Field)
+* Fix exception handling
+
 #### 2.0.0
 
 * Stable release for Fable 2
