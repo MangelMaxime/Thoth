@@ -175,7 +175,7 @@ val it : Result<User, string> = Ok { Id = 67; Name = ""; Email = "user@mail.com"
 
 ### Auto decoder
 
-If your JSON structure is a one to one match, with your F# type, you can use auto decoders. Auto decoders, will generate the decoder at runtime for you and still guarante that the JSON structure is correct.
+If your JSON structure is a one to one match, with your F# type, you can use auto decoders. Auto decoders, will generate the decoder at runtime for you and still guarantee that the JSON structure is correct.
 
 ```fsharp
 > let json = """{ "Id" : 0, "Name": "maxime", "Email": "mail@domain.com", "Followers": 0 }"""
