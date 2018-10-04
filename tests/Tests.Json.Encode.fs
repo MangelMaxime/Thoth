@@ -11,7 +11,7 @@ open System
 type User =
     { Id : int
       Name : string
-      Email : string
+      Email : string option
       followers : int }
 
 type SmallRecord =
@@ -331,7 +331,7 @@ let tests : Test =
                 let value =
                     { Id = 0
                       Name = "Maxime"
-                      Email = "mail@test.com"
+                      Email = Some "mail@test.com"
                       followers = 33 }
 
                 let actual = Encode.Auto.toString(0, value)
@@ -343,21 +343,21 @@ let tests : Test =
                 let value =
                     { Id = 0
                       Name = "Maxime"
-                      Email = "mail@test.com"
+                      Email = Some "mail@test.com"
                       followers = 33 }
 
                 let actual = Encode.Auto.toString(0, value, true)
                 equal expected actual
 
-            testCase "ignoreMembers works" <| fun _ ->
+            testCase "Optional members with None value are ignored" <| fun _ ->
                 let expected =
                     """{"Id":0,"Name":"Maxime","followers":33}"""
                 let value =
                     { Id = 0
                       Name = "Maxime"
-                      Email = "mail@test.com"
+                      Email = None
                       followers = 33 }
-                let actual = Encode.Auto.toString(0, value, ignoreMembers=["Email"])
+                let actual = Encode.Auto.toString(0, value)
                 equal expected actual
         ]
 

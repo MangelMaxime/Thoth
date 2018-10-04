@@ -338,19 +338,12 @@ module Encode =
         Option.map encoder >> Option.defaultWith (fun _ -> nil)
 
     type Auto =
-        static member toString(space : int, value : obj, ?forceCamelCase : bool, ?ignoreMembers: string seq) : string =
-            let value =
-                match ignoreMembers with
-                | None -> value
-                | Some ms ->
-                    let value2 = obj()
-                    let ignore = System.Collections.Generic.HashSet(ms)
-                    for k in JS.Object.keys(value) do
-                        if not(ignore.Contains(k)) then
-                            value2?(k) <- value?(k)
-                    value2
-            JS.JSON.stringify(value, (fun _ v ->
+        static member toString(space : int, value : obj, ?forceCamelCase : bool) : string =
+            JS.JSON.stringify(value, (fun k v ->
                 match v with
+                // Return undefined so the field is excluded from the JSON object
+                | _ when isNull v && not(System.String.IsNullOrEmpty k) ->
+                    Decode.Helpers.jsUndefined
                 // Match string before so it's not considered an IEnumerable
                 | :? string -> v
                 | :? System.Collections.IEnumerable ->

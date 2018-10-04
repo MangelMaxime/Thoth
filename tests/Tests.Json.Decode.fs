@@ -128,7 +128,7 @@ type Record10 =
 type User =
     { Id : int
       Name : string
-      Email : string
+      Email : string option
       Followers : int }
 
     static member Create id name email followers =
@@ -1471,7 +1471,7 @@ Expecting a string but instead got: 12
 
             testCase "complex object builder works" <| fun _ ->
                 let expected =
-                    Ok(User.Create 67 "" "user@mail.com" 0)
+                    Ok(User.Create 67 "" (Some "user@mail.com") 0)
 
                 let userDecoder =
                     Decode.object
@@ -1479,7 +1479,7 @@ Expecting a string but instead got: 12
                             { Id = get.Required.Field "id" Decode.int
                               Name = get.Optional.Field "name" Decode.string
                                         |> Option.defaultValue ""
-                              Email = get.Required.Field "email" Decode.string
+                              Email = get.Optional.Field "email" Decode.string
                               Followers = 0 }
                         )
 
@@ -1675,12 +1675,27 @@ Expecting a string but instead got: 12
                 equal "maxime" user.Name
                 equal 0 user.Id
                 equal 0 user.Followers
-                equal "mail@domain.com" user.Email
+                equal "mail@domain.com" user.Email.Value
 
             testCase "Auto.fromString works with camelCase" <| fun _ ->
                 let json = """{ "id" : 0, "name": "maxime", "email": "mail@domain.com", "followers": 0 }"""
                 let user = Decode.Auto.fromString<User>(json, isCamelCase=true)
-                let expected = Ok { Id = 0; Name = "maxime"; Email = "mail@domain.com"; Followers = 0 }
+                let expected = Ok { Id = 0; Name = "maxime"; Email = Some "mail@domain.com"; Followers = 0 }
                 equal expected user
+
+            testCase "Auto.fromString works with missing optional fields" <| fun _ ->
+                let json = """{ "Id" : 0, "Name": "maxime", "Followers": 0 }"""
+                let user = Decode.Auto.fromString<User>(json)
+                let expected = Ok { Id = 0; Name = "maxime"; Email = None; Followers = 0 }
+                equal expected user
+
+            // TODO: This tests is failing because Decode.string fails with null values,
+            // but string is a nullable type in F#
+
+            // testCase "Auto.fromString works with missing nullable fields" <| fun _ ->
+            //     let json = """{ "Id" : 0, "Email": "mail@domain.com", "Followers": 0 }"""
+            //     let user = Decode.Auto.fromString<User>(json)
+            //     let expected = Ok { Id = 0; Name = null; Email = Some "mail@domain.com"; Followers = 0 }
+            //     equal expected user
         ]
     ]

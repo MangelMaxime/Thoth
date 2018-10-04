@@ -28,6 +28,9 @@ module Decode =
         [<Emit("typeof $0")>]
         let jsTypeof (_ : obj) : string = jsNative
 
+        [<Emit("void 0")>]
+        let jsUndefined: obj = jsNative
+
         [<Emit("$0 instanceof SyntaxError")>]
         let isSyntaxError (_ : obj) : bool = jsNative
 
@@ -807,22 +810,21 @@ module Decode =
 
     let private autoObject (decoders: (string * bool * BoxedDecoder)[]) (path : string) (value: obj) =
         if not (Helpers.isObject value) then
-            (path, BadPrimitive ("an object", value)) |> Error
+            (path, BadType ("an object", value)) |> Error
         else
             (decoders, Ok []) ||> Array.foldBack (fun (name, isOptional, decoder) acc ->
                 match acc with
                 | Error _ -> acc
                 | Ok result ->
-                    if isOptional then
-                        // TODO: Copied from IOptionalGetter.Field. Should we unify it?
-                        match decodeValueError path (field name decoder) value with
-                        | Ok v -> Ok(v::result)
-                        | Error (_, BadField _ )
-                        | Error (_, BadPrimitive (_, null)) -> Ok((box None)::result)
-                        | Error er -> Error er
-                    else
-                        field name decoder path value
-                        |> Result.map (fun v -> v::result))
+                    let path = path + "." + name
+                    let fieldValue = value?(name)
+                    if Helpers.isDefined fieldValue then
+                        decoder path fieldValue
+                    elif isOptional then
+                        Ok(box None)
+                    else // Assume the value is null
+                        decoder path null
+                    |> Result.map (fun v -> v::result))
 
     let private mixedArray msg (decoders: BoxedDecoder[]) (path: string) (values: obj[]): Result<obj list, DecoderError> =
         if decoders.Length <> values.Length then
