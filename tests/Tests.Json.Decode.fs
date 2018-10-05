@@ -300,10 +300,46 @@ let tests : Test =
                         """
 Error at: `$`
 Expecting an int64 but instead got: "maxime"
-Reason: Input string was not in a correct format.
                         """.Trim())
                 let actual =
                     Decode.fromString Decode.int64 "\"maxime\""
+
+                equal expected actual
+
+            testCase "an uint32 works from number" <| fun _ ->
+                let expected = Ok 1000u
+                let actual =
+                    Decode.fromString Decode.uint32 "1000"
+
+                equal expected actual
+
+            testCase "an uint32 works from string" <| fun _ ->
+                let expected = Ok 1000u
+                let actual =
+                    Decode.fromString Decode.uint32 "\"1000\""
+
+                equal expected actual
+
+            testCase "an uint32 output an error if incorrect string" <| fun _ ->
+                #if FABLE_COMPILER
+                let expected =
+                    Error(
+                        """
+Error at: `$`
+Expecting an uint32 but instead got: "maxime"
+Reason: Input string was not in a correct format.
+                        """.Trim())
+                #else
+                let expected =
+                    Error(
+                        """
+Error at: `$`
+Expecting an uint32 but instead got: "maxime"
+                        """.Trim())
+                #endif
+
+                let actual =
+                    Decode.fromString Decode.uint32 "\"maxime\""
 
                 equal expected actual
 
@@ -322,6 +358,7 @@ Reason: Input string was not in a correct format.
                 equal expected actual
 
             testCase "an uint64 output an error if incorrect string" <| fun _ ->
+                #if FABLE_COMPILER
                 let expected =
                     Error(
                         """
@@ -329,6 +366,15 @@ Error at: `$`
 Expecting an uint64 but instead got: "maxime"
 Reason: Input string was not in a correct format.
                         """.Trim())
+                #else
+                let expected =
+                    Error(
+                        """
+Error at: `$`
+Expecting an uint64 but instead got: "maxime"
+                        """.Trim())
+                #endif
+
                 let actual =
                     Decode.fromString Decode.uint64 "\"maxime\""
 
@@ -374,7 +420,7 @@ Expecting a bigint but instead got: "maxime"
                     Error(
                         """
 Error at: `$`
-Expecting a date in ISO 8601 format but instead got: "invalid_string"
+Expecting a datetime but instead got: "invalid_string"
                         """.Trim())
 
                 let actual =
@@ -406,9 +452,9 @@ Expecting a date in ISO 8601 format but instead got: "invalid_string"
                     Error(
                         """
 Error at: `$`
-Expecting a date in ISO 8601 format but instead got: "2018-1-1"
+Expecting a datetimeoffset but instead got: "NOT A DATETIMEOFFSET"
                         """.Trim())
-                let json = "\"2018-1-1\""
+                let json = "\"NOT A DATETIMEOFFSET\""
                 let actual =
                     Decode.fromString Decode.datetimeOffset json
 
@@ -602,7 +648,7 @@ Expecting a string but instead got: false
                     Error(
                         """
 Error at: `$.[4]`
-Expecting a date in ISO 8601 format but instead got: false
+Expecting a datetime but instead got: false
                         """.Trim())
 
                 let actual =
@@ -1598,6 +1644,12 @@ Expecting a string but instead got: 12
                 let value = 12L
                 let json = Encode.Auto.toString(4, value)
                 let res = Decode.Auto.unsafeFromString<int64>(json)
+                equal value res
+
+            testCase "Auto decoders works for uint32" <| fun _ ->
+                let value = 12u
+                let json = Encode.Auto.toString(4, value)
+                let res = Decode.Auto.unsafeFromString<uint32>(json)
                 equal value res
 
             testCase "Auto decoders works for uint64" <| fun _ ->

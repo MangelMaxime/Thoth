@@ -45,11 +45,6 @@ module Decode =
         let inline asString (token: JToken): string = token.Value<string>()
         let inline asArray (token: JToken): JToken[] = token.Value<JArray>().Values() |> Seq.toArray
 
-        // Regex copied from: https://www.myintervals.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
-        let ISO_8601 = System.Text.RegularExpressions.Regex("^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$")
-        let failDate path token = (path, BadPrimitive("a date in ISO 8601 format", token)) |> Error
-        let inline isDate (token: JToken) = token.Type = JTokenType.Date || (token.Type = JTokenType.String && ISO_8601.IsMatch(asString token))
-
     let private genericMsg msg value newLine =
         try
             "Expecting "
@@ -160,45 +155,63 @@ module Decode =
             // Using Helpers.isString fails because Json.NET directly assigns Guid type
             if value.Type = JTokenType.Guid then
                 value.Value<System.Guid>() |> Ok
-            else if value.Type = JTokenType.String then
-                try
-                    Helpers.asString value |> System.Guid.Parse |> Ok
-                with
-                    | _ -> (path, BadPrimitive("a guid", value)) |> Error
+            elif value.Type = JTokenType.String then
+                match System.Guid.TryParse (Helpers.asString value) with
+                | true, x -> Ok x
+                | _ -> (path, BadPrimitive("a guid", value)) |> Error
             else (path, BadPrimitive("a guid", value)) |> Error
 
     let int : Decoder<int> =
         fun path token ->
-            if token.Type <> JTokenType.Integer then
-                (path, BadPrimitive("an int", token)) |> Error
+            if token.Type = JTokenType.Integer then
+                let value = token.Value<decimal> ()
+                if value >= (decimal System.Int32.MinValue) && value <= (decimal System.Int32.MaxValue) then
+                    Ok (int32 value)
+                else
+                    (path, BadPrimitiveExtra("an int", token, "Value was either too large or too small for an int")) |> Error
+            elif token.Type = JTokenType.String then
+                match System.Int32.TryParse (Helpers.asString token) with
+                | true, x -> Ok x
+                | _ -> (path, BadPrimitive("an int", token)) |> Error
             else
-                try
-                    Ok(Helpers.asInt token)
-                with
-                    | _ -> (path, BadPrimitiveExtra("an int", token, "Value was either too large or too small for an int")) |> Error
+                (path, BadPrimitive("an int", token)) |> Error
 
     let int64 : Decoder<int64> =
         fun path token ->
             if token.Type = JTokenType.Integer then
                 Ok(token.Value<int64>())
             elif token.Type = JTokenType.String then
-                try
-                    token.Value<int64>() |> int64 |> Ok
-                with
-                    | ex ->
-                        (path, BadPrimitiveExtra("an int64", token, ex.Message)) |> Error
+                match System.Int64.TryParse (Helpers.asString token) with
+                | true, x -> Ok x
+                | _ -> (path, BadPrimitive("an int64", token)) |> Error
             else (path, BadPrimitive("an int64", token)) |> Error
+
+    let uint32 : Decoder<uint32> =
+        fun path token ->
+            if token.Type = JTokenType.Integer then
+                let value = token.Value<decimal> ()
+                if value >= 0m && value <= (decimal System.UInt32.MaxValue) then
+                    Ok (uint32 value)
+                else
+                    (path, BadPrimitiveExtra("an uint32", token, "Value was either too large or too small for an uint32")) |> Error
+            elif token.Type = JTokenType.String then
+                match System.UInt32.TryParse (Helpers.asString token, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture) with
+                | true, x -> Ok x
+                | _ -> (path, BadPrimitive("an uint32", token)) |> Error
+            else (path, BadPrimitive("an uint32", token)) |> Error
 
     let uint64 : Decoder<uint64> =
         fun path token ->
             if token.Type = JTokenType.Integer then
-                Ok(token.Value<uint64>())
+                let value = token.Value<decimal>()
+                if value >= 0m && value <= (decimal System.UInt64.MaxValue) then
+                    Ok (uint64 value)
+                else
+                    (path, BadPrimitiveExtra("an uint64", token, "Value was either too large or too small for an uint64")) |> Error
             elif token.Type = JTokenType.String then
-                try
-                    token.Value<uint64>() |> uint64 |> Ok
-                with
-                    | ex ->
-                        (path, BadPrimitiveExtra("an uint64", token, ex.Message)) |> Error
+                match System.UInt64.TryParse (Helpers.asString token, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture) with
+                | true, x -> Ok x
+                | _ -> (path, BadPrimitive("an uint64", token)) |> Error
             else (path, BadPrimitive("an uint64", token)) |> Error
 
     let bigint : Decoder<bigint> =
@@ -206,11 +219,9 @@ module Decode =
             if Helpers.isNumber token then
                 Helpers.asInt token |> bigint |> Ok
             elif Helpers.isString token then
-                try
-                    Helpers.asString token |> bigint.Parse |> Ok
-                with
-                    | _ ->
-                        (path, BadPrimitive("a bigint", token)) |> Error
+                match bigint.TryParse (Helpers.asString token) with
+                | true, x -> Ok x
+                | _ -> (path, BadPrimitive("a bigint", token)) |> Error
             else
                 (path, BadPrimitive("a bigint", token)) |> Error
 
@@ -225,7 +236,7 @@ module Decode =
         fun path token ->
             if token.Type = JTokenType.Float then
                 Ok(token.Value<float>())
-            else if token.Type = JTokenType.Integer then
+            elif token.Type = JTokenType.Integer then
                 Ok(token.Value<float>())
             else
                 (path, BadPrimitive("a float", token)) |> Error
@@ -235,25 +246,29 @@ module Decode =
             if Helpers.isNumber value then
                 Helpers.asFloat value |> decimal |> Ok
             elif Helpers.isString value then
-                Helpers.asString value |> System.Decimal.Parse |> Ok
+                match System.Decimal.TryParse (Helpers.asString value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture) with
+                | true, x -> Ok x
+                | _ -> (path, BadPrimitive("a decimal", value)) |> Error
             else
                 (path, BadPrimitive("a decimal", value)) |> Error
 
     let datetime : Decoder<System.DateTime> =
-        fun path token ->
-            try
-                if Helpers.isDate token
-                then System.DateTime.Parse(Helpers.asString token, new System.Globalization.CultureInfo("en-US")) |> Ok
-                else Helpers.failDate path token
-            with _ -> Helpers.failDate path token
+        fun path value ->
+            if value.Type = JTokenType.Date || value.Type = JTokenType.String then
+                match System.DateTime.TryParse (Helpers.asString value) with
+                | true, x -> Ok x
+                | _ -> (path, BadPrimitive("a datetime", value)) |> Error
+            else
+                (path, BadPrimitive("a datetime", value)) |> Error
 
     let datetimeOffset : Decoder<System.DateTimeOffset> =
-        fun path token ->
-            try
-                if Helpers.isDate token
-                then System.DateTimeOffset.Parse(Helpers.asString token, new System.Globalization.CultureInfo("en-US")) |> Ok
-                else Helpers.failDate path token
-            with _ -> Helpers.failDate path token
+        fun path value ->
+            if value.Type = JTokenType.Date || value.Type = JTokenType.String then
+                match System.DateTimeOffset.TryParse (Helpers.asString value) with
+                | true, x -> Ok x
+                | _ -> (path, BadPrimitive("a datetimeoffset", value)) |> Error
+            else
+                (path, BadPrimitive("a datetimeoffset", value)) |> Error
 
     /////////////////////////
     // Object primitives ///
@@ -957,6 +972,8 @@ module Decode =
             then boxDecoder decimal
             elif fullname = typeof<int64>.FullName
             then boxDecoder int64
+            elif fullname = typeof<uint32>.FullName
+            then boxDecoder uint32
             elif fullname = typeof<uint64>.FullName
             then boxDecoder uint64
             elif fullname = typeof<bigint>.FullName
