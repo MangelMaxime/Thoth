@@ -399,9 +399,12 @@ module Decode =
             else
                 // TODO: Review, is this OK?
                 match d1 path value with
-                | Ok v -> Some v |> Ok
-                | Error(_, (BadField _)) -> Ok None
-                | Error er -> Error er
+                | Ok v -> Ok (Some v)
+                | Error (_, BadField _ )
+                | Error (_, BadType (_, null))
+                | Error (_, BadPrimitive (_, null)) -> Ok None
+                | Error error -> Error error
+
 
     let oneOf (decoders : Decoder<'value> list) : Decoder<'value> =
         fun path value ->
