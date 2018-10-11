@@ -4,6 +4,7 @@ namespace Thoth.Json
 [<RequireQualifiedAccess>]
 module Decode =
 
+    open System.Globalization
     open Fable.Core
     open Fable.Core.JsInterop
     open Fable.Import
@@ -238,7 +239,7 @@ module Decode =
                 Helpers.asInt value |> bigint |> Ok
             elif Helpers.isString value then
                 try
-                    Helpers.asString value |> bigint.Parse |> Ok
+                    bigint.Parse (Helpers.asString value, CultureInfo.InvariantCulture) |> Ok
                 with
                     | _ ->
                         (path, BadPrimitive("a bigint", value)) |> Error
@@ -265,10 +266,11 @@ module Decode =
                 Helpers.asFloat value |> decimal |> Ok
             elif Helpers.isString value then
                 try
-                    Helpers.asString value |> System.Decimal.Parse |> Ok
+                    System.Decimal.Parse (Helpers.asString value, CultureInfo.InvariantCulture)
+                    |> Ok
                 with
                     | ex ->
-                        (path, BadPrimitiveExtra("an decimal", value, ex.Message)) |> Error
+                        (path, BadPrimitiveExtra("a decimal", value, ex.Message)) |> Error
             else
                 (path, BadPrimitive("a decimal", value)) |> Error
 
