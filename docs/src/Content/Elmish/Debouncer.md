@@ -64,7 +64,7 @@ type Msg =
 3. Handle `DebouncerSelfMsg` in your update function
 
 ```fsharp
-let private msg model =
+let private update msg model =
     match msg with
     | DebouncerSelfMsg debouncerMsg ->
         let (debouncerModel, debouncerCmd) = Debouncer.update debouncerMsg model.Debouncer
@@ -76,7 +76,7 @@ let private msg model =
 4. Bounce `EndOfInput` each time the user types something in the input
 
 ```fsharp
-let private msg model =
+let private update msg model =
     match msg with
     | ChangeValue newValue ->
         let (debouncerModel, debouncerCmd) =
