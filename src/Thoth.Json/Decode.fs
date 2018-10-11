@@ -4,6 +4,7 @@ namespace Thoth.Json
 [<RequireQualifiedAccess>]
 module Decode =
 
+    open System.Globalization
     open Fable.Core
     open Fable.Core.JsInterop
     open Fable.Import
@@ -65,11 +66,6 @@ module Decode =
         let inline asFloat (o: obj): float = unbox o
         let inline asString (o: obj): string = unbox o
         let inline asArray (o: obj): obj[] = unbox o
-
-        // Regex copied from: https://www.myintervals.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
-        let ISO_8601 = System.Text.RegularExpressions.Regex("^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$")
-        let failDate path token = (path, BadPrimitive("a date in ISO 8601 format", token)) |> Error
-        let inline isDate (o: obj) = isString o && ISO_8601.IsMatch(asString o)
 
     let private genericMsg msg value newLine =
         try
@@ -179,38 +175,56 @@ module Decode =
     let guid : Decoder<System.Guid> =
         fun path value ->
             if Helpers.isString value then
-                try
-                    Helpers.asString value |> System.Guid.Parse |> Ok
-                with
-                    |  _ -> (path, BadPrimitive("a guid", value)) |> Error
+                match System.Guid.TryParse (Helpers.asString value) with
+                | true, x -> Ok x
+                | _ -> (path, BadPrimitive("a guid", value)) |> Error
             else (path, BadPrimitive("a guid", value)) |> Error
 
     let int : Decoder<int> =
         fun path value ->
-            if not (Helpers.isNumber value)  then
-                (path, BadPrimitive("an int", value)) |> Error
-            else
-                if not (Helpers.isValidIntRange value) then
-                    (path, BadPrimitiveExtra("an int", value, "Value was either too large or too small for an int")) |> Error
-                else
+            if Helpers.isNumber value then
+                if Helpers.isValidIntRange value then
                     Ok(Helpers.asInt value)
+                else
+                    (path, BadPrimitiveExtra("an int", value, "Value was either too large or too small for an int")) |> Error
+            else
+                (path, BadPrimitive("an int", value)) |> Error
+
 
     let int64 : Decoder<int64> =
         fun path value ->
             if Helpers.isNumber value then
                 Helpers.asInt value |> int64 |> Ok
             elif Helpers.isString value then
+                match System.Int64.TryParse (Helpers.asString value) with
+                | true, x -> Ok x
+                | _ -> (path, BadPrimitive("an int64", value)) |> Error
+            else (path, BadPrimitive("an int64", value)) |> Error
+
+    let uint32 : Decoder<uint32> =
+        fun path value ->
+            if Helpers.isNumber value then
+                let x = Helpers.asFloat value
+                if x >= 0. && x <= (float System.UInt32.MaxValue) then
+                    Helpers.asInt value |> uint32 |> Ok
+                else
+                    (path, BadPrimitiveExtra("an uint32", value, "Value was either too large or too small for an uint32")) |> Error
+            elif Helpers.isString value then
                 try
-                    Helpers.asString value |> System.Int64.Parse |> Ok
+                    Helpers.asString value |> uint32 |> Ok
                 with
                     | ex ->
-                        (path, BadPrimitiveExtra("an int64", value, ex.Message)) |> Error
-            else (path, BadPrimitive("an int64", value)) |> Error
+                        (path, BadPrimitiveExtra("an uint32", value, ex.Message)) |> Error
+            else (path, BadPrimitive("an uint32", value)) |> Error
 
     let uint64 : Decoder<uint64> =
         fun path value ->
             if Helpers.isNumber value then
-                Helpers.asInt value |> uint64 |> Ok
+                let x = Helpers.asFloat value
+                if x >= 0. && x <= (float System.UInt64.MaxValue) then
+                    Helpers.asInt value |> uint64 |> Ok
+                else
+                    (path, BadPrimitiveExtra("an uint64", value, "Value was either too large or too small for an uint64")) |> Error
             elif Helpers.isString value then
                 try
                     Helpers.asString value |> uint64 |> Ok
@@ -225,7 +239,7 @@ module Decode =
                 Helpers.asInt value |> bigint |> Ok
             elif Helpers.isString value then
                 try
-                    Helpers.asString value |> bigint.Parse |> Ok
+                    bigint.Parse (Helpers.asString value, CultureInfo.InvariantCulture) |> Ok
                 with
                     | _ ->
                         (path, BadPrimitive("a bigint", value)) |> Error
@@ -251,32 +265,32 @@ module Decode =
             if Helpers.isNumber value then
                 Helpers.asFloat value |> decimal |> Ok
             elif Helpers.isString value then
-                Helpers.asString value |> System.Decimal.Parse |> Ok
+                try
+                    System.Decimal.Parse (Helpers.asString value, CultureInfo.InvariantCulture)
+                    |> Ok
+                with
+                    | ex ->
+                        (path, BadPrimitiveExtra("a decimal", value, ex.Message)) |> Error
             else
                 (path, BadPrimitive("a decimal", value)) |> Error
 
-    // Regex copied from: https://www.myintervals.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
-    let ISO_8601 = System.Text.RegularExpressions.Regex("^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$")
-
-    let private failDate path token =
-        (path, BadPrimitive("a date in ISO 8601 format", token)) |> Error
-
     let datetime : Decoder<System.DateTime> =
         fun path value ->
-            try
-                if Helpers.isDate value
-                then System.DateTime.Parse(Helpers.asString value) |> Ok
-                else Helpers.failDate path value
-            with _ -> Helpers.failDate path value
+            if Helpers.isString value then
+                match System.DateTime.TryParse (Helpers.asString value) with
+                | true, x -> Ok x
+                | _ -> (path, BadPrimitive("a datetime", value)) |> Error
+            else
+                (path, BadPrimitive("a datetime", value)) |> Error
 
     let datetimeOffset : Decoder<System.DateTimeOffset> =
         fun path value ->
-            try
-                if Helpers.isDate value
-                then System.DateTimeOffset.Parse(Helpers.asString value) |> Ok
-                else Helpers.failDate path value
-            with _ -> Helpers.failDate path value
-
+            if Helpers.isString value then
+                match System.DateTimeOffset.TryParse(Helpers.asString value) with
+                | true, x -> Ok x
+                | _ -> (path, BadPrimitive("a datetimeoffset", value)) |> Error
+            else
+                (path, BadPrimitive("a datetime", value)) |> Error
 
     /////////////////////////
     // Object primitives ///
@@ -912,6 +926,8 @@ module Decode =
             then boxDecoder decimal
             elif fullname = typeof<int64>.FullName
             then boxDecoder int64
+            elif fullname = typeof<uint32>.FullName
+            then boxDecoder uint32
             elif fullname = typeof<uint64>.FullName
             then boxDecoder uint64
             elif fullname = typeof<bigint>.FullName

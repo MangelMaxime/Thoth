@@ -7,8 +7,6 @@ module Encode =
     open Newtonsoft.Json.Linq
     open System.IO
 
-    let inline internal padLeft2 c =  (fun (x: string) -> x.PadLeft(2, c)) << string
-
     type Encoder<'T> = 'T -> JToken
 
     ///**Description**
@@ -81,7 +79,7 @@ module Encode =
     let decimal (value : decimal) : JToken =
         // TODO: This is OK for now because Fable just use JS number for decimals
         // but in the future we should use another format to keep precision
-        FSharp.Core.Operators.float value |> float
+        JValue(value) :> JToken
 
     ///**Description**
     /// Encode null
@@ -175,36 +173,17 @@ module Encode =
     let int64 (value : int64) : JToken =
         JValue(Operators.string value) :> JToken
 
+    let uint32 (value : uint32) : JToken =
+        JValue(Operators.string value) :> JToken
+
     let uint64 (value : uint64) : JToken =
         JValue(Operators.string value) :> JToken
 
     let datetime (value : System.DateTime) : JToken =
-        JValue(value) :> JToken
+        JValue(value.ToString("O")) :> JToken
 
     let datetimeOffset (value : System.DateTimeOffset) : JToken =
-        let offset =
-            let sign =
-                if value.Offset.Hours < 0 then
-                    "-"
-                else
-                    "+"
-            let hours = padLeft2 '0' (System.Math.Abs(value.Offset.Hours))
-            let minutes = padLeft2 '0' value.Offset.Minutes
-            sign + hours + ":" + minutes
-
-        Operators.string value.Year
-            + "-"
-            + padLeft2 '0' (Operators.string value.Month)
-            + "-"
-            + padLeft2 '0' (Operators.string value.Day)
-            + "T"
-            + padLeft2 '0' (Operators.string value.Hour)
-            + ":"
-            + padLeft2 '0' (Operators.string value.Minute)
-            + ":"
-            + padLeft2 '0' (Operators.string value.Second)
-            + offset
-        |> JValue :> JToken
+        JValue(value.ToString("O")) :> JToken
 
     let tuple2
             (enc1 : Encoder<'T1>)

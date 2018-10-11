@@ -6,8 +6,6 @@ module Encode =
     open Fable.Import
     open Fable.Core.JsInterop
 
-    let inline internal padLeft2 c =  (fun (x: string) -> x.PadLeft(2, c)) << string
-
     /// **Description**
     /// Represents a JavaScript value
     type Value = obj
@@ -176,29 +174,7 @@ module Encode =
         box (value.ToString())
 
     let datetimeOffset (value : System.DateTimeOffset) : Value =
-        let offset =
-            let sign =
-                if value.Offset.Hours < 0 then
-                    "-"
-                else
-                    "+"
-            let hours = padLeft2 '0' (System.Math.Abs(value.Offset.Hours))
-            let minutes = padLeft2 '0' value.Offset.Minutes
-            sign + hours + ":" + minutes
-
-        Operators.string value.Year
-            + "-"
-            + padLeft2 '0' (Operators.string value.Month)
-            + "-"
-            + padLeft2 '0' (Operators.string value.Day)
-            + "T"
-            + padLeft2 '0' (Operators.string value.Hour)
-            + ":"
-            + padLeft2 '0' (Operators.string value.Minute)
-            + ":"
-            + padLeft2 '0' (Operators.string value.Second)
-            + offset
-        |> string
+        value.ToString("O") |> string
 
     let int64 (value : int64) : Value =
         box (value.ToString())

@@ -122,7 +122,7 @@ let tests : Test =
                 #if FABLE_COMPILER
                 let expected = "\"2018-10-01T11:12:55.000Z\""
                 #else
-                let expected = "\"2018-10-01T11:12:55Z\""
+                let expected = "\"2018-10-01T11:12:55.0000000Z\""
                 #endif
                 let actual =
                     DateTime(2018, 10, 1, 11, 12, 55, DateTimeKind.Utc)
@@ -132,7 +132,11 @@ let tests : Test =
                 equal expected actual
 
             testCase "a datetimeOffset works" <| fun _ ->
-                let expected = "\"2018-07-02T12:23:45+02:00\""
+                #if FABLE_COMPILER
+                let expected = "\"2018-07-02T12:23:45.000+02:00\""
+                #else
+                let expected = "\"2018-07-02T12:23:45.0000000+02:00\""
+                #endif
                 let actual =
                     DateTimeOffset(2018, 7, 2, 12, 23, 45, 0, TimeSpan.FromHours(2.))
                     |> Encode.datetimeOffset
@@ -158,7 +162,7 @@ let tests : Test =
 
                 equal expected actual
 
-            testCase "a int64 works" <| fun _ ->
+            testCase "an int64 works" <| fun _ ->
                 let expected = "\"7923209\""
                 let actual =
                     7923209L
@@ -167,7 +171,7 @@ let tests : Test =
 
                 equal expected actual
 
-            testCase "a uint64 works" <| fun _ ->
+            testCase "an uint64 works" <| fun _ ->
                 let expected = "\"7923209\""
                 let actual =
                     7923209UL
@@ -216,7 +220,7 @@ let tests : Test =
                 #if FABLE_COMPILER
                 let expected = """[1,"maxime",2.5,{"fieldA":"test"},"2018-10-01T11:12:55.000Z"]"""
                 #else
-                let expected = """[1,"maxime",2.5,{"fieldA":"test"},"2018-10-01T11:12:55Z"]"""
+                let expected = """[1,"maxime",2.5,{"fieldA":"test"},"2018-10-01T11:12:55.0000000Z"]"""
                 #endif
                 let actual =
                     Encode.tuple5
