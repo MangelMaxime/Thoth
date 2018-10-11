@@ -46,7 +46,7 @@
 </ol>
 <pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A0A1A7;font-style: italic">// Model definition</span>
 <span style="color: #A626A4">type</span><span> </span><span style="color: #C18401">Model</span><span> </span><span style="color: #A626A4">=</span>
-<span>    </span><span style="color: #A626A4">{</span><span> State </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">State</span>
+<span>    </span><span style="color: #A626A4">{</span><span> Debouncer </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Debouncer</span><span>.</span><span style="color: #C18401">State</span>
 <span>      </span><span style="color: #A0A1A7;font-style: italic">// ...</span>
 <span>    </span><span style="color: #A626A4">}</span>
 
@@ -66,7 +66,7 @@
 <ol start="3">
 <li>Handle <code>DebouncerSelfMsg</code> in your update function</li>
 </ol>
-<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #A626A4">private</span><span> </span><span style="color: #E45649">msg</span><span style="color: #383A42"> model</span><span> </span><span style="color: #A626A4">=</span>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #A626A4">private</span><span> </span><span style="color: #E45649">update</span><span style="color: #383A42"> msg model</span><span> </span><span style="color: #A626A4">=</span>
 <span>    </span><span style="color: #A626A4">match</span><span> msg </span><span style="color: #A626A4">with</span>
 <span>    </span><span style="color: #A626A4">|</span><span> DebouncerSelfMsg debouncerMsg </span><span style="color: #A626A4">-&gt;</span>
 <span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #A626A4">(</span><span style="color: #383A42">debouncerModel</span><span style="color: #A626A4">,</span><span style="color: #383A42"> debouncerCmd</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span><span> Debouncer.update debouncerMsg model.Debouncer</span>
@@ -75,7 +75,7 @@
 <ol start="4">
 <li>Bounce <code>EndOfInput</code> each time the user types something in the input</li>
 </ol>
-<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #A626A4">private</span><span> </span><span style="color: #E45649">msg</span><span style="color: #383A42"> model</span><span> </span><span style="color: #A626A4">=</span>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #A626A4">private</span><span> </span><span style="color: #E45649">update</span><span style="color: #383A42"> msg model</span><span> </span><span style="color: #A626A4">=</span>
 <span>    </span><span style="color: #A626A4">match</span><span> msg </span><span style="color: #A626A4">with</span>
 <span>    </span><span style="color: #A626A4">|</span><span> ChangeValue newValue </span><span style="color: #A626A4">-&gt;</span>
 <span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #A626A4">(</span><span style="color: #383A42">debouncerModel</span><span style="color: #A626A4">,</span><span style="color: #383A42"> debouncerCmd</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
