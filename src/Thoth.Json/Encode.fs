@@ -315,22 +315,22 @@ module Encode =
 
     type Auto =
         static member toString(space : int, value : obj, ?forceCamelCase : bool) : string =
-            JS.JSON.stringify(value, (fun _ v ->
-                match v with
+            JS.JSON.stringify(value, (fun _ value ->
+                match value with
                 // Match string before so it's not considered an IEnumerable
-                | :? string -> v
+                | :? string -> value
                 | :? System.Collections.IEnumerable ->
-                    if JS.Array.isArray(v)
-                    then v
-                    else JS.Array.from(v :?> JS.Iterable<obj>) |> box
+                    if JS.Array.isArray(value)
+                    then value
+                    else JS.Array.from(value :?> JS.Iterable<obj>) |> box
                 | _ ->
-                    if defaultArg forceCamelCase false && Decode.Helpers.isObject v then
+                    if defaultArg forceCamelCase false && Decode.Helpers.isObject value then
                         let replacement = createObj []
-                        for key in Decode.Helpers.objectKeys v do
+                        for key in Decode.Helpers.objectKeys value do
                             replacement?(key.[..0].ToLowerInvariant() + key.[1..]) <- value?(key)
                         replacement
                     else
-                        v
+                        value
             ), space)
 
     ///**Description**
