@@ -603,10 +603,12 @@ module Decode =
     type IRequiredGetter =
         abstract Field : string -> Decoder<'a> -> 'a
         abstract At : List<string> -> Decoder<'a> -> 'a
+        abstract Raw : Decoder<'a> -> 'a
 
     type IOptionalGetter =
         abstract Field : string -> Decoder<'a> -> 'a option
         abstract At : List<string> -> Decoder<'a> -> 'a option
+        abstract Raw : Decoder<'a> -> 'a option
 
     type IGetters =
         abstract Required: IRequiredGetter
@@ -624,6 +626,11 @@ module Decode =
                                 raise (DecoderException error)
                         member __.At (fieldNames : string list) (decoder : Decoder<_>) =
                             match decodeValueError path (at fieldNames decoder) v with
+                            | Ok v -> v
+                            | Error error ->
+                                raise (DecoderException error)
+                        member __.Raw (decoder: Decoder<_>) =
+                            match decodeValueError path decoder v with
                             | Ok v -> v
                             | Error error ->
                                 raise (DecoderException error) }
@@ -648,7 +655,14 @@ module Decode =
                                 | Error error ->
                                     raise (DecoderException error)
                             else
-                                raise (DecoderException (path, BadType ("an object", v))) }
+                                raise (DecoderException (path, BadType ("an object", v)))
+                        member __.Raw (decoder: Decoder<_>) =
+                            match decodeValueError path decoder v with
+                            | Ok v -> Some v
+                            | Error (_, BadField _ )
+                            | Error (_, BadPrimitive (_, null)) -> None
+                            | Error error ->
+                                raise (DecoderException error) }
             } |> Ok
 
     ///////////////////////

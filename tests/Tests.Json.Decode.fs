@@ -1,13 +1,13 @@
 module Tests.Decode
 
-#if FABLE_COMPILER
+// #if FABLE_COMPILER
 open Fable.Import
 open Fable.Core
 open Fable.Core.JsInterop
 open Thoth.Json
-#else
-open Thoth.Json.Net
-#endif
+// #else
+// open Thoth.Json.Net
+// #endif
 open Util.Testing
 open System
 
@@ -170,6 +170,24 @@ let jsonRecordInvalid =
          "f": "invalid_a_field",
          "g": "invalid_a_field",
          "h": "invalid_a_field" }"""
+
+type Shape =
+    | Circle of radius: int
+    | Square of width: int * height: int
+
+    static member DecoderCircle =
+        Decode.field "radius" ( Decode.int
+                                |> Decode.map Circle )
+
+    static member DecoderSquare =
+        Decode.field "square" ( Decode.tuple2
+                                    Decode.int
+                                    Decode.int
+                                |> Decode.map Square )
+
+type MyObj =
+    { Enabled: bool
+      Shape: Shape }
 
 exception CustomException
 
@@ -1586,6 +1604,22 @@ Expecting a string but instead got: 12
 
                 equal expected actual
 
+            testCase "get.Field.Raw works" <| fun _ ->
+                let json = """{
+    "enabled": true,
+	"shape": "circle",
+    "radius": 20
+}"""
+                let shapeDecoder =
+                    Decode.field "shape" Decode.string
+
+                let decoder =
+                    Decode.object (fun get ->
+                        { Enabled = get.Required.Field "enabled" Decode.bool
+                          Shape = failwith "How do you write this decoder ?" }
+                    )
+
+                ()
         ]
 
         testList "Auto" [
