@@ -1,3 +1,10 @@
+#### 2.2.0
+
+* Re-add optional and optionalAt related to #51
+* Fix Encode.Auto
+* Various improvements for Primitive types improvements  (by @draganjovanovic1)
+* Fix decoding of optional fields (by @eugene-g)
+
 #### 2.1.0
 
 * Fix nested object builder (ex: get.Optional.Field > get.Required.Field)
