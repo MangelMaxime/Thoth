@@ -341,9 +341,31 @@ module Decode =
                 (currentPath, BadPrimitive("an array", token))
                 |> Error
 
-    // //////////////////////
-    // // Data structure ///
-    // ////////////////////
+
+    let optional (fieldName : string) (decoder : Decoder<'value>) : Decoder<'value option> =
+        fun path v ->
+            match decodeValueError path (field fieldName decoder) v with
+            | Ok v -> Ok (Some v)
+            | Error (_, BadField _ ) -> Ok None
+            | Error (_, BadType (_, jToken))
+            | Error (_, BadPrimitive (_, jToken)) when jToken.Type = JTokenType.Null -> Ok None
+            | Error error ->
+                raise (DecoderException error)
+
+    let optionalAt (fieldNames : string list) (decoder : Decoder<'value>) : Decoder<'value option> =
+        fun path v ->
+            match decodeValueError path (at fieldNames decoder) v with
+            | Ok v -> Ok (Some v)
+            | Error (_, BadPath _ )
+            | Error (_, BadTypeAt _) -> Ok None
+            | Error (_, BadType (_, jToken))
+            | Error (_, BadPrimitive (_, jToken)) when jToken.Type = JTokenType.Null -> Ok None
+            | Error error ->
+                raise (DecoderException error)
+
+    //////////////////////
+    // Data structure ///
+    ////////////////////
 
     let list (decoder : Decoder<'value>) : Decoder<'value list> =
         fun path token ->

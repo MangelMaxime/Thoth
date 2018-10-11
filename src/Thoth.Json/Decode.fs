@@ -266,7 +266,9 @@ module Decode =
                 Helpers.asFloat value |> decimal |> Ok
             elif Helpers.isString value then
                 try
-                    System.Decimal.Parse (Helpers.asString value, CultureInfo.InvariantCulture)
+                    // System.Decimal.Parse (Helpers.asString value, CultureInfo.InvariantCulture)
+                    // Remove CultureInfo.InvariantCulture for now, otherwise Fable output a warning
+                    System.Decimal.Parse (Helpers.asString value)
                     |> Ok
                 with
                     | ex ->
@@ -363,7 +365,27 @@ module Decode =
                 (currentPath, BadPrimitive("an array", value))
                 |> Error
 
-    // let nullable (d1: Decoder<'value>) : Resul<'value option, DecoderError> =
+
+    let optional (fieldName : string) (decoder : Decoder<'value>) : Decoder<'value option> =
+        fun path v ->
+            match decodeValueError path (field fieldName decoder) v with
+            | Ok v -> Ok (Some v)
+            | Error (_, BadField _ )
+            | Error (_, BadType (_, null))
+            | Error (_, BadPrimitive (_, null)) -> Ok None
+            | Error error ->
+                raise (DecoderException error)
+
+    let optionalAt (fieldNames : string list) (decoder : Decoder<'value>) : Decoder<'value option> =
+        fun path v ->
+            match decodeValueError path (at fieldNames decoder) v with
+            | Ok v -> Ok (Some v)
+            | Error (_, BadPath _ )
+            | Error (_, BadType (_, null))
+            | Error (_, BadTypeAt _)
+            | Error (_, BadPrimitive (_, null)) -> Ok None
+            | Error error ->
+                raise (DecoderException error)
 
     //////////////////////
     // Data structure ///

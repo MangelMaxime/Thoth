@@ -1,13 +1,13 @@
 module Tests.Decode
 
-// #if FABLE_COMPILER
+#if FABLE_COMPILER
 open Fable.Import
 open Fable.Core
 open Fable.Core.JsInterop
 open Thoth.Json
-// #else
-// open Thoth.Json.Net
-// #endif
+#else
+open Thoth.Json.Net
+#endif
 open Util.Testing
 open System
 
@@ -1001,6 +1001,56 @@ Expecting an object but instead got:
 
                 let expectedValid = Ok(Some "maxime")
                 let actualValid =
+                    Decode.fromString (Decode.optional "name" Decode.string) json
+
+                equal expectedValid actualValid
+
+                match Decode.fromString (Decode.optional "name" Decode.int) json with
+                | Error _ -> ()
+                | Ok _ -> failwith "Expected type error for `name` field"
+
+                let expectedMissingField = Ok(None)
+                let actualMissingField =
+                    Decode.fromString (Decode.optional "height" Decode.int) json
+
+                equal expectedMissingField actualMissingField
+
+                let expectedUndefinedField = Ok(None)
+                let actualUndefinedField =
+                    Decode.fromString (Decode.optional "something_undefined" Decode.string) json
+
+                equal expectedUndefinedField actualUndefinedField
+
+            testCase "optionalAt works" <| fun _ ->
+                let json = """{ "data" : { "name": "maxime", "age": 25, "something_undefined": null } }"""
+
+                let expectedValid = Ok(Some "maxime")
+                let actualValid =
+                    Decode.fromString (Decode.optionalAt [ "data"; "name" ] Decode.string) json
+
+                equal expectedValid actualValid
+
+                match Decode.fromString (Decode.optionalAt [ "data"; "name" ] Decode.int) json with
+                | Error _ -> ()
+                | Ok _ -> failwith "Expected type error for `name` field"
+
+                let expectedMissingField = Ok None
+                let actualMissingField =
+                    Decode.fromString (Decode.optionalAt [ "data"; "height" ] Decode.int) json
+
+                equal expectedMissingField actualMissingField
+
+                let expectedUndefinedField = Ok(None)
+                let actualUndefinedField =
+                    Decode.fromString (Decode.optionalAt [ "data"; "something_undefined" ] Decode.string) json
+
+                equal expectedUndefinedField actualUndefinedField
+
+            testCase "combining option and field decoders works" <| fun _ ->
+                let json = """{ "name": "maxime", "age": 25, "something_undefined": null }"""
+
+                let expectedValid = Ok(Some "maxime")
+                let actualValid =
                     Decode.fromString (Decode.option (Decode.field "name" Decode.string) ) json
 
                 equal expectedValid actualValid
@@ -1020,6 +1070,7 @@ Expecting an object but instead got:
                     Decode.fromString (Decode.option (Decode.field "something_undefined" Decode.string) ) json
 
                 equal expectedUndefinedField actualUndefinedField
+
         ]
 
         testList "Fancy decoding" [
