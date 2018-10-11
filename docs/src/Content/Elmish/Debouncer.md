@@ -40,7 +40,7 @@ The following demo works like that:
 ```fsharp
 // Model definition
 type Model =
-    { State : State
+    { Debouncer : Debouncer.State
       // ...
     }
 
