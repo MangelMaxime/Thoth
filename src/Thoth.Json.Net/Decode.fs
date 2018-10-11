@@ -3,6 +3,7 @@ namespace Thoth.Json.Net
 [<RequireQualifiedAccess>]
 module Decode =
 
+    open System.Globalization
     open Newtonsoft.Json
     open Newtonsoft.Json.Linq
     open System.IO
@@ -170,7 +171,7 @@ module Decode =
                 else
                     (path, BadPrimitiveExtra("an int", token, "Value was either too large or too small for an int")) |> Error
             elif token.Type = JTokenType.String then
-                match System.Int32.TryParse (Helpers.asString token) with
+                match System.Int32.TryParse (Helpers.asString token, NumberStyles.Any, CultureInfo.InvariantCulture) with
                 | true, x -> Ok x
                 | _ -> (path, BadPrimitive("an int", token)) |> Error
             else
@@ -181,7 +182,7 @@ module Decode =
             if token.Type = JTokenType.Integer then
                 Ok(token.Value<int64>())
             elif token.Type = JTokenType.String then
-                match System.Int64.TryParse (Helpers.asString token) with
+                match System.Int64.TryParse (Helpers.asString token, NumberStyles.Any, CultureInfo.InvariantCulture) with
                 | true, x -> Ok x
                 | _ -> (path, BadPrimitive("an int64", token)) |> Error
             else (path, BadPrimitive("an int64", token)) |> Error
@@ -195,7 +196,7 @@ module Decode =
                 else
                     (path, BadPrimitiveExtra("an uint32", token, "Value was either too large or too small for an uint32")) |> Error
             elif token.Type = JTokenType.String then
-                match System.UInt32.TryParse (Helpers.asString token, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture) with
+                match System.UInt32.TryParse (Helpers.asString token, NumberStyles.Any, CultureInfo.InvariantCulture) with
                 | true, x -> Ok x
                 | _ -> (path, BadPrimitive("an uint32", token)) |> Error
             else (path, BadPrimitive("an uint32", token)) |> Error
@@ -209,7 +210,7 @@ module Decode =
                 else
                     (path, BadPrimitiveExtra("an uint64", token, "Value was either too large or too small for an uint64")) |> Error
             elif token.Type = JTokenType.String then
-                match System.UInt64.TryParse (Helpers.asString token, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture) with
+                match System.UInt64.TryParse (Helpers.asString token, NumberStyles.Any, CultureInfo.InvariantCulture) with
                 | true, x -> Ok x
                 | _ -> (path, BadPrimitive("an uint64", token)) |> Error
             else (path, BadPrimitive("an uint64", token)) |> Error
@@ -219,7 +220,7 @@ module Decode =
             if Helpers.isNumber token then
                 Helpers.asInt token |> bigint |> Ok
             elif Helpers.isString token then
-                match bigint.TryParse (Helpers.asString token) with
+                match bigint.TryParse (Helpers.asString token, NumberStyles.Any, CultureInfo.InvariantCulture) with
                 | true, x -> Ok x
                 | _ -> (path, BadPrimitive("a bigint", token)) |> Error
             else
@@ -246,7 +247,7 @@ module Decode =
             if Helpers.isNumber value then
                 Helpers.asFloat value |> decimal |> Ok
             elif Helpers.isString value then
-                match System.Decimal.TryParse (Helpers.asString value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture) with
+                match System.Decimal.TryParse (Helpers.asString value, NumberStyles.Any, CultureInfo.InvariantCulture) with
                 | true, x -> Ok x
                 | _ -> (path, BadPrimitive("a decimal", value)) |> Error
             else
@@ -255,7 +256,7 @@ module Decode =
     let datetime : Decoder<System.DateTime> =
         fun path value ->
             if value.Type = JTokenType.Date || value.Type = JTokenType.String then
-                match System.DateTime.TryParse (Helpers.asString value) with
+                match System.DateTime.TryParse (Helpers.asString value, CultureInfo.InvariantCulture, DateTimeStyles.None) with
                 | true, x -> Ok x
                 | _ -> (path, BadPrimitive("a datetime", value)) |> Error
             else
@@ -264,7 +265,7 @@ module Decode =
     let datetimeOffset : Decoder<System.DateTimeOffset> =
         fun path value ->
             if value.Type = JTokenType.Date || value.Type = JTokenType.String then
-                match System.DateTimeOffset.TryParse (Helpers.asString value) with
+                match System.DateTimeOffset.TryParse (Helpers.asString value, CultureInfo.InvariantCulture, DateTimeStyles.None) with
                 | true, x -> Ok x
                 | _ -> (path, BadPrimitive("a datetimeoffset", value)) |> Error
             else
