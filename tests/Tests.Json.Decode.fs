@@ -979,7 +979,7 @@ Expecting an object but instead got:
                 equal expected actual
 
             testCase "optional works" <| fun _ ->
-                let json = """{ "name": "maxime", "age": 25 }"""
+                let json = """{ "name": "maxime", "age": 25, "something_undefined": null }"""
 
                 let expectedValid = Ok(Some "maxime")
                 let actualValid =
@@ -997,6 +997,11 @@ Expecting an object but instead got:
 
                 equal expectedMissingField actualMissingField
 
+                let expectedUndefinedField = Ok(None)
+                let actualUndefinedField =
+                    Decode.fromString (Decode.option (Decode.field "something_undefined" Decode.string) ) json
+
+                equal expectedUndefinedField actualUndefinedField
         ]
 
         testList "Fancy decoding" [
