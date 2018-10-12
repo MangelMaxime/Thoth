@@ -3,6 +3,7 @@ namespace Thoth.Json
 [<RequireQualifiedAccess>]
 module Encode =
 
+    open System.Globalization
     open Fable.Import
     open Fable.Core.JsInterop
 
@@ -38,7 +39,7 @@ module Encode =
     ///**Exceptions**
     ///
     let guid (value : System.Guid) : Value =
-        value.ToString() |> string
+        box (value.ToString())
 
     ///**Description**
     /// Encode an int
@@ -174,10 +175,10 @@ module Encode =
         box (value.ToString())
 
     let datetimeOffset (value : System.DateTimeOffset) : Value =
-        value.ToString("O") |> string
+        value.ToString("O", CultureInfo.InvariantCulture) |> string
 
     let int64 (value : int64) : Value =
-        box (value.ToString())
+        box (value.ToString(CultureInfo.InvariantCulture))
 
     let uint64 (value : uint64) : Value =
         box (value.ToString())
@@ -284,7 +285,7 @@ module Encode =
     /// **Exceptions**
     ///
     let datetime (value : System.DateTime) : Value =
-        value.ToString("O") |> string
+        value.ToString("O", CultureInfo.InvariantCulture) |> string
 
     ///**Description**
     /// Convert a `Value` into a prettified string.
