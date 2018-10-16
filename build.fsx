@@ -263,15 +263,27 @@ Target.create "Watch" (fun _ ->
 Target.create "Build.Demos" (fun _ ->
     Yarn.install (fun o -> { o with WorkingDirectory = "./demos/Thoth.Elmish.Demo/" })
 
-
     DotNet.restore (dtntWorkDir (root </> "demos" </> "Thoth.Elmish.Demo")) ""
-
 
     let result =
         DotNet.exec
             (dtntWorkDir (root </> "demos" </> "Thoth.Elmish.Demo"))
             "fable"
             "webpack -- -p"
+
+    if not result.OK then failwithf "Fable build failed for demos."
+)
+
+Target.create "Watch.Demos" (fun _ ->
+    Yarn.install (fun o -> { o with WorkingDirectory = "./demos/Thoth.Elmish.Demo/" })
+
+    DotNet.restore (dtntWorkDir (root </> "demos" </> "Thoth.Elmish.Demo")) ""
+
+    let result =
+        DotNet.exec
+            (dtntWorkDir (root </> "demos" </> "Thoth.Elmish.Demo"))
+            "fable"
+            "webpack-dev-server"
 
     if not result.OK then failwithf "Fable build failed for demos."
 )

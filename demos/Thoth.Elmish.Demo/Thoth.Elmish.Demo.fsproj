@@ -4,12 +4,15 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="src/Debouncer.fs" />
-    <Compile Include="src/Toast.fs" />
-    <Compile Include="src/App.fs" />
+    <ProjectReference Include="../../src/Thoth.Elmish.Toast/Thoth.Elmish.Toast.fsproj" />
+    <ProjectReference Include="../../src/Thoth.Elmish/Thoth.Elmish.fsproj" />
+    <ProjectReference Include="../../src/Thoth.Elmish.FormBuilder/Thoth.Elmish.FormBuilder.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/Thoth.Elmish.Toast/Thoth.Elmish.Toast.fsproj" />
+    <Compile Include="src/Debouncer.fs" />
+    <Compile Include="src/Toast.fs" />
+    <Compile Include="src/FormBuilder.fs" />
+    <Compile Include="src/App.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

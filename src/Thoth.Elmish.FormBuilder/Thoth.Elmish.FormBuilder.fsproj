@@ -1,23 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Description>Toolbox for working with Elmish applications</Description>
+        <Description>Form abstraction making it easier to works with form in Elmish application</Description>
         <PackageProjectUrl>https://github.com/MangelMaxime/Thoth</PackageProjectUrl>
         <PackageLicenseUrl>https://github.com/MangelMaxime/Thoth/blob/master/LICENSE.md</PackageLicenseUrl>
         <RepositoryUrl>https://github.com/MangelMaxime/Thoth</RepositoryUrl>
-        <PackageTags>fable;fsharp;json</PackageTags>
+        <PackageTags>fable;fsharp</PackageTags>
         <Authors>Maxime Mangel</Authors>
-        <Version>0.1.1</Version>
+        <Version>0.0.0</Version>
     </PropertyGroup>
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
     <ItemGroup>
-        <Compile Include="Debouncer.fs" />
+        <ProjectReference Include="../../src/Thoth.Elmish/Thoth.Elmish.fsproj" />
     </ItemGroup>
     <ItemGroup>
-        <Content Include="*.fsproj; **\*.fs; **\*.js" PackagePath="fable" />
+        <Compile Include="Common.fs" />
+        <Compile Include="Button.fs" />
+        <Compile Include="Select.fs" />
+        <Compile Include="Input.fs" />
+        <Compile Include="Form.fs" />
+        <Compile Include="Builders.fs" />
+    </ItemGroup>
+    <ItemGroup>
+        <Content Include="*.fsproj; **\*.fs; **\*.js; **\*.css" PackagePath="fable" />
     </ItemGroup>
     <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

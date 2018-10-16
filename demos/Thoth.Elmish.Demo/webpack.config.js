@@ -20,7 +20,7 @@ var babelOptions = {
     ]
 };
 
-var isProduction = process.argv.indexOf("-p") >= 0;
+var isProduction = !process.argv.find(v => v.indexOf('webpack-dev-server') !== -1);
 console.log("Bundling for " + (isProduction ? "production" : "development") + "...");
 
 var commonPlugins = [

@@ -13,6 +13,7 @@ nuget Fable.PowerPack
 nuget Fable.React
 nuget Fable.Import.HMR
 nuget Giraffe
+nuget Fulma
 
 # Save Newtonsoft pkg in repo dir so we
 # can access it with F# interactive
@@ -49,13 +50,14 @@ group Docs
     nuget Fable.React
     nuget Fable.PowerPack
     nuget Fable.Import.Node
-    nuget Fulma prerelease
+    nuget Fulma
 
     github akamud/vscode-theme-onelight themes/OneLight.json
     github ionide/ionide-fsgrammar grammar/fsharp.json
 
 group Demos
     storage:none
+    references: strict
     source https://www.nuget.org/api/v2
     framework: netstandard2.0
 
@@ -69,6 +71,5 @@ group Demos
     nuget Fable.PowerPack
     nuget Fable.React
     nuget Fulma
-    nuget Thoth.Elmish
-    nuget Fulma.Extensions prerelease
+    nuget Fulma.Extensions
     nuget Fable.Import.HMR

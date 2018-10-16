@@ -9,3 +9,25 @@ $body-size: 14px;
 @import './../../node_modules/bulma-tooltip/dist/css/bulma-tooltip.sass';
 
 @import './toast.scss';
+
+.thoth-form {
+    position: relative;
+
+    .wait-container {
+        display: none;
+        position: absolute;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+        z-index: 10;
+    }
+
+    &.is-waiting {
+        opacity: .4;
+
+        .wait-container {
+            display: flex;
+        }
+    }
+}
