@@ -659,8 +659,8 @@ module Decode =
                         member __.Raw (decoder: Decoder<_>) =
                             match decodeValueError path decoder v with
                             | Ok v -> Some v
-                            | Error (_, BadField _ )
-                            | Error (_, BadPrimitive (_, null)) -> None
+                            | Error (_, BadField _ ) -> None
+                            | Error (_, BadPrimitive (_, jToken)) when jToken.Type = JTokenType.Null -> None
                             | Error error ->
                                 raise (DecoderException error) }
             } |> Ok
