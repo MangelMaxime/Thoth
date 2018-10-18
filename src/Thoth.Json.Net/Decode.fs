@@ -394,7 +394,7 @@ module Decode =
 
                 value.Properties()
                 |> Seq.map (fun prop ->
-                    (prop.Name, value.SelectToken(prop.Name) |> unwrap path decoder)
+                    (prop.Name, value.Item(prop.Name) |> unwrap path decoder)
                 )
                 |> Seq.toList
                 |> Ok
