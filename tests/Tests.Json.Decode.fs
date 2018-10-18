@@ -173,17 +173,17 @@ let jsonRecordInvalid =
 
 type Shape =
     | Circle of radius: int
-    | Square of width: int * height: int
+    | Rectangle of width: int * height: int
 
     static member DecoderCircle =
         Decode.field "radius" Decode.int
         |> Decode.map Circle
 
-    static member DecoderSquare =
+    static member DecoderRectangle =
         Decode.tuple2
             (Decode.field "width" Decode.int)
             (Decode.field "height" Decode.int)
-        |> Decode.map Square
+        |> Decode.map Rectangle
 
 type MyObj =
     { Enabled: bool
@@ -1670,8 +1670,8 @@ Expecting a string but instead got: 12
                     |> Decode.andThen (function
                         | "circle" ->
                             Shape.DecoderCircle
-                        | "square" ->
-                            Shape.DecoderSquare
+                        | "rectangle" ->
+                            Shape.DecoderRectangle
                         | shape ->
                             Decode.fail (sprintf "Unknown shape type %s" shape))
 
@@ -1703,8 +1703,8 @@ Expecting a string but instead got: 12
                     |> Decode.andThen (function
                         | "circle" ->
                             Shape.DecoderCircle
-                        | "square" ->
-                            Shape.DecoderSquare
+                        | "rectangle" ->
+                            Shape.DecoderRectangle
                         | shape ->
                             Decode.fail (sprintf "Unknown shape type %s" shape))
 
@@ -1734,8 +1734,8 @@ Expecting a string but instead got: 12
                     |> Decode.andThen (function
                         | "circle" ->
                             Shape.DecoderCircle
-                        | "square" ->
-                            Shape.DecoderSquare
+                        | "rectangle" ->
+                            Shape.DecoderRectangle
                         | shape ->
                             Decode.fail (sprintf "Unknown shape type %s" shape))
 
@@ -1773,8 +1773,8 @@ Expecting an object with a field named `radius` but instead got:
                     |> Decode.andThen (function
                         | "circle" ->
                             Shape.DecoderCircle
-                        | "square" ->
-                            Shape.DecoderSquare
+                        | "rectangle" ->
+                            Shape.DecoderRectangle
                         | shape ->
                             Decode.fail (sprintf "Unknown shape type %s" shape))
 
@@ -1805,8 +1805,8 @@ Expecting an object with a field named `radius` but instead got:
                     |> Decode.andThen (function
                         | "circle" ->
                             Shape.DecoderCircle
-                        | "square" ->
-                            Shape.DecoderSquare
+                        | "rectangle" ->
+                            Shape.DecoderRectangle
                         | shape ->
                             Decode.fail (sprintf "Unknown shape type %s" shape))
 
@@ -1837,8 +1837,8 @@ Expecting an object with a field named `radius` but instead got:
                     |> Decode.andThen (function
                         | "circle" ->
                             Shape.DecoderCircle
-                        | "square" ->
-                            Shape.DecoderSquare
+                        | "rectangle" ->
+                            Shape.DecoderRectangle
                         | shape ->
                             Decode.fail (sprintf "Unknown shape type %s" shape))
 
@@ -1869,8 +1869,8 @@ Expecting an object with a field named `radius` but instead got:
                     |> Decode.andThen (function
                         | "circle" ->
                             Shape.DecoderCircle
-                        | "square" ->
-                            Shape.DecoderSquare
+                        | "rectangle" ->
+                            Shape.DecoderRectangle
                         | shape ->
                             Decode.fail (sprintf "Unknown shape type %s" shape))
 
@@ -1900,8 +1900,8 @@ Expecting an object with a field named `radius` but instead got:
                     |> Decode.andThen (function
                         | "circle" ->
                             Shape.DecoderCircle
-                        | "square" ->
-                            Shape.DecoderSquare
+                        | "rectangle" ->
+                            Shape.DecoderRectangle
                         | shape ->
                             Decode.fail (sprintf "Unknown shape type %s" shape))
 
