@@ -828,6 +828,10 @@ module Decode =
 
     open Microsoft.FSharp.Reflection
 
+    type FieldType =
+        | Optional of System.Type
+        | Required
+
     [<AbstractClass>]
     type private BoxedDecoder() =
         abstract Decode: path : string * token: JToken -> Result<obj, DecoderError>
@@ -848,17 +852,27 @@ module Decode =
     let inline private unboxDecoder<'T> (d: BoxedDecoder): Decoder<'T> =
         (d :?> DecoderCrate<'T>).UnboxedDecoder
 
-    let private autoObject (decoders: (string * BoxedDecoder)[]) (path : string) (value: JToken) =
+    let private autoObject (decoderInfos: (FieldType * string * BoxedDecoder)[]) (path : string) (value: JToken) =
         if not (Helpers.isObject value) then
             (path, BadPrimitive ("an object", value)) |> Error
         else
-            (decoders, Ok []) ||> Array.foldBack (fun (name, decoder) acc ->
+            (decoderInfos, Ok []) ||> Array.foldBack (fun (fieldType, name, decoder) acc ->
                 match acc with
                 | Error _ -> acc
                 | Ok result ->
-                    // TODO!!! Optional types shouldn't be required
-                    field name (decoder.BoxedDecoder) path value
-                    |> Result.map (fun v -> v::result))
+                    match fieldType with
+                    | FieldType.Optional typ ->
+                        optional name decoder.BoxedDecoder path value
+                        |> Result.map (fun v ->
+                            match v with
+                            | Some v ->
+                                let ucis = FSharpType.GetUnionCases(typ)
+                                (FSharpValue.MakeUnion(ucis.[1], [|v|]))::result
+                            | None -> box None::result
+                        )
+                    | FieldType.Required ->
+                        field name decoder.BoxedDecoder path value
+                        |> Result.map (fun v -> v::result))
 
     let private mixedArray msg (decoders: BoxedDecoder[]) (path: string) (values: JToken[]): Result<obj list, DecoderError> =
         if decoders.Length <> values.Length then
@@ -952,7 +966,21 @@ module Decode =
                                 fi.Name.[..0].ToLowerInvariant() + fi.Name.[1..]
                             else
                                 fi.Name
-                        name, autoDecoder isCamelCase fi.PropertyType)
+
+                        let fieldType, propertyType =
+                            if fi.PropertyType.IsGenericType then
+                                let fullname = fi.PropertyType.GetGenericTypeDefinition().FullName
+                                if fullname = typedefof<obj option>.FullName then
+                                    FieldType.Optional fi.PropertyType, fi.PropertyType.GenericTypeArguments.[0]
+                                else
+                                    FieldType.Required, fi.PropertyType
+                            else
+                                FieldType.Required, fi.PropertyType
+
+                        // then autoDecoder isCamelCase t.GenericTypeArguments.[0] |> genericOption t |> boxDecoder
+                        // then t.GenericTypeArguments.[0] |> (autoDecoder isCamelCase) |> option |> boxDecoder
+
+                        fieldType, name, autoDecoder isCamelCase propertyType)
                 autoObject decoders path value
                 |> Result.map (fun xs -> FSharpValue.MakeRecord(t, List.toArray xs)))
         elif FSharpType.IsUnion(t) then

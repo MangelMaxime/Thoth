@@ -151,6 +151,10 @@ type MyList<'T> =
     | Nil
     | Cons of 'T * MyList<'T>
 
+type TestMaybeRecord =
+    { Maybe : string option
+      Must : string }
+
 let jsonRecord =
     """{ "a": 1.0,
          "b": 2.0,
@@ -2115,5 +2119,29 @@ Expecting an object with a field named `radius` but instead got:
                 let user = Decode.Auto.fromString<User>(json, isCamelCase=true)
                 let expected = Ok { Id = 0; Name = "maxime"; Email = "mail@domain.com"; Followers = 0 }
                 equal expected user
+
+            testCase "Auto.fromString works for records with an actual value for the optional field value" <| fun _ ->
+                let json = """{ "maybe" : "maybe value", "must": "must value"}"""
+                let actual = Decode.Auto.fromString<TestMaybeRecord>(json, isCamelCase=true)
+                let expected =
+                    Ok ({ Maybe = Some "maybe value"
+                          Must = "must value" } : TestMaybeRecord)
+                equal expected actual
+
+            testCase "Auto.fromString works for records with `null` for the optional field value" <| fun _ ->
+                let json = """{ "maybe" : null, "must": "must value"}"""
+                let actual = Decode.Auto.fromString<TestMaybeRecord>(json, isCamelCase=true)
+                let expected =
+                    Ok ({ Maybe = None
+                          Must = "must value" } : TestMaybeRecord)
+                equal expected actual
+
+            testCase "Auto.fromString works for records missing an optional field" <| fun _ ->
+                let json = """{ "must": "must value"}"""
+                let actual = Decode.Auto.fromString<TestMaybeRecord>(json, isCamelCase=true)
+                let expected =
+                    Ok ({ Maybe = None
+                          Must = "must value" } : TestMaybeRecord)
+                equal expected actual
         ]
     ]
