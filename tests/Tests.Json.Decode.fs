@@ -176,14 +176,14 @@ type Shape =
     | Square of width: int * height: int
 
     static member DecoderCircle =
-        Decode.field "radius" ( Decode.int
-                                |> Decode.map Circle )
+        Decode.field "radius" Decode.int
+        |> Decode.map Circle
 
     static member DecoderSquare =
-        Decode.field "square" ( Decode.tuple2
-                                    Decode.int
-                                    Decode.int
-                                |> Decode.map Square )
+        Decode.tuple2
+            (Decode.field "width" Decode.int)
+            (Decode.field "height" Decode.int)
+        |> Decode.map Square
 
 type MyObj =
     { Enabled: bool
@@ -1663,14 +1663,30 @@ Expecting a string but instead got: 12
 }"""
                 let shapeDecoder =
                     Decode.field "shape" Decode.string
+                    |> Decode.andThen (function
+                        | "circle" ->
+                            Shape.DecoderCircle
+                        | "square" ->
+                            Shape.DecoderSquare
+                        | shape ->
+                            Decode.fail (sprintf "Unknown shape type %s" shape))
 
                 let decoder =
                     Decode.object (fun get ->
                         { Enabled = get.Required.Field "enabled" Decode.bool
-                          Shape = failwith "How do you write this decoder ?" }
+                          Shape = get.Required.Raw shapeDecoder }
                     )
 
-                ()
+                let actual =
+                    Decode.fromString
+                        decoder
+                        json
+
+                let expected =
+                    Ok { Enabled = true
+                         Shape = Circle 20 }
+
+                equal expected actual
         ]
 
         testList "Auto" [
