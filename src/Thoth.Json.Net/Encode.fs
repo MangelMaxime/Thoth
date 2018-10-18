@@ -3,6 +3,7 @@ namespace Thoth.Json.Net
 [<RequireQualifiedAccess>]
 module Encode =
 
+    open System.Globalization
     open Newtonsoft.Json
     open Newtonsoft.Json.Linq
     open System.IO
@@ -168,22 +169,22 @@ module Encode =
         |> object
 
     let bigint (value : bigint) : JToken =
-        JValue(Operators.string value) :> JToken
+        JValue(value.ToString(CultureInfo.InvariantCulture)) :> JToken
 
     let int64 (value : int64) : JToken =
-        JValue(Operators.string value) :> JToken
+        JValue(value.ToString(CultureInfo.InvariantCulture)) :> JToken
 
     let uint32 (value : uint32) : JToken =
-        JValue(Operators.string value) :> JToken
+        JValue(value) :> JToken
 
     let uint64 (value : uint64) : JToken =
-        JValue(Operators.string value) :> JToken
+        JValue(value.ToString(CultureInfo.InvariantCulture)) :> JToken
 
     let datetime (value : System.DateTime) : JToken =
-        JValue(value.ToString("O")) :> JToken
+        JValue(value.ToString("O", CultureInfo.InvariantCulture)) :> JToken
 
     let datetimeOffset (value : System.DateTimeOffset) : JToken =
-        JValue(value.ToString("O")) :> JToken
+        JValue(value.ToString("O", CultureInfo.InvariantCulture)) :> JToken
 
     let tuple2
             (enc1 : Encoder<'T1>)

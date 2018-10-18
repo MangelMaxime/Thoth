@@ -43,6 +43,7 @@ module Decode =
         let inline asBool (token: JToken): bool = token.Value<bool>()
         let inline asInt (token: JToken): int = token.Value<int>()
         let inline asFloat (token: JToken): float = token.Value<float>()
+        let inline asDecimal (token: JToken): System.Decimal = token.Value<System.Decimal>()
         let inline asString (token: JToken): string = token.Value<string>()
         let inline asArray (token: JToken): JToken[] = token.Value<JArray>().Values() |> Seq.toArray
 
@@ -235,41 +236,39 @@ module Decode =
 
     let float : Decoder<float> =
         fun path token ->
-            if token.Type = JTokenType.Float then
-                Ok(token.Value<float>())
-            elif token.Type = JTokenType.Integer then
-                Ok(token.Value<float>())
+            if Helpers.isNumber token then
+                Helpers.asFloat token |> Ok
             else
                 (path, BadPrimitive("a float", token)) |> Error
 
     let decimal : Decoder<decimal> =
-        fun path value ->
-            if Helpers.isNumber value then
-                Helpers.asFloat value |> decimal |> Ok
-            elif Helpers.isString value then
-                match System.Decimal.TryParse (Helpers.asString value, NumberStyles.Any, CultureInfo.InvariantCulture) with
+        fun path token ->
+            if Helpers.isNumber token then
+                Helpers.asDecimal token |> Ok
+            elif Helpers.isString token then
+                match System.Decimal.TryParse (Helpers.asString token, NumberStyles.Any, CultureInfo.InvariantCulture) with
                 | true, x -> Ok x
-                | _ -> (path, BadPrimitive("a decimal", value)) |> Error
+                | _ -> (path, BadPrimitive("a decimal", token)) |> Error
             else
-                (path, BadPrimitive("a decimal", value)) |> Error
+                (path, BadPrimitive("a decimal", token)) |> Error
 
     let datetime : Decoder<System.DateTime> =
-        fun path value ->
-            if value.Type = JTokenType.Date || value.Type = JTokenType.String then
-                match System.DateTime.TryParse (Helpers.asString value, CultureInfo.InvariantCulture, DateTimeStyles.None) with
+        fun path token ->
+            if token.Type = JTokenType.Date || token.Type = JTokenType.String then
+                match System.DateTime.TryParse (Helpers.asString token, CultureInfo.InvariantCulture, DateTimeStyles.None) with
                 | true, x -> Ok x
-                | _ -> (path, BadPrimitive("a datetime", value)) |> Error
+                | _ -> (path, BadPrimitive("a datetime", token)) |> Error
             else
-                (path, BadPrimitive("a datetime", value)) |> Error
+                (path, BadPrimitive("a datetime", token)) |> Error
 
     let datetimeOffset : Decoder<System.DateTimeOffset> =
-        fun path value ->
-            if value.Type = JTokenType.Date || value.Type = JTokenType.String then
-                match System.DateTimeOffset.TryParse (Helpers.asString value, CultureInfo.InvariantCulture, DateTimeStyles.None) with
+        fun path token ->
+            if token.Type = JTokenType.Date || token.Type = JTokenType.String then
+                match System.DateTimeOffset.TryParse (Helpers.asString token, CultureInfo.InvariantCulture, DateTimeStyles.None) with
                 | true, x -> Ok x
-                | _ -> (path, BadPrimitive("a datetimeoffset", value)) |> Error
+                | _ -> (path, BadPrimitive("a datetimeoffset", token)) |> Error
             else
-                (path, BadPrimitive("a datetimeoffset", value)) |> Error
+                (path, BadPrimitive("a datetimeoffset", token)) |> Error
 
     /////////////////////////
     // Object primitives ///
