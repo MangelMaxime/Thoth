@@ -48,7 +48,7 @@ module FakeServer =
 
     let getJobs () =
         promise {
-            do! Promise.sleep 2000
+            do! Promise.sleep 5000
             return [
                 "1", "C"
                 "10", "C#"
@@ -88,17 +88,20 @@ module FakeServer =
 type Msg =
     | Submit
     | OnFormMsg of Form.Msg
+    | ChangeFirstname of string
 
 type Model =
-    { FormState : Form.FormState<Msg> }
+    { FormState : Form.FormState<Msg>
+      Firstname : string
+      FirstnameError : string }
 
 let getJobsList =
     promise {
         let! res = FakeServer.getJobs ()
-        return Ok res
+        return res
     }
 
-let validateFromServer (body : string)=
+let validateFromServer (body : string) =
     promise {
         let! res = FakeServer.checkForErrors body
         match Decode.fromString (Decode.list Form.ErrorDef.Decoder) res with
@@ -109,6 +112,13 @@ let validateFromServer (body : string)=
     }
 
 let private createForm =
+    let age =
+        input {
+            label "Age"
+            isRequired
+            placeholder "Ex: 18"
+        }
+
     let firstname = input {
         label "Firstname"
         jsonLabel "firstname"
@@ -153,6 +163,7 @@ let private createForm =
 
         addInput firstname
         addInput surname
+        addInput age
         addInput email
         addSelect domains
 
@@ -163,7 +174,9 @@ let private createForm =
 let private init _ =
     let (formState, formCmds) = createForm |> Form.init
 
-    { FormState = formState }, Cmd.map OnFormMsg formCmds
+    { FormState = formState
+      Firstname = ""
+      FirstnameError = "" }, Cmd.map OnFormMsg formCmds
 
 let private update msg model =
     match msg with
@@ -177,15 +190,37 @@ let private update msg model =
         // else
         let (newForm, isValid) = Form.validate model.FormState
         if isValid then
+            printfn "%s" (Form.toJson newForm)
             { model with FormState = Form.setWaiting true newForm }, Cmd.none
         else
             { model with FormState = newForm }, Cmd.none
 
+    | ChangeFirstname newValue ->
+        if newValue <> "" then
+            { model with Firstname = newValue
+                         FirstnameError = "" }, Cmd.none
+        else
+            { model with Firstname = newValue
+                         FirstnameError = "This field is required" }, Cmd.none
+
 let private view model dispatch =
     Columns.columns [ ]
-        [ Column.column [ Column.Width (Screen.All, Column.Is6)
-                          Column.Offset (Screen.All, Column.Is3) ]
-            [ Form.render model.FormState dispatch ] ]
+        [ Column.column [ Column.Width(Screen.All, Column.Is6)
+                          Column.Offset(Screen.All, Column.Is3) ]
+            [ Form.render model.FormState dispatch
+            //   Field.div [ ]
+            //     [ Label.label [ ]
+            //         [ str "Firstname" ]
+            //       Control.div [ ]
+            //         [ Input.input [ Input.Value model.Firstname
+            //                         Input.Placeholder "Ex: Maxime"
+            //                         Input.OnChange (fun ev ->
+            //                             ev.Value |> string |> ChangeFirstname |> dispatch
+            //                         ) ] ]
+            //       Help.help [ Help.Color IsDanger ]
+            //         [ str model.FirstnameError ] ]
+              // ...
+            ] ]
 
 
 open Elmish.React
@@ -196,3 +231,91 @@ let start (id : string) =
     Program.mkProgram init update view
     |> Program.withReactUnoptimized id
     |> Program.run
+
+
+// module Test =
+//     open System
+
+//     type ButtonState<'T> =
+//         class end
+
+//     type ValidationState =
+//             | Valid
+//             | Invalid of string
+
+//     type InputState =
+//         { Label : string
+//           Placeholder : string option
+//           Value : string
+//           Validators : InputValidator list
+//           ValidationInputState : ValidationState }
+
+//     and InputValidator = InputState -> ValidationState
+
+//     type FormState<'AppMsg> =
+//         { Fields : (Guid * InputState) list
+//           Actions : ButtonState<'AppMsg> list }
+
+//     let form =
+//         { Fields =
+//             [ (Guid.NewGuid(), { Label = "Firstname"
+//                                  Placeholder = None
+//                                  Value = ""
+//                                  Validators = []
+//                                  ValidationInputState = Valid })
+//               (Guid.NewGuid(), { Label = "Lastname"
+//                                  Placeholder = Some "Ex: Mangel"
+//                                  Value = ""
+//                                  Validators = [ isRequired ]
+//                                  ValidationInputState = Valid }) ]
+//           Actions = [ ]
+//         }
+
+// let private createForm =
+//     let firstname = input {
+//         label "Firstname"
+//         placeholder "Ex: Maxime"
+//         isRequired
+//     }
+
+//     let surname = input {
+//         label "Surname"
+//         placeholder "Ex: Mangel"
+//         isRequired
+//     }
+
+//     form {
+//         addInput firstname
+//         addInput surname
+//     }
+
+// let private createForm =
+//     Form.create ()
+//     |> Form.addInput
+//         ( Form.Input.create ()
+//             |> Form.Input.label "Firstname"
+//             |> Form.Input.placeholder "Ex: Maxime"
+//             |> Form.Input.isRequired )
+//     |> Form.addInput
+//         ( Form.Input.create ()
+//             |> Form.Input.label "Surname"
+//             |> Form.Input.placeholder "Ex: Mangel"
+//             |> Form.Input.isRequired )
+
+module Test2 =
+
+    open Fable.Import
+
+    type Key = string
+
+    type SelectState =
+        { Label : string
+          SelectedKey : Key option
+          Values : (Key * string) list
+          Placeholder : (Key * string) option
+          Validators : SelectValidator list
+          ValidationSelectState : ValidationState
+          IsLoading : bool
+          ValuesFromServer : JS.Promise<(Key * string) list> option }
+
+    and SelectValidator = SelectState -> ValidationState

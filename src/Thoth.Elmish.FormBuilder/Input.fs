@@ -7,14 +7,14 @@ open System
 
 module Input =
 
-    type InputState=
+    type InputState =
         { Label : string
           JsonLabel : string option
           Type : string
           Value : string
           Placeholder : string option
           Validators : InputValidator list
-          ValidationInputState: ValidationState }
+          ValidationInputState : ValidationState }
 
         member this.JsonKey
             with get () = this.JsonLabel
@@ -52,7 +52,7 @@ module Input =
         member __.IsRequired (inputState : InputState) =
             let apply (inputState : InputState) =
                 if inputState.Value = "" then
-                    Invalid "Ce champs est requis"
+                    Invalid "This field is required"
                 else
                     Valid
 

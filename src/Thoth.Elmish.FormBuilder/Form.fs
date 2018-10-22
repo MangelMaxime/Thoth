@@ -117,11 +117,8 @@ module Form =
                     | Some fetchKeyValues ->
                         let request () =
                             promise {
-                                match! fetchKeyValues with
-                                | Ok keyValues ->
-                                    return (guid, keyValues)
-                                | Error msg ->
-                                    return (failwithf "An error occured when fetching keyValues for the field `%s:%s`.\nError:\n%s" selectState.Label (guid.ToString()) msg)
+                                let! keyValues = fetchKeyValues
+                                return (guid, keyValues)
                             }
                         Cmd.ofPromise request () SelectInitValues OnError
                     | None -> Cmd.none
@@ -169,7 +166,11 @@ module Form =
             | (_, Field.Select selectState) -> selectState.ToJson()
         )
         |> Encode.object
+        #if DEBUG
+        |> Encode.toString 4
+        #else
         |> Encode.toString 0
+        #endif
 
     let render (formState : FormState<'AppMsg>) (dispatch : 'AppMsg -> unit) =
         match formState.OnFormMsg with

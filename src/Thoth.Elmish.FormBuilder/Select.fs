@@ -20,7 +20,7 @@ module Select =
           Validators : SelectValidator list
           ValidationSelectState : ValidationState
           IsLoading : bool
-          ValuesFromServer : JS.Promise<Result<(Key * string) list, string>> option }
+          ValuesFromServer : JS.Promise<(Key * string) list> option }
 
         member this.JsonKey
             with get () = this.JsonLabel
@@ -63,7 +63,7 @@ module Select =
                                IsLoading = false }
 
         [<CustomOperation("valuesFromServer")>]
-        member __.ValuesFromServer (selectState : SelectState, valuesFromServer : JS.Promise<Result<(Key * string) list, string>>) =
+        member __.ValuesFromServer (selectState : SelectState, valuesFromServer : JS.Promise<(Key * string) list>) =
             { selectState with ValuesFromServer = Some valuesFromServer
                                IsLoading = true }
 
@@ -71,7 +71,7 @@ module Select =
         member __.IsRequired (selectState : SelectState) =
             let apply (selectState : SelectState) =
                 if selectState.SelectedKey.IsNone then
-                    Invalid "Ce champs est requis"
+                    Invalid "This field is required"
                 else
                     Valid
 
