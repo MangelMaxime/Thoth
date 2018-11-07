@@ -1,3 +1,7 @@
+#### 2.4.0
+
+* Make auto decoder succeeds on Class marked as optional
+
 #### 2.3.0
 
 * Fix #59: Make autodecoder support optional fields when missing from JSON
