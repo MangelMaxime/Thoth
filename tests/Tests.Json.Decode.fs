@@ -1831,5 +1831,6 @@ Expecting a string but instead got: 12
                 let user = Decode.Auto.fromString<User>(json, isCamelCase=true)
                 let expected = Ok { Id = 0; Name = "maxime"; Email = "mail@domain.com"; Followers = 0 }
                 equal expected user
+
         ]
     ]

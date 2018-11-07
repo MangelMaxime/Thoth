@@ -13,304 +13,269 @@ open Fable.PowerPack
 
 module Form =
 
-    type ErrorDef =
-        { Text : string
-          Key : string }
+    type InputState =
+        { Label : string
+          Value : string }
+
+        static member Empty =
+            { Label = ""
+              Value = "" }
+
+    type Key = string
+
+    type SelectState =
+        { Label : string
+          Placeholder : (Key * string) option
+          SelectedKey : Key option
+          Values : (Key * string) list
+          IsLoading : bool
+          ValuesFromServer : JS.Promise<(Key * string) list> option }
+
+        static member Empty =
+            { Label = ""
+              Placeholder = None
+              SelectedKey = None
+              Values = []
+              IsLoading = false
+              ValuesFromServer = None }
+
+    type IField =
+        interface end
+
+    type FieldType =
+        | Input
+        | Select
+
+    type IFieldMsg =
+        interface end
+
+    // type CodeField =
+    //     | Input of InputState
+    //     | Select of SelectState
+    //     interface IField
+
+    type Id = string
+
+    type FieldInfo =
+        { Type : FieldType
+          State : obj
+          Id : Id }
 
     type Msg =
-        | OnFieldChange of Guid * string
         | DebouncerSelfMsg of Debouncer.SelfMessage<Msg>
-        | TriggerServerValidation
-        | ServerValidationResult of ErrorDef list
-        | OnError of exn
-        | SelectInitValues of Guid * (Select.Key * string) list
+        | OnFieldMessage of Id * obj
 
-    [<RequireQualifiedAccess>]
-    type Field =
-        | Input of Input.InputState
-        | Select of Select.SelectState
+    type Form<'AppMsg> =
+        { Fields : FieldInfo list
+          OnFormMsg : Msg -> 'AppMsg }
 
-    type FormState<'AppMsg> =
-        { Fields : (Guid * Field) list
-          OnFormMsg : (Msg -> 'AppMsg) option
-          Actions : Button.ButtonState<'AppMsg> list
-          IsWaiting : bool
-          Debouncer : Debouncer.State
-          ServerValidation : (string -> JS.Promise<ErrorDef list>) option
-          GlobalError : string }
+    type FieldConfig =
+        { Render : obj -> (IFieldMsg -> unit) -> React.ReactElement
+          Update : obj -> obj -> obj * (Id -> Cmd<Msg>)
+          Init : obj -> obj * (Id -> Cmd<Msg>) }
 
-    type FormBuilder() =
-        member __.Bind(m, f) =
-            failwith "bind"
+    type Config = Map<FieldType, FieldConfig>
 
-        member __.Return x = failwith "return"
+    // let render (form : Form) =
+    //     let fields =
+    //         form.Fields
+    //         |> List.map (fun field ->
 
-        member __.ReturnFrom() = failwith "return from"
+    //         )
 
-        member __.Zero() = failwith "return from"
+    module Form =
+        module Cmd =
+            let none (_id : Id) : Cmd<Msg> =
+                [ ]
 
-        // member __.Combine(formState : FormState<_>, inputState : Input.InputState) =
-        //     { formState with Fields = formState.Fields @ [ Field.Input inputState ] }
+            let ofPromise (task: 'a -> Fable.Import.JS.Promise<'FieldMessage>)
+                          (arg:'a)
+                          (fieldId : Id) : Cmd<Msg> =
 
-        member __.For( seq : seq<FormState<_>>, body: 'T -> FormState<_>) =
-            Browser.console.log "For #1"
-            Browser.console.log seq
-            Browser.console.log body
-            seq
+                let bind dispatch =
+                    task arg
+                    |> Promise.map (fun fieldMessage ->
+                        OnFieldMessage (fieldId, fieldMessage)
+                        |> dispatch
+                    )
+                    |> Promise.catch (fun error ->
+                        OnFieldMessage (fieldId, error)
+                        |> dispatch
+                    )
+                    |> ignore
 
-        member __.For( seq : FormState<_>, body: 'T -> FormState<_>) =
-            Browser.console.log "For #2"
-            Browser.console.log seq
-            Browser.console.log body
-            seq
+                [ bind ]
 
-        member __.For( seq : seq<int>, body: Input.InputState -> FormState<_>) : FormState<_> =
-            Browser.console.log "For #3"
-            Browser.console.log seq
-            Browser.console.log body
-            unbox null
+    module Input =
 
-        member __.Yield(_) : FormState<_> =
-            { Fields = [ ]
-              OnFormMsg = None
-              Actions = [ ]
-              IsWaiting = false
-              Debouncer = Debouncer.create()
-              ServerValidation = None
-              GlobalError = "" }
+        type Msg =
+            | ChangeValue of string
+            interface IFieldMsg
 
-        // member __.YieldFrom( x ) =
-        //     printfn "YieldFrom: %A" x
-        //     { Fields = [ ]
-        //       OnFormMsg = None
-        //       Actions = [ ] }
+        let init (state : obj) =
+            state, Form.Cmd.none
 
-        [<CustomOperation("onChange")>]
-        member __.OnChange (formState : FormState<_>, onChange) =
-            { formState with OnFormMsg = Some onChange }
+        let update (state : obj) (msg : obj) =
+            let msg = msg :?> Msg
+            let state = state :?> InputState
 
-        [<CustomOperation("serverValidation")>]
-        member __.ServerValidation (formState : FormState<_>, infos) =
-            { formState with ServerValidation = Some infos }
+            match msg with
+            | ChangeValue newValue ->
+                box { state with Value = newValue }, Form.Cmd.none
 
-        [<CustomOperation("addInput")>]
-        member __.Input (formState : FormState<_>, newField) =
-            { formState with Fields = formState.Fields @ [ (Guid.NewGuid(), Field.Input newField) ] }
+        let render (state : obj) (onChange : IFieldMsg -> unit) =
+            let state : InputState = state :?> InputState
+            Field.div [ ]
+                [ Label.label [ ]
+                    [ str state.Label ]
+                  Control.div [ ]
+                    [ Input.input [ Input.Value state.Value
+                                    // Input.Placeholder (state.Placeholder |> Option.defaultValue "")
+                                    Input.OnChange (fun ev ->
+                                        ev.Value |> ChangeValue |> onChange
+                                    ) ] ]
+                //   Help.help [ Help.Color IsDanger ]
+                //     [ str state.ValidationInputState.ToText ]
+                    ]
 
-        [<CustomOperation("addSelect")>]
-        member __.Select (formState : FormState<_>, newField) =
-            { formState with Fields = formState.Fields @ [ (Guid.NewGuid(), Field.Select newField) ] }
+    module Select =
 
-        [<CustomOperation("addAction")>]
-        member __.addAction (formState : FormState<_>, newAction) =
-            { formState with Actions = formState.Actions @ [ newAction ] }
+        type Msg =
+            | ChangeValue of string
+            | ReceivedValueFromServer of (Key * string) list
+            interface IFieldMsg
 
-    let init (formState : FormState<'AppMsg>) =
-        let cmds =
-            formState.Fields
-            |> List.map (fun (guid, field) ->
-                match field with
-                | Field.Input _ ->
-                    Cmd.none
-                | Field.Select selectState ->
-                    match selectState.ValuesFromServer with
-                    | Some fetchKeyValues ->
-                        let request () =
-                            promise {
-                                let! keyValues = fetchKeyValues
-                                return (guid, keyValues)
-                            }
-                        Cmd.ofPromise request () SelectInitValues OnError
-                    | None -> Cmd.none
+        let private renderOption (key,value) =
+            option [ Value key
+                     Prop.Key key ]
+                [ str value ]
+
+        let private renderPlaceHolder (placeholder : (Key * string) option) =
+            match placeholder with
+            | Some (key, value) ->
+                option [ Value key
+                         Disabled true ]
+                    [ str value ]
+            | None ->
+                option [ Disabled true ]
+                    [ ]
+
+        let init (state : obj) =
+            let state = state :?> SelectState
+            let cmd =
+                match state.ValuesFromServer with
+                | Some fetchKeyValues ->
+                    let request () =
+                        promise {
+                            let! keyValues = fetchKeyValues
+                            return ReceivedValueFromServer keyValues
+                        }
+
+                    Form.Cmd.ofPromise request ()
+
+                | None -> Form.Cmd.none
+
+            box { state with IsLoading = true }, cmd
+
+        let update (state : obj) (msg : obj) =
+            let msg = msg :?> Msg
+            let state = state :?> SelectState
+
+            match msg with
+            | ChangeValue selectedKey ->
+                box { state with SelectedKey = Some selectedKey }, Form.Cmd.none
+
+            | ReceivedValueFromServer values ->
+                box { state with IsLoading = false
+                                 Values = values }, Form.Cmd.none
+
+        let render (state : obj) (onChange : IFieldMsg -> unit) =
+            let state : SelectState = state :?> SelectState
+            Field.div [ ]
+                [ Label.label [ ]
+                    [ str state.Label ]
+                  Control.div [ ]
+                    [ Select.select [ Select.IsLoading state.IsLoading
+                                      Select.IsFullWidth ]
+                        [ select [ Value (state.SelectedKey |> Option.defaultValue "")
+                                   OnChange (fun ev ->
+                                        ev.Value |> ChangeValue |> onChange
+                                    ) ]
+                            [ renderPlaceHolder state.Placeholder
+                              state.Values
+                              |> List.map renderOption
+                              |> ofList ] ] ]
+                //   Help.help [ Help.Color IsDanger ]
+                //     [ str state.ValidationSelectState.ToText ]
+                     ]
+
+    let create (onFormMsg : Msg -> 'AppMsg) : Form<'AppMsg> =
+        { Fields = []
+          OnFormMsg = onFormMsg }
+
+    let addField field form =
+        { form with Fields = form.Fields @ [ field ] }
+
+
+    let config =
+        Map.empty<FieldType, FieldConfig>
+        |> Map.add Input
+            { Render = Input.render
+              Update = Input.update
+              Init = Input.init }
+        |> Map.add Select
+            { Render = Select.render
+              Update = Select.update
+              Init = Select.init }
+
+    let init (form : Form<_>) =
+        let mappedFields =
+            form.Fields
+            |> List.map (fun info ->
+                match Map.tryFind info.Type config with
+                | Some config ->
+                    let newState, cmd = config.Init info.State
+                    { info with State = newState }, cmd info.Id
+                | None -> failwithf "Seems like you didn't register `FieldType.%s`" (string info.Type)
             )
 
-        formState, Cmd.batch cmds
+        let fields = mappedFields |> List.map fst
+        let cmds = mappedFields |> List.map snd
 
-    let setWaiting (isWaiting : bool) (formState : FormState<'AppMsg>) =
-        { formState with IsWaiting = isWaiting }
+        { form with Fields = fields }, Cmd.batch cmds
 
-    let validate (formState : FormState<'AppMsg>) : FormState<'AppMsg> * bool =
-        let newFields =
-            formState.Fields
-            |> List.map (fun (guid, field) ->
-                            let newField =
-                                match field with
-                                | Field.Input inputState ->
-                                    Input.applyValidators inputState
-                                    |> Field.Input
-                                | Field.Select selectState ->
-                                    Select.appyValidators selectState
-                                    |> Field.Select
-
-                            (guid, newField)
-            )
-
-        let isValid =
-            newFields
-            |> List.filter (fun (_, field) ->
-                match field with
-                | Field.Input inputState ->
-                    inputState.ValidationInputState <> Valid
-                | Field.Select selectState ->
-                    selectState.IsLoading || selectState.ValidationSelectState <> Valid
-            )
-            |> List.length
-            |> (=) 0
-
-        { formState with Fields = newFields }, isValid
-
-    let toJson (formState : FormState<'AppMsg>) =
-        formState.Fields
-        |> List.map (function
-            | (_, Field.Input inputState) -> inputState.ToJson()
-            | (_, Field.Select selectState) -> selectState.ToJson()
-        )
-        |> Encode.object
-        #if DEBUG
-        |> Encode.toString 4
-        #else
-        |> Encode.toString 0
-        #endif
-
-    let render (formState : FormState<'AppMsg>) (dispatch : 'AppMsg -> unit) =
-        match formState.OnFormMsg with
-        | Some onEvent ->
-            let fields =
-                let onFieldChange =
-                    OnFieldChange >> onEvent >> dispatch
-
-                formState.Fields
-                    |> List.map (function
-                        | (guid, Field.Input inputState) -> Input.render guid onFieldChange inputState
-                        | (guid, Field.Select selectState) -> Select.render guid onFieldChange selectState)
-
-            let actions =
-                formState.Actions
-                    |> List.map (Button.render dispatch)
-
-            let formClass =
-                if formState.IsWaiting then
-                    "thoth-form is-waiting"
-                else
-                    "thoth-form"
-
-            div [ Class formClass ]
-                [ yield div [ Class "wait-container" ]
-                    [ Icon.faIcon [ ]
-                        [ Fa.icon Fa.I.Spinner
-                          Fa.fa3x
-                          Fa.spin ] ]
-                  yield! fields
-                  yield Help.help [ Help.Color IsDanger ]
-                    [ str formState.GlobalError ]
-                  yield Field.div [ Field.IsGroupedCentered ]
-                    actions ]
-
-        | None ->
-            Message.message [ Message.Color IsWarning ]
-                [ Message.body [ ]
-                    [ str "You need to provide a `onChange` msg to the form"
-                      br [ ]
-                      str "Without this message the form can't send event into the application" ] ]
-
-    let update (msg : Msg) (formState : FormState<_>) =
+    let update (msg : Msg) (form : Form<_>) =
         match msg with
-        | OnFieldChange (guid, newValue) ->
-            let newFields =
-                formState.Fields
-                |> List.map (fun (localGuid, field) ->
-                    if localGuid <> guid then
-                        (localGuid, field)
+        | OnFieldMessage (fieldId, msg) ->
+            let mappedFields =
+                form.Fields
+                |> List.map (fun info ->
+                    if info.Id = fieldId then
+                        match Map.tryFind info.Type config with
+                        | Some config ->
+                            let newState, cmd = config.Update info.State msg
+                            { info with State = newState }, cmd info.Id
+                        | None -> failwithf "Seems like you didn't register `FieldType.%s`" (string info.Type)
                     else
-                        let newField =
-                            match field with
-                            | Field.Input inputState ->
-                                Input.update inputState newValue
-                                |> Field.Input
-                            | Field.Select selectState ->
-                                Select.update selectState newValue
-                                |> Field.Select
-
-                        (localGuid, newField)
+                        info, Form.Cmd.none info.Id
                 )
 
-            let (debouncerModel, debouncerCmd) =
-                formState.Debouncer
-                |> Debouncer.bounce (TimeSpan.FromSeconds 1.5) "trigger_server_validation" TriggerServerValidation
+            let fields = mappedFields |> List.map fst
+            let cmds = mappedFields |> List.map snd
 
-            { formState with Fields = newFields
-                             Debouncer = debouncerModel }, Cmd.map DebouncerSelfMsg debouncerCmd
+            { form with Fields = fields }, Cmd.batch cmds
 
-        | DebouncerSelfMsg debouncerMsg ->
-            let (debouncerModel, debouncerCmd) = Debouncer.update debouncerMsg formState.Debouncer
-            { formState with Debouncer = debouncerModel }, debouncerCmd
-
-        | TriggerServerValidation ->
-            match formState.ServerValidation with
-            | Some request ->
-                let json = toJson formState
-                formState, Cmd.ofPromise request json ServerValidationResult OnError
-            | None -> formState, Cmd.none
-
-        | ServerValidationResult errors ->
-            let errors =
-                errors
-                |> List.groupBy (fun error ->
-                    error.Key
-                )
-                |> Map.ofList
-
-            let newFields =
-                formState.Fields
-                |> List.map (fun (guid, field) ->
-                    match field with
-                    | Field.Input inputState ->
-                        let newState =
-                            match errors.TryGetValue inputState.JsonKey with
-                            // We found the key in the errors map, then extract the first error
-                            | (true, first::_) ->
-                                { inputState with ValidationInputState = Invalid first.Text }
-                            | (true, [])
-                            | (false, _) -> inputState
-                        guid, Field.Input newState
-                    | Field.Select selectState ->
-                        let newState =
-                            match errors.TryGetValue selectState.JsonKey with
-                            // We found the key in the errors map, then extract the first error
-                            | (true, first::_) ->
-                                { selectState with ValidationSelectState = Invalid first.Text }
-                            | (true, [])
-                            | (false, _) -> selectState
-
-                        guid, Field.Select newState
-                )
-
-            let globalError =
-                match errors.TryGetValue "global_error" with
-                // We found the key in the errors map, then extract the first error
-                | (true, first::_) ->
-                    first.Text
-                | (true, [])
-                | (false, _) -> ""
-
-            { formState with Fields = newFields
-                             GlobalError = globalError }, Cmd.none
-
-        | SelectInitValues (guid, keyValues) ->
-            let newFields =
-                formState.Fields
-                |> List.map (fun (localGuid, field) ->
-                    match localGuid, field with
-                    | localGuid, Field.Select selectState when localGuid = guid ->
-                        let updatedSelectState =
-                            { selectState with Values = keyValues
-                                               IsLoading = false }
-                        (guid, Field.Select updatedSelectState)
-                    | _ ->
-                        (localGuid, field)
-                )
-            { formState with Fields = newFields }, Cmd.none
-
-        | OnError msg ->
-            Browser.console.error msg
-            formState, Cmd.none
+    let render (form : Form<_>) dispatch =
+        form.Fields
+        |> List.map (fun info ->
+            match Map.tryFind info.Type config with
+            | Some config ->
+                let onFieldChange guid =
+                    (fun v -> OnFieldMessage (guid, v)) >> form.OnFormMsg >> dispatch
+                fragment [ FragmentProp.Key info.Id ]
+                    [ config.Render info.State (onFieldChange info.Id) ]
+            | None ->
+                Browser.console.error (sprintf "Seems like you didn't register `FieldType.%s`" (string info.Type))
+                str "Faill"
+        )
+        |> ofList

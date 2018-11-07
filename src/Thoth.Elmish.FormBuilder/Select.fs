@@ -112,7 +112,7 @@ module Select =
             option [ Disabled true ]
                 [ ]
 
-    let render (guid : Guid) onChange (selectState : SelectState) =
+    let render onChange (selectState : SelectState) =
         Field.div [ ]
             [ Label.label [ ]
                 [ str selectState.Label ]
@@ -121,8 +121,7 @@ module Select =
                                   Select.IsFullWidth ]
                     [ select [ Value (selectState.SelectedKey |> Option.defaultValue "")
                                OnChange (fun ev ->
-                                    let newValue = ev.Value |> string
-                                    onChange (guid, newValue)
+                                    ev.Value |> onChange
                                 ) ]
                         [ yield renderPlaceHolder selectState.Placeholder
                           yield! (List.map renderOption selectState.Values) ] ] ]

@@ -79,7 +79,7 @@ module Input =
                           ValidationInputState= Valid }
         |> applyValidators
 
-    let render (guid : Guid) onChange (inputState : InputState) =
+    let render onChange (inputState : InputState) =
         Field.div [ ]
             [ Label.label [ ]
                 [ str inputState.Label ]
@@ -87,8 +87,7 @@ module Input =
                 [ Input.input [ Input.Value inputState.Value
                                 Input.Placeholder (inputState.Placeholder |> Option.defaultValue "")
                                 Input.OnChange (fun ev ->
-                                    let newValue = ev.Value |> string
-                                    onChange (guid, newValue)
+                                    ev.Value |> onChange
                                 ) ] ]
               Help.help [ Help.Color IsDanger ]
                 [ str inputState.ValidationInputState.ToText ] ]
