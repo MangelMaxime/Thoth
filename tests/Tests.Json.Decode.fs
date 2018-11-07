@@ -208,6 +208,9 @@ type MyObj2 =
     { Enabled: bool
       Shape: Shape option }
 
+type RecordWithPrivateConstructor = private { Foo1: int; Foo2: float }
+type UnionWithPrivateConstructor = private Bar of string | Baz
+
 exception CustomException
 
 let tests : Test =
@@ -2211,5 +2214,15 @@ I run into a `fail` decoder: Class types cannot be automatically deserialized: T
                     Ok ({ Maybe = None
                           Must = "must value" } : TestMaybeRecord)
                 equal expected actual
+
+            testCase "Auto.fromString works with records with private constructors" <| fun _ ->
+                let json = """{ "foo1": 5, "foo2": 7.8 }"""
+                Decode.Auto.fromString(json, isCamelCase=true)
+                |> equal (Ok ({ Foo1 = 5; Foo2 = 7.8 }: RecordWithPrivateConstructor))
+
+            testCase "Auto.fromString works with unions with private constructors" <| fun _ ->
+                let json = """[ "Baz", ["Bar", "foo"]]"""
+                Decode.Auto.fromString<UnionWithPrivateConstructor list>(json, isCamelCase=true)
+                |> equal (Ok [Baz; Bar "foo"])
         ]
     ]
