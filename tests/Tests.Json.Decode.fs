@@ -155,6 +155,17 @@ type TestMaybeRecord =
     { Maybe : string option
       Must : string }
 
+type BaseClass =
+    class end
+
+type RecordWithOptionalClass =
+    { MaybeClass : BaseClass option
+      Must : string }
+
+type RecordWithRequiredClass =
+    { Class : BaseClass
+      Must : string }
+
 let jsonRecord =
     """{ "a": 1.0,
          "b": 2.0,
@@ -2134,6 +2145,63 @@ Expecting an object with a field named `radius` but instead got:
                 let expected =
                     Ok ({ Maybe = None
                           Must = "must value" } : TestMaybeRecord)
+                equal expected actual
+
+            testCase "Auto.fromString works for records with `null` for the optional field value on classes" <| fun _ ->
+                let json = """{ "maybeClass" : null, "must": "must value"}"""
+                let actual = Decode.Auto.fromString<RecordWithOptionalClass>(json, isCamelCase=true)
+                let expected =
+                    Ok ({ MaybeClass = None
+                          Must = "must value" } : RecordWithOptionalClass)
+                equal expected actual
+
+            testCase "Auto.fromString returns an Error for field using a non optional class" <| fun _ ->
+                let json = """{ "class" : null, "must": "must value"}"""
+                let actual = Decode.Auto.fromString<RecordWithRequiredClass>(json, isCamelCase=true)
+                #if FABLE_COMPILER
+                let expected =
+                    Error (
+                        """
+Error at: `$.class`
+I run into a `fail` decoder: Class types cannot be automatically deserialized: Tests.Decode.BaseClass
+                        """.Trim())
+                #else
+                let expected =
+                    Error (
+                        """
+Error at: `$.class`
+I run into a `fail` decoder: Class types cannot be automatically deserialized: Tests.Decode+BaseClass
+                        """.Trim())
+                #endif
+                equal expected actual
+
+            testCase "Auto.fromString works for Class marked as optional" <| fun _ ->
+                let json = """{ }"""
+
+                let actual = Decode.Auto.fromString<BaseClass option>(json, isCamelCase=true)
+                let expected = Ok None
+                equal expected actual
+
+            testCase "Auto.fromString returns an Error for Class" <| fun _ ->
+                let json = """{ }"""
+
+                let actual = Decode.Auto.fromString<BaseClass>(json, isCamelCase=true)
+                #if FABLE_COMPILER
+                let expected =
+                    Error (
+                        """
+Error at: `$`
+I run into a `fail` decoder: Class types cannot be automatically deserialized: Tests.Decode.BaseClass
+                        """.Trim())
+                #else
+                let expected =
+                    Error (
+                        """
+Error at: `$`
+I run into a `fail` decoder: Class types cannot be automatically deserialized: Tests.Decode+BaseClass
+                        """.Trim())
+                #endif
+
                 equal expected actual
 
             testCase "Auto.fromString works for records missing an optional field" <| fun _ ->
