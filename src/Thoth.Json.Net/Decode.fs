@@ -956,7 +956,7 @@ module Decode =
                 |> Result.map (fun values -> FSharpValue.MakeUnion(uci, List.toArray values))
 
     and private autoDecodeRecordsAndUnions (t: System.Type) (isCamelCase : bool) : BoxedDecoder =
-        if FSharpType.IsRecord(t) then
+        if FSharpType.IsRecord(t, System.Reflection.BindingFlags.NonPublic) then
             boxDecoder(fun path value ->
                 let decoders =
                     FSharpType.GetRecordFields(t)
@@ -983,7 +983,7 @@ module Decode =
                         fieldType, name, autoDecoder isCamelCase propertyType)
                 autoObject decoders path value
                 |> Result.map (fun xs -> FSharpValue.MakeRecord(t, List.toArray xs)))
-        elif FSharpType.IsUnion(t) then
+        elif FSharpType.IsUnion(t, System.Reflection.BindingFlags.NonPublic) then
             boxDecoder(fun path (value: JToken) ->
                 if Helpers.isString(value) then
                     let name = Helpers.asString value
