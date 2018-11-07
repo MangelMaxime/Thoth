@@ -155,6 +155,10 @@ type TestMaybeRecord =
     { Maybe : string option
       Must : string }
 
+type TestMaybeRecord2 =
+    { Maybe : System.Collections.Generic.List<string> option
+      Must : string }
+
 let jsonRecord =
     """{ "a": 1.0,
          "b": 2.0,
@@ -2134,6 +2138,14 @@ Expecting an object with a field named `radius` but instead got:
                 let expected =
                     Ok ({ Maybe = None
                           Must = "must value" } : TestMaybeRecord)
+                equal expected actual
+
+            testCase "Auto.fromString works for records with `null` for the optional field value on classes" <| fun _ ->
+                let json = """{ "maybe" : null, "must": "must value"}"""
+                let actual = Decode.Auto.fromString<TestMaybeRecord2>(json, isCamelCase=true)
+                let expected =
+                    Ok ({ Maybe = None
+                          Must = "must value" } : TestMaybeRecord2)
                 equal expected actual
 
             testCase "Auto.fromString works for records missing an optional field" <| fun _ ->
