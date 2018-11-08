@@ -1,3 +1,7 @@
+#### 2.5.0
+
+* Make auto decoder support record/unions with private constructors
+
 #### 2.4.0
 
 * Make auto decoder succeeds on Class marked as optional

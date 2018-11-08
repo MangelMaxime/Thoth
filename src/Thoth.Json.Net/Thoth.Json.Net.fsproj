@@ -7,7 +7,7 @@
         <RepositoryUrl>https://github.com/MangelMaxime/Thoth</RepositoryUrl>
         <PackageTags>fsharp;json</PackageTags>
         <Authors>Maxime Mangel</Authors>
-        <Version>2.4.0</Version>
+        <Version>2.5.0</Version>
     </PropertyGroup>
     <PropertyGroup>
         <TargetFrameworks>netstandard2.0;net46</TargetFrameworks>
