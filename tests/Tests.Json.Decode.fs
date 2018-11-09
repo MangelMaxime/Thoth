@@ -2224,5 +2224,14 @@ I run into a `fail` decoder: Class types cannot be automatically deserialized: T
                 let json = """[ "Baz", ["Bar", "foo"]]"""
                 Decode.Auto.fromString<UnionWithPrivateConstructor list>(json, isCamelCase=true)
                 |> equal (Ok [Baz; Bar "foo"])
+
+            #if !FABLE_COMPILER
+            testCase "Newtonsoft.Json converter works with camelCased json objects" <| fun _ ->
+                let json = """{ "id" : 0, "name": "maxime", "email": "mail@domain.com", "followers": 0 }"""
+                let settings = Newtonsoft.Json.JsonSerializerSettings(Converters=Converters.All)
+                settings.ContractResolver <-  Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+                Newtonsoft.Json.JsonConvert.DeserializeObject<_>(json, settings)
+                |> equal ({ Id = 0; Name = "maxime"; Email = "mail@domain.com"; Followers = 0 }: User)
+            #endif
         ]
     ]

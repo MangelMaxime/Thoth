@@ -9,6 +9,7 @@ open System.Collections.Concurrent
 open System.Reflection
 open FSharp.Reflection
 open Newtonsoft.Json
+open Newtonsoft.Json.Linq
 
 let private advance(reader: JsonReader) =
     reader.Read() |> ignore
@@ -24,14 +25,14 @@ let private readElements(reader: JsonReader, itemTypes: Type[], serializer: Json
     upcast elems
 
 let private getUci (reader: JsonReader) t name =
-    FSharpType.GetUnionCases(t)
+    FSharpType.GetUnionCases(t, allowAccessToPrivateRepresentation=true)
     |> Array.tryFind (fun uci -> uci.Name = name)
     |> function
         | Some uci -> uci
         | None -> failwithf "Cannot find case %s in %s (path: %s)" name (string t) reader.Path
 
 let private makeUnion (reader: JsonReader) uci values =
-    try FSharpValue.MakeUnion(uci, values)
+    try FSharpValue.MakeUnion(uci, values, allowAccessToPrivateRepresentation=true)
     with ex -> failwithf "Cannot create union %s (case %s) with %A (path: %s): %s"
                     (string uci.DeclaringType) uci.Name values reader.Path ex.Message
 
@@ -41,7 +42,7 @@ type OptionConverter() =
         t.Name = "FSharpOption`1" && t.Namespace = "Microsoft.FSharp.Core"
     override __.WriteJson(writer, value, serializer) =
         let t = value.GetType()
-        let _, fields = FSharpValue.GetUnionFields(value, t)
+        let _, fields = FSharpValue.GetUnionFields(value, t, allowAccessToPrivateRepresentation=true)
         if fields.Length = 0
         then writer.WriteNull()
         else serializer.Serialize(writer, fields.[0])
@@ -51,15 +52,37 @@ type OptionConverter() =
         | _ -> let value = serializer.Deserialize(reader, t.GenericTypeArguments.[0])
                makeUnion reader (getUci reader t "Some") [|value|]
 
+/// Newtonsoft.Json is capable of converting F# records but it fails if the constructor is private
+type RecordConverter() =
+    inherit JsonConverter()
+    override __.CanConvert(t) =
+        FSharpType.IsRecord(t, allowAccessToPrivateRepresentation=true)
+    override __.WriteJson(writer, value, serializer) =
+        let fieldInfos = FSharpType.GetRecordFields(value.GetType(), allowAccessToPrivateRepresentation=true)
+        let fields = FSharpValue.GetRecordFields(value, allowAccessToPrivateRepresentation=true)
+        writer.WriteStartObject()
+        let useCamelCase = serializer.ContractResolver :? Serialization.CamelCasePropertyNamesContractResolver
+        for i=0 to fields.Length - 1 do
+            let name = fieldInfos.[i].Name
+            let name = if useCamelCase then name.[..0].ToLowerInvariant() + name.[1..] else name
+            writer.WritePropertyName(name)
+            serializer.Serialize(writer, fields.[i])
+        writer.WriteEndObject()
+    // TODO: This won't work for records with private constructors, but it's ok
+    // because we're using Decode.Auto.fromString which doesn't call the converters
+    override __.ReadJson(reader, t, _existingValue, serializer) =
+        failwith "Reading is not implemented for RecordConverter"
+    override __.CanRead = false
+
 type UnionConverter() =
     inherit JsonConverter()
     override __.CanConvert(t) =
-        FSharpType.IsUnion t
+        FSharpType.IsUnion(t, allowAccessToPrivateRepresentation=true)
         && t.Name <> "FSharpList`1"
         && t.Name <> "FSharpOption`1"
     override __.WriteJson(writer, value, serializer) =
         let t = value.GetType()
-        let uci, fields = FSharpValue.GetUnionFields(value, t)
+        let uci, fields = FSharpValue.GetUnionFields(value, t, allowAccessToPrivateRepresentation=true)
         if fields.Length = 0 then
             serializer.Serialize(writer, uci.Name)
         else
@@ -142,42 +165,14 @@ type MapConverter() =
         | token -> failwithf "Expecting array for map got %s (path: %s)"
                         (Enum.GetName(typeof<JsonToken>, token)) reader.Path
 
-let converters =
+let All =
     [|
         OptionConverter() :> JsonConverter
         UnionConverter() :> JsonConverter
+        RecordConverter() :> JsonConverter
         TupleConverter() :> JsonConverter
         MapConverter() :> JsonConverter
     |]
-
-type CacheConverter(converters: JsonConverter[]) =
-    inherit JsonConverter()
-    let cache = ConcurrentDictionary<Type, JsonConverter>()
-    static let mutable singleton: CacheConverter option = None
-    static member Singleton =
-        match singleton with
-        | Some x -> x
-        | None ->
-            let x = CacheConverter(converters)
-            singleton <- Some x
-            x
-    override __.CanConvert(t) =
-        let conv =
-            cache.GetOrAdd(t, fun t ->
-                converters
-                |> Array.tryFind (fun conv -> conv.CanConvert(t))
-                |> Option.toObj)
-        not(isNull conv)
-    override __.WriteJson(writer, value, serializer) =
-        match cache.TryGetValue(value.GetType()) with
-        | false, _
-        | true, null -> serializer.Serialize(writer, value)
-        | true, conv -> conv.WriteJson(writer, value, serializer)
-    override __.ReadJson(reader, t, existingValue, serializer) =
-        match cache.TryGetValue(t) with
-        | false, _
-        | true, null -> serializer.Deserialize(reader, t)
-        | true, conv -> conv.ReadJson(reader, t, existingValue, serializer)
 
 #if INTERACTIVE
 let encodeWithConverter<'T> (converter: JsonConverter) (space: int) (value: obj) : string =

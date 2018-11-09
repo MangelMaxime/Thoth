@@ -302,7 +302,7 @@ module Encode =
     type Auto =
         static member toString(space : int, value : obj, ?forceCamelCase : bool) : string =
             let format = if space = 0 then Formatting.None else Formatting.Indented
-            let settings = JsonSerializerSettings(Converters = [|Converters.CacheConverter.Singleton|],
+            let settings = JsonSerializerSettings(Converters = Converters.All,
                                                   Formatting = format)
 
             if defaultArg forceCamelCase false then

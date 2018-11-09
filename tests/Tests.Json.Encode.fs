@@ -27,6 +27,9 @@ type SmallRecord =
             "fieldA", Encode.string x.fieldA
         ]
 
+type RecordWithPrivateConstructor = private { Foo1: int; Foo2: float }
+type UnionWithPrivateConstructor = private Bar of string | Baz
+
 let tests : Test =
     testList "Thoth.Json.Encode" [
 
@@ -353,6 +356,17 @@ let tests : Test =
                 let actual = Encode.Auto.toString(0, value, true)
                 equal expected actual
 
+            testCase "Auto.toString works with records with private constructors" <| fun _ ->
+                let expected = """{"foo1":5,"foo2":7.8}"""
+                let value = { Foo1 = 5; Foo2 = 7.8 }: RecordWithPrivateConstructor
+                let actual = Encode.Auto.toString(0, value, forceCamelCase=true)
+                equal expected actual
+
+            testCase "Auto.toString works with unions with private constructors" <| fun _ ->
+                let expected = """["Baz",["Bar","foo"]]"""
+                let value = [Baz; Bar "foo"]: UnionWithPrivateConstructor list
+                let actual = Encode.Auto.toString(0, value, forceCamelCase=true)
+                equal expected actual
         ]
 
     ]
