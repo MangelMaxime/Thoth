@@ -87,10 +87,10 @@ module FakeServer =
 
 type Msg =
     | Submit
-    | OnFormMsg of Form.Msg
+    | OnFormMsg of FormBuilder.Types.Msg
 
 type Model =
-    { FormState : Form.Form<Msg> }
+    { FormState : FormBuilder.Types.Form<Msg> }
 
 let getJobsList =
     promise {
@@ -150,12 +150,15 @@ let getJobsList =
 //         addAction submit
 //     }
 
+let x =
+    Fields.Input.create
+
 let form =
     Form.create OnFormMsg
-    |> Form.addField { Type = Form.Input
+    |> Form.addField { Type = "fulma-input"
                        State = { Form.InputState.Empty with Label = "Firstname" }
                        Id = "firstname" }
-    |> Form.addField { Type = Form.Input
+    |> Form.addField { Type = "fulma-input"
                        State = { Form.InputState.Empty with Label = "Surname" }
                        Id = "surname" }
     |> Form.addField { Type = Form.Select

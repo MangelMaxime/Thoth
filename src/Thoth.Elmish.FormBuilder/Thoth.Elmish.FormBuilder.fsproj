@@ -17,10 +17,10 @@
         <ProjectReference Include="../../src/Thoth.Elmish/Thoth.Elmish.fsproj" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="Common.fs" />
-        <Compile Include="Button.fs" />
-        <Compile Include="Select.fs" />
-        <Compile Include="Input.fs" />
+        <Compile Include="Types.fs" />
+        <Compile Include="Cmd.fs" />
+        <Compile Include="Fields/Input.fs" />
+        <Compile Include="Fields/Select.fs" />
         <Compile Include="Form.fs" />
         <Compile Include="Builders.fs" />
     </ItemGroup>
