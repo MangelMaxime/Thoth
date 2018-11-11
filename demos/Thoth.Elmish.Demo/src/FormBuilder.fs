@@ -6,10 +6,10 @@ module Demos.FormBuilder
 
 open Elmish
 open Fable.Helpers.React
-open Fulma
 open Thoth.Elmish
 open System
 open Thoth.Elmish.FormBuilder
+open Thoth.Elmish.FormBuilder.Fields
 open Fable.PowerPack
 open Thoth.Json
 
@@ -86,7 +86,7 @@ module FakeServer =
     //     }
 
 type Msg =
-    | Submit
+    // | Submit
     | OnFormMsg of FormBuilder.Types.Msg
 
 type Model =
@@ -150,26 +150,30 @@ let getJobsList =
 //         addAction submit
 //     }
 
-let x =
-    Fields.Input.create
+// TODO: This should be place has a default config in the library
+let config =
+    Map.empty<FormBuilder.Types.FieldType, FormBuilder.Types.FieldConfig>
+    |> Map.add "default-input" FormBuilder.Fields.Input.config
+    |> Map.add "default-select" FormBuilder.Fields.Select.config
+    |> Map.add "default-checkbox" FormBuilder.Fields.Checkbox.config
 
 let form =
     Form.create OnFormMsg
-    |> Form.addField { Type = "fulma-input"
-                       State = { Form.InputState.Empty with Label = "Firstname" }
-                       Id = "firstname" }
-    |> Form.addField { Type = "fulma-input"
-                       State = { Form.InputState.Empty with Label = "Surname" }
-                       Id = "surname" }
-    |> Form.addField { Type = Form.Select
-                       State = { Form.SelectState.Empty
-                                    with Label = "Favorite Language"
-                                         Values = [ ]
-                                         ValuesFromServer = Some getJobsList }
-                       Id = "favLang" }
+    |> Form.addField
+            ( Input.create "Firstname"
+                |> Input.withDefaultRenderer )
+    |> Form.addField
+            ( Input.create "Surname"
+                |> Input.withDefaultRenderer )
+    |> Form.addField
+            ( Select.create "Favorite language"
+                |> Select.withValues
+                    [ "2", "F#"
+                      "300", "Elm" ]
+                |> Select.withDefaultRenderer )
 
 let private init _ =
-    let (formState, formCmds) = Form.init form
+    let (formState, formCmds) = Form.init config form
 
     { FormState = formState }, Cmd.map OnFormMsg formCmds
     // { FormState = form }, Cmd.none
@@ -177,7 +181,7 @@ let private init _ =
 let private update msg model =
     match msg with
     | OnFormMsg msg ->
-        let (formState, formCmd) = Form.update msg model.FormState
+        let (formState, formCmd) = Form.update config msg model.FormState
         { model with FormState = formState }, Cmd.map OnFormMsg formCmd
 
     // | Submit ->
@@ -188,11 +192,13 @@ let private update msg model =
     //     else
     //         { model with FormState = newForm }, Cmd.none
 
+open Fulma
+
 let private view model dispatch =
     Columns.columns [ ]
         [ Column.column [ Column.Width(Screen.All, Column.Is6)
                           Column.Offset(Screen.All, Column.Is3) ]
-            [ Form.render model.FormState dispatch ] ]
+            [ Form.render config model.FormState dispatch ] ]
 
 open Elmish.React
 open Elmish.Debug

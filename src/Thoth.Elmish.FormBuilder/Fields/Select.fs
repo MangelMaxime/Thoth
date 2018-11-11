@@ -1,4 +1,4 @@
-namespace Fulma.FormBuilder
+namespace Thoth.Elmish.FormBuilder.Fields
 
 open Fulma
 open Fable.Helpers.React
@@ -6,6 +6,7 @@ open Fable.Helpers.React.Props
 open Fable.Import
 open Fable.PowerPack
 open Thoth.Elmish
+open System
 
 module Select =
 
@@ -18,14 +19,6 @@ module Select =
           Values : (Key * string) list
           IsLoading : bool
           ValuesFromServer : JS.Promise<(Key * string) list> option }
-
-        static member Empty =
-            { Label = ""
-              Placeholder = None
-              SelectedKey = None
-              Values = []
-              IsLoading = false
-              ValuesFromServer = None }
 
     type Msg =
         | ChangeValue of string
@@ -47,24 +40,22 @@ module Select =
             option [ Disabled true ]
                 [ ]
 
-    let init (state : FormBuilder.Types.FieldState) =
+    let private init (state : FormBuilder.Types.FieldState) =
         let state = state :?> SelectState
-        let cmd =
-            match state.ValuesFromServer with
-            | Some fetchKeyValues ->
-                let request () =
-                    promise {
-                        let! keyValues = fetchKeyValues
-                        return ReceivedValueFromServer keyValues
-                    }
 
-                FormBuilder.Cmd.ofPromise request ()
+        match state.ValuesFromServer with
+        | Some fetchKeyValues ->
+            let request () =
+                promise {
+                    let! keyValues = fetchKeyValues
+                    return ReceivedValueFromServer keyValues
+                }
 
-            | None -> FormBuilder.Cmd.none
+            box { state with IsLoading = true }, FormBuilder.Cmd.ofPromise request ()
 
-        box { state with IsLoading = true }, cmd
+        | None -> box state, FormBuilder.Cmd.none
 
-    let update (msg : FormBuilder.Types.FieldMsg) (state : FormBuilder.Types.FieldState) =
+    let private update (msg : FormBuilder.Types.FieldMsg) (state : FormBuilder.Types.FieldState) =
         let msg = msg :?> Msg
         let state = state :?> SelectState
 
@@ -76,7 +67,7 @@ module Select =
             box { state with IsLoading = false
                              Values = values }, FormBuilder.Cmd.none
 
-    let render (state : FormBuilder.Types.FieldState) (onChange : FormBuilder.Types.IFieldMsg -> unit) =
+    let private render (state : FormBuilder.Types.FieldState) (onChange : FormBuilder.Types.IFieldMsg -> unit) =
         let state : SelectState = state :?> SelectState
         Field.div [ ]
             [ Label.label [ ]
@@ -95,6 +86,29 @@ module Select =
             //   Help.help [ Help.Color IsDanger ]
             //     [ str state.ValidationSelectState.ToText ]
                  ]
+
+    let config : FormBuilder.Types.FieldConfig =
+        { Render = render
+          Update = update
+          Init = init }
+
+
+    let create (label : string) : SelectState =
+        { Label = label
+          Placeholder = None
+          SelectedKey = None
+          Values = []
+          IsLoading = false
+          ValuesFromServer = None }
+
+    let withValues (values : (Key * string) list) (state : SelectState) =
+        { state with Values = values }
+
+    let withDefaultRenderer (state : SelectState) : FormBuilder.Types.Field =
+        { Type = "default-select"
+          State = state
+          Guid = Guid.NewGuid() }
+
 
     // type SelectBuilder() =
 

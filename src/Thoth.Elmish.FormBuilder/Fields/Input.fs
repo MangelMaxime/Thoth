@@ -3,6 +3,7 @@ namespace Thoth.Elmish.FormBuilder.Fields
 open Fulma
 open Fable.Helpers.React
 open Thoth.Elmish
+open System
 
 module FormCmd = Thoth.Elmish.FormBuilder.Cmd
 
@@ -17,10 +18,10 @@ module Input =
         | ChangeValue of string
         interface FormBuilder.Types.IFieldMsg
 
-    let init (state : FormBuilder.Types.FieldState) =
+    let private init (state : FormBuilder.Types.FieldState) =
         state, FormCmd.none
 
-    let update (msg : FormBuilder.Types.FieldMsg) (state : FormBuilder.Types.FieldState) =
+    let private update (msg : FormBuilder.Types.FieldMsg) (state : FormBuilder.Types.FieldState) =
         let msg = msg :?> Msg
         let state = state :?> InputState
 
@@ -28,7 +29,7 @@ module Input =
         | ChangeValue newValue ->
             box { state with Value = newValue }, FormCmd.none
 
-    let render (state : FormBuilder.Types.FieldState) (onChange : FormBuilder.Types.IFieldMsg -> unit) =
+    let private render (state : FormBuilder.Types.FieldState) (onChange : FormBuilder.Types.IFieldMsg -> unit) =
         let state : InputState = state :?> InputState
         Field.div [ ]
             [ Label.label [ ]
@@ -43,12 +44,22 @@ module Input =
             //     [ str state.ValidationInputState.ToText ]
                 ]
 
+    let config : FormBuilder.Types.FieldConfig =
+        { Render = render
+          Update = update
+          Init = init }
+
     let create (label : string) : InputState =
-        { Label = ""
+        { Label = label
           Value = "" }
 
     let withValue (value : string) (state : InputState) =
         { state with Value = value }
+
+    let withDefaultRenderer (state : InputState) : FormBuilder.Types.Field =
+        { Type = "default-input"
+          State = state
+          Guid = Guid.NewGuid() }
 
     // type InputBuilder() =
 

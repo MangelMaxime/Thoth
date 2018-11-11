@@ -11,7 +11,6 @@
   <ItemGroup>
     <Compile Include="src/Debouncer.fs" />
     <Compile Include="src/Toast.fs" />
-    <Compile Include="src/Fulma.FormBuilder/Config.fs" />
     <Compile Include="src/FormBuilder.fs" />
     <Compile Include="src/App.fs" />
   </ItemGroup>

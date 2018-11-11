@@ -3,6 +3,7 @@ namespace Thoth.Elmish.FormBuilder
 open Thoth.Elmish
 open Fable.Import
 open Elmish
+open System
 
 module Types =
 
@@ -23,10 +24,6 @@ module Types =
     /// Needs to be unique per field type in your `Config`
     type FieldType = string
 
-    /// Type alias to identify a field in a form
-    /// Needs to be unique per field
-    type FieldId = string
-
     /// Type alias for the field `State`, should be casted
     type FieldState = obj
 
@@ -40,11 +37,11 @@ module Types =
           /// Current state of the field in the form
           State : FieldState
           /// Unique Id of the field in the form
-          Id : FieldId }
+          Guid : Guid }
 
     type Msg =
-        | DebouncerSelfMsg of Debouncer.SelfMessage<Msg>
-        | OnFieldMessage of FieldId * FieldState
+        // | DebouncerSelfMsg of Debouncer.SelfMessage<Msg>
+        | OnFieldMessage of Guid * FieldState
 
     type Form<'AppMsg> =
         { Fields : Field list
@@ -53,7 +50,7 @@ module Types =
     /// Record to config a field behavior
     type FieldConfig =
         { Render : FieldState -> (IFieldMsg -> unit) -> React.ReactElement
-          Update : FieldMsg -> FieldState -> FieldState * (FieldId -> Cmd<Msg>)
-          Init : FieldState -> FieldState * (FieldId -> Cmd<Msg>) }
+          Update : FieldMsg -> FieldState -> FieldState * (Guid -> Cmd<Msg>)
+          Init : FieldState -> FieldState * (Guid -> Cmd<Msg>) }
 
     type Config = Map<FieldType, FieldConfig>

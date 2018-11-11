@@ -19,6 +19,7 @@
     <ItemGroup>
         <Compile Include="Types.fs" />
         <Compile Include="Cmd.fs" />
+        <Compile Include="Fields/Checkbox.fs" />
         <Compile Include="Fields/Input.fs" />
         <Compile Include="Fields/Select.fs" />
         <Compile Include="Form.fs" />
