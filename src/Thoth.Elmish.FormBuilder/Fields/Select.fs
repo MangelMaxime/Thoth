@@ -12,7 +12,7 @@ module Select =
 
     type Key = string
 
-    type SelectState =
+    type State =
         { Label : string
           Placeholder : (Key * string) option
           SelectedKey : Key option
@@ -41,7 +41,7 @@ module Select =
                 [ ]
 
     let private init (state : FormBuilder.Types.FieldState) =
-        let state = state :?> SelectState
+        let state = state :?> State
 
         match state.ValuesFromServer with
         | Some fetchKeyValues ->
@@ -57,7 +57,7 @@ module Select =
 
     let private update (msg : FormBuilder.Types.FieldMsg) (state : FormBuilder.Types.FieldState) =
         let msg = msg :?> Msg
-        let state = state :?> SelectState
+        let state = state :?> State
 
         match msg with
         | ChangeValue selectedKey ->
@@ -68,7 +68,7 @@ module Select =
                              Values = values }, FormBuilder.Cmd.none
 
     let private render (state : FormBuilder.Types.FieldState) (onChange : FormBuilder.Types.IFieldMsg -> unit) =
-        let state : SelectState = state :?> SelectState
+        let state : State = state :?> State
         Field.div [ ]
             [ Label.label [ ]
                 [ str state.Label ]
@@ -84,7 +84,7 @@ module Select =
                           |> List.map renderOption
                           |> ofList ] ] ]
             //   Help.help [ Help.Color IsDanger ]
-            //     [ str state.ValidationSelectState.ToText ]
+            //     [ str state.ValidationState.ToText ]
                  ]
 
     let config : FormBuilder.Types.FieldConfig =
@@ -93,7 +93,7 @@ module Select =
           Init = init }
 
 
-    let create (label : string) : SelectState =
+    let create (label : string) : State =
         { Label = label
           Placeholder = None
           SelectedKey = None
@@ -101,10 +101,13 @@ module Select =
           IsLoading = false
           ValuesFromServer = None }
 
-    let withValues (values : (Key * string) list) (state : SelectState) =
+    let withSelectedKey (key : Key ) (state : State) =
+        { state with SelectedKey = Some key }
+
+    let withValues (values : (Key * string) list) (state : State) =
         { state with Values = values }
 
-    let withDefaultRenderer (state : SelectState) : FormBuilder.Types.Field =
+    let withDefaultRenderer (state : State) : FormBuilder.Types.Field =
         { Type = "default-select"
           State = state
           Guid = Guid.NewGuid() }

@@ -8,7 +8,7 @@ open System
 module FormCmd = Thoth.Elmish.FormBuilder.Cmd
 
 [<RequireQualifiedAccess>]
-module Input =
+module Textarea =
 
     type State =
         { Label : string
@@ -35,11 +35,11 @@ module Input =
             [ Label.label [ ]
                 [ str state.Label ]
               Control.div [ ]
-                [ Input.input [ Input.Value state.Value
-                                // Input.Placeholder (state.Placeholder |> Option.defaultValue "")
-                                Input.OnChange (fun ev ->
-                                    ev.Value |> ChangeValue |> onChange
-                                ) ] ]
+                [ Textarea.textarea [ Textarea.Value state.Value
+                                      Textarea.OnChange (fun ev ->
+                                        ev.Value |> ChangeValue |> onChange
+                                      ) ]
+                    [ ] ]
             //   Help.help [ Help.Color IsDanger ]
             //     [ str state.ValidationState.ToText ]
                 ]
@@ -57,7 +57,7 @@ module Input =
         { state with Value = value }
 
     let withDefaultRenderer (state : State) : FormBuilder.Types.Field =
-        { Type = "default-input"
+        { Type = "default-textarea"
           State = state
           Guid = Guid.NewGuid() }
 

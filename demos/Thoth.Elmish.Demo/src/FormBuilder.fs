@@ -156,6 +156,8 @@ let config =
     |> Map.add "default-input" FormBuilder.Fields.Input.config
     |> Map.add "default-select" FormBuilder.Fields.Select.config
     |> Map.add "default-checkbox" FormBuilder.Fields.Checkbox.config
+    |> Map.add "default-textarea" FormBuilder.Fields.Textarea.config
+    |> Map.add "default-radio-button" FormBuilder.Fields.RadioButton.config
 
 let form =
     Form.create OnFormMsg
@@ -163,14 +165,24 @@ let form =
             ( Input.create "Firstname"
                 |> Input.withDefaultRenderer )
     |> Form.addField
-            ( Input.create "Surname"
-                |> Input.withDefaultRenderer )
-    |> Form.addField
             ( Select.create "Favorite language"
                 |> Select.withValues
                     [ "2", "F#"
                       "300", "Elm" ]
                 |> Select.withDefaultRenderer )
+    |> Form.addField
+            ( Textarea.create "Description"
+                |> Textarea.withDefaultRenderer )
+    |> Form.addField
+            ( Textarea.create "Description"
+                |> Textarea.withDefaultRenderer )
+    |> Form.addField
+            ( RadioButton.create "Gender"
+                |> RadioButton.withValues
+                    [ "1", "Male"
+                      "2", "Female"
+                      "3", "Other" ]
+                |> RadioButton.withDefaultRenderer )
 
 let private init _ =
     let (formState, formCmds) = Form.init config form

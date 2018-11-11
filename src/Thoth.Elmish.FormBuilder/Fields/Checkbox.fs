@@ -11,8 +11,6 @@ module FormCmd = Thoth.Elmish.FormBuilder.Cmd
 [<RequireQualifiedAccess>]
 module Checkbox =
 
-    type Key = string
-
     type CheckboxState =
         { Label : string
           IsChecked : bool }
@@ -41,8 +39,7 @@ module Checkbox =
                                                OnChange (fun _ ->
                                                 onChange ToggleState
                                                ) ] ]
-                      span [ ]
-                        [ str state.Label ] ] ]
+                      str state.Label ] ]
             //   Help.help [ Help.Color IsDanger ]
             //     [ str state.ValidationInputState.ToText ]
                 ]
