@@ -3,8 +3,9 @@ namespace Thoth.Elmish.FormBuilder.Fields
 open Fulma
 open Fable.Helpers.React
 open Fable.Helpers.React.Props
-open Thoth.Elmish
+open Thoth.Elmish.FormBuilder.Types
 open System
+open Thoth.Json
 
 module FormCmd = Thoth.Elmish.FormBuilder.Cmd
 
@@ -17,16 +18,21 @@ module RadioButton =
         { Label : string
           SelectedKey : Key option
           Values : (Key * string) list
-          Group : string }
+          Group : string
+          Validators : Validator list
+          ValidationState : ValidationState
+          JsonLabel : string option }
+
+    and Validator = State -> ValidationState
 
     type Msg =
         | ChangeValue of string
-        interface FormBuilder.Types.IFieldMsg
+        interface IFieldMsg
 
-    let private init (state : FormBuilder.Types.FieldState) =
+    let private init (state : FieldState) =
         state, FormCmd.none
 
-    let private update (msg : FormBuilder.Types.FieldMsg) (state : FormBuilder.Types.FieldState) =
+    let private update (msg : FieldMsg) (state : FieldState) =
         let msg = msg :?> Msg
         let state = state :?> State
 
@@ -34,18 +40,17 @@ module RadioButton =
         | ChangeValue key ->
             box { state with SelectedKey = Some key }, FormCmd.none
 
-    let private renderRadio (group : string) (selectedKey : Key option) (onChange : FormBuilder.Types.IFieldMsg -> unit) (key, value) =
-        Radio.radio [ ]
+    let private renderRadio (group : string) (selectedKey : Key option) (onChange : IFieldMsg -> unit) (key, value) =
+        Radio.radio [ Props [ Prop.Key key ] ]
             [ Radio.input [ Radio.Input.Props [ OnChange (fun _ -> ChangeValue key |> onChange)
                                                 selectedKey
                                                 |> Option.map (fun cKey -> cKey = key)
                                                 |> Option.defaultValue false
-                                                |> Checked
-                                                Prop.Key key ]
+                                                |> Checked ]
                             Radio.Input.Name group ]
               str value ]
 
-    let private render (state : FormBuilder.Types.FieldState) (onChange : FormBuilder.Types.IFieldMsg -> unit) =
+    let private render (state : FieldState) (onChange : IFieldMsg -> unit) =
         let state : State = state :?> State
 
         Field.div [ ]
@@ -59,16 +64,47 @@ module RadioButton =
             //     [ str state.ValidationInputState.ToText ]
                 ]
 
-    let config : FormBuilder.Types.FieldConfig =
+    let private validate (state : FieldState) =
+        let state : State = state :?> State
+        let rec applyValidators (validators : Validator list) (state : State) =
+            match validators with
+                | validator::rest ->
+                    match validator state with
+                    | Valid -> applyValidators rest state
+                    | Invalid msg ->
+                        { state with ValidationState = Invalid msg }
+                | [] -> state
+
+        applyValidators state.Validators state
+        |> toFieldState
+
+    let private isValid (state : FieldState) =
+        let state : State = state :?> State
+        state.ValidationState = Valid
+
+    let private toJson (state : FieldState) =
+        let state : State = state :?> State
+        state.JsonLabel
+            |> Option.defaultValue state.Label, state.SelectedKey
+                                                |> Option.map Encode.string
+                                                |> Option.defaultValue Encode.nil
+
+    let config : FieldConfig =
         { Render = render
           Update = update
-          Init = init }
+          Init = init
+          Validate = validate
+          IsValid = isValid
+          ToJson = toJson }
 
     let create (label : string) : State =
         { Label = label
           SelectedKey = None
           Values = []
-          Group = (Guid.NewGuid()).ToString() }
+          Group = (Guid.NewGuid()).ToString()
+          Validators = [ ]
+          ValidationState = Valid
+          JsonLabel = None }
 
     let withValues (values : (Key * string) list) (state : State) =
         { state with Values = values }
@@ -76,7 +112,7 @@ module RadioButton =
     let withSelectedKey (key : Key ) (state : State) =
         { state with SelectedKey = Some key }
 
-    let withDefaultRenderer (state : State) : FormBuilder.Types.Field =
+    let withDefaultRenderer (state : State) : Field =
         { Type = "default-radio-button"
           State = state
           Guid = Guid.NewGuid() }

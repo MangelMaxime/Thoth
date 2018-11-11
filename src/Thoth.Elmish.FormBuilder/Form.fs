@@ -1,13 +1,11 @@
 namespace Thoth.Elmish.FormBuilder
 
 open Elmish
-open Fulma
 open Fable.Helpers.React
 open Fable.Helpers.React.Props
-open Fable.Import
-open Fable.PowerPack
 open Types
 open System
+open Thoth.Json
 
 module FormCmd = Thoth.Elmish.FormBuilder.Cmd
 
@@ -37,14 +35,27 @@ module Form =
         { form with Fields = form.Fields @ [ securedField ] }
 
     let init (config : Config) (form : Form<_>) =
+        let unkownFields =
+            form.Fields
+            |> List.filter (fun info ->
+                not (Map.containsKey info.Type config)
+            )
+
+        if unkownFields.Length <> 0 then
+            let mutable msg = "You didn't register the following types in your config:"
+
+            for field in unkownFields do
+                msg <- msg + "\n" + "- " + field.Type
+            failwith msg
+
         let mappedFields =
             form.Fields
             |> List.map (fun info ->
-                match Map.tryFind info.Type config with
-                | Some config ->
-                    let newState, cmd = config.Init info.State
-                    { info with State = newState }, cmd info.Guid
-                | None -> failwithf "Seems like you didn't register FieldType: `%s`" (string info.Type)
+                let fieldConfig = Map.find info.Type config
+
+                let newState, cmd = fieldConfig.Init info.State
+                { info with State = newState }, cmd info.Guid
+
             )
 
         let fields = mappedFields |> List.map fst
@@ -59,11 +70,10 @@ module Form =
                 form.Fields
                 |> List.map (fun info ->
                     if info.Guid = fieldId then
-                        match Map.tryFind info.Type config with
-                        | Some config ->
-                            let newState, cmd = config.Update msg info.State
-                            { info with State = newState }, cmd info.Guid
-                        | None -> failwithf "Seems like you didn't register FieldType: `%s`" (string info.Type)
+                        let fieldConfig = Map.find info.Type config
+
+                        let newState, cmd = fieldConfig.Update msg info.State
+                        { info with State = newState }, cmd info.Guid
                     else
                         info, FormCmd.none info.Guid
                 )
@@ -76,14 +86,44 @@ module Form =
     let render (config : Config) (form : Form<_>) dispatch =
         form.Fields
         |> List.map (fun info ->
-            match Map.tryFind info.Type config with
-            | Some config ->
-                let onFieldChange guid =
-                    (fun v -> OnFieldMessage (guid, v)) >> form.OnFormMsg >> dispatch
-                fragment [ FragmentProp.Key (info.Guid.ToString()) ]
-                    [ config.Render info.State (onFieldChange info.Guid) ]
-            | None ->
-                Browser.console.error (sprintf "Seems like you didn't register FieldType: `%s`" (string info.Type))
-                str "Fail"
+            let fieldConfig = Map.find info.Type config
+
+            let onFieldChange guid =
+                (fun v -> OnFieldMessage (guid, v)) >> form.OnFormMsg >> dispatch
+
+            fragment [ FragmentProp.Key (info.Guid.ToString()) ]
+                [ fieldConfig.Render info.State (onFieldChange info.Guid) ]
         )
         |> ofList
+
+    let validate (config : Config) (form : Form<'AppMsg>) : Form<'AppMsg> * bool =
+        let newFields =
+            form.Fields
+            |> List.map (fun field ->
+                let fieldConfig = Map.find field.Type config
+                { field with State = fieldConfig.Validate field.State }
+            )
+
+        let isValid =
+            newFields
+            |> List.filter (fun field ->
+                let fieldConfig = Map.find field.Type config
+                fieldConfig.IsValid field.State
+            )
+            |> List.length
+            |> (=) 0
+
+        { form with Fields = newFields }, isValid
+
+    let toJson (config : Config) (form : Form<'AppMsg>) : string =
+        form.Fields
+        |> List.map (fun field ->
+            let fieldConfig = Map.find field.Type config
+            fieldConfig.ToJson field.State
+        )
+        |> Encode.object
+        #if DEBUG
+        |> Encode.toString 4
+        #else
+        |> Encode.toString 0
+        #endif

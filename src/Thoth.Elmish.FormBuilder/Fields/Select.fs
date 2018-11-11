@@ -5,8 +5,11 @@ open Fable.Helpers.React
 open Fable.Helpers.React.Props
 open Fable.Import
 open Fable.PowerPack
-open Thoth.Elmish
+open Thoth.Elmish.FormBuilder.Types
 open System
+open Thoth.Json
+
+module FormCmd = Thoth.Elmish.FormBuilder.Cmd
 
 module Select =
 
@@ -18,12 +21,17 @@ module Select =
           SelectedKey : Key option
           Values : (Key * string) list
           IsLoading : bool
-          ValuesFromServer : JS.Promise<(Key * string) list> option }
+          ValuesFromServer : JS.Promise<(Key * string) list> option
+          Validators : Validator list
+          ValidationState : ValidationState
+          JsonLabel : string option }
+
+    and Validator = State -> ValidationState
 
     type Msg =
         | ChangeValue of string
         | ReceivedValueFromServer of (Key * string) list
-        interface FormBuilder.Types.IFieldMsg
+        interface IFieldMsg
 
     let private renderOption (key,value) =
         option [ Value key
@@ -40,7 +48,7 @@ module Select =
             option [ Disabled true ]
                 [ ]
 
-    let private init (state : FormBuilder.Types.FieldState) =
+    let private init (state : FieldState) =
         let state = state :?> State
 
         match state.ValuesFromServer with
@@ -51,23 +59,23 @@ module Select =
                     return ReceivedValueFromServer keyValues
                 }
 
-            box { state with IsLoading = true }, FormBuilder.Cmd.ofPromise request ()
+            box { state with IsLoading = true }, FormCmd.ofPromise request ()
 
-        | None -> box state, FormBuilder.Cmd.none
+        | None -> box state, FormCmd.none
 
-    let private update (msg : FormBuilder.Types.FieldMsg) (state : FormBuilder.Types.FieldState) =
+    let private update (msg : FieldMsg) (state : FieldState) =
         let msg = msg :?> Msg
         let state = state :?> State
 
         match msg with
         | ChangeValue selectedKey ->
-            box { state with SelectedKey = Some selectedKey }, FormBuilder.Cmd.none
+            box { state with SelectedKey = Some selectedKey }, FormCmd.none
 
         | ReceivedValueFromServer values ->
             box { state with IsLoading = false
-                             Values = values }, FormBuilder.Cmd.none
+                             Values = values }, FormCmd.none
 
-    let private render (state : FormBuilder.Types.FieldState) (onChange : FormBuilder.Types.IFieldMsg -> unit) =
+    let private render (state : FieldState) (onChange : IFieldMsg -> unit) =
         let state : State = state :?> State
         Field.div [ ]
             [ Label.label [ ]
@@ -87,11 +95,38 @@ module Select =
             //     [ str state.ValidationState.ToText ]
                  ]
 
-    let config : FormBuilder.Types.FieldConfig =
+    let private validate (state : FieldState) =
+        let state : State = state :?> State
+        let rec applyValidators (validators : Validator list) (state : State) =
+            match validators with
+                | validator::rest ->
+                    match validator state with
+                    | Valid -> applyValidators rest state
+                    | Invalid msg ->
+                        { state with ValidationState = Invalid msg }
+                | [] -> state
+
+        applyValidators state.Validators state
+        |> toFieldState
+
+    let private isValid (state : FieldState) =
+        let state : State = state :?> State
+        not state.IsLoading || state.ValidationState = Valid
+
+    let private toJson (state : FieldState) =
+        let state : State = state :?> State
+        state.JsonLabel
+            |> Option.defaultValue state.Label, state.SelectedKey
+                                                |> Option.map Encode.string
+                                                |> Option.defaultValue Encode.nil
+
+    let config : FieldConfig =
         { Render = render
           Update = update
-          Init = init }
-
+          Init = init
+          Validate = validate
+          IsValid = isValid
+          ToJson = toJson }
 
     let create (label : string) : State =
         { Label = label
@@ -99,7 +134,10 @@ module Select =
           SelectedKey = None
           Values = []
           IsLoading = false
-          ValuesFromServer = None }
+          ValuesFromServer = None
+          Validators = [ ]
+          ValidationState = Valid
+          JsonLabel = None }
 
     let withSelectedKey (key : Key ) (state : State) =
         { state with SelectedKey = Some key }
@@ -107,7 +145,7 @@ module Select =
     let withValues (values : (Key * string) list) (state : State) =
         { state with Values = values }
 
-    let withDefaultRenderer (state : State) : FormBuilder.Types.Field =
+    let withDefaultRenderer (state : State) : Field =
         { Type = "default-select"
           State = state
           Guid = Guid.NewGuid() }

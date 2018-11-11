@@ -86,7 +86,7 @@ module FakeServer =
     //     }
 
 type Msg =
-    // | Submit
+    | Submit
     | OnFormMsg of FormBuilder.Types.Msg
 
 type Model =
@@ -174,14 +174,13 @@ let form =
             ( Textarea.create "Description"
                 |> Textarea.withDefaultRenderer )
     |> Form.addField
-            ( Textarea.create "Description"
-                |> Textarea.withDefaultRenderer )
+            ( Checkbox.create "I agree with the terms and conditions"
+                |> Checkbox.withDefaultRenderer )
     |> Form.addField
-            ( RadioButton.create "Gender"
+            ( RadioButton.create "Make your profile public ?"
                 |> RadioButton.withValues
-                    [ "1", "Male"
-                      "2", "Female"
-                      "3", "Other" ]
+                    [ "1", "Yes"
+                      "2", "No" ]
                 |> RadioButton.withDefaultRenderer )
 
 let private init _ =
@@ -197,9 +196,9 @@ let private update msg model =
         { model with FormState = formState }, Cmd.map OnFormMsg formCmd
 
     // | Submit ->
-    //     let (newForm, isValid) = Form.validate model.FormState
+    //     let (newForm, isValid) = Form.validate config model.FormState
     //     if isValid then
-    //         printfn "%s" (Form.toJson newForm)
+    //         printfn "%s" (Form.toJson config newForm)
     //         { model with FormState = Form.setWaiting true newForm }, Cmd.none
     //     else
     //         { model with FormState = newForm }, Cmd.none

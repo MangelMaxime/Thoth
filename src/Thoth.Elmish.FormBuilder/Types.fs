@@ -1,6 +1,6 @@
 namespace Thoth.Elmish.FormBuilder
 
-open Thoth.Elmish
+open Thoth.Json
 open Fable.Import
 open Elmish
 open System
@@ -51,6 +51,11 @@ module Types =
     type FieldConfig =
         { Render : FieldState -> (IFieldMsg -> unit) -> React.ReactElement
           Update : FieldMsg -> FieldState -> FieldState * (Guid -> Cmd<Msg>)
-          Init : FieldState -> FieldState * (Guid -> Cmd<Msg>) }
+          Init : FieldState -> FieldState * (Guid -> Cmd<Msg>)
+          Validate : FieldState -> FieldState
+          IsValid : FieldState -> bool
+          ToJson : FieldState -> string * Encode.Value }
 
     type Config = Map<FieldType, FieldConfig>
+
+    let inline toFieldState state : FieldState = box state

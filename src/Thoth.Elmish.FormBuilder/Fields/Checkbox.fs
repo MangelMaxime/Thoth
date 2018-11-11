@@ -3,35 +3,42 @@ namespace Thoth.Elmish.FormBuilder.Fields
 open Fulma
 open Fable.Helpers.React
 open Fable.Helpers.React.Props
-open Thoth.Elmish
+open Thoth.Elmish.FormBuilder.Types
 open System
+open Thoth.Json
 
 module FormCmd = Thoth.Elmish.FormBuilder.Cmd
 
 [<RequireQualifiedAccess>]
 module Checkbox =
 
-    type CheckboxState =
+    type State =
         { Label : string
-          IsChecked : bool }
+          IsChecked : bool
+          Validators : Validator list
+          ValidationState : ValidationState
+          JsonLabel : string option }
+
+    and Validator = State -> ValidationState
 
     type Msg =
         | ToggleState
-        interface FormBuilder.Types.IFieldMsg
+        interface IFieldMsg
 
-    let private init (state : FormBuilder.Types.FieldState) =
+    let private init (state : FieldState) =
         state, FormCmd.none
 
-    let private update (msg : FormBuilder.Types.FieldMsg) (state : FormBuilder.Types.FieldState) =
+    let private update (msg : FieldMsg) (state : FieldState) =
         let msg = msg :?> Msg
-        let state = state :?> CheckboxState
+        let state = state :?> State
 
         match msg with
         | ToggleState ->
-            box { state with IsChecked = not state.IsChecked }, FormCmd.none
+            { state with IsChecked = not state.IsChecked }
+            |> toFieldState, FormCmd.none
 
-    let private render (state : FormBuilder.Types.FieldState) (onChange : FormBuilder.Types.IFieldMsg -> unit) =
-        let state : CheckboxState = state :?> CheckboxState
+    let private render (state : FieldState) (onChange : IFieldMsg -> unit) =
+        let state : State = state :?> State
         Field.div [ ]
             [ Control.div [ ]
                 [ Checkbox.checkbox [ ]
@@ -44,19 +51,48 @@ module Checkbox =
             //     [ str state.ValidationInputState.ToText ]
                 ]
 
-    let config : FormBuilder.Types.FieldConfig =
+    let private validate (state : FieldState) =
+        let state : State = state :?> State
+        let rec applyValidators (validators : Validator list) (state : State) =
+            match validators with
+                | validator::rest ->
+                    match validator state with
+                    | Valid -> applyValidators rest state
+                    | Invalid msg ->
+                        { state with ValidationState = Invalid msg }
+                | [] -> state
+
+        applyValidators state.Validators state
+        |> toFieldState
+
+    let private isValid (state : FieldState) =
+        let state : State = state :?> State
+        state.ValidationState = Valid
+
+    let private toJson (state : FieldState) =
+        let state : State = state :?> State
+        state.JsonLabel
+            |> Option.defaultValue state.Label, Encode.bool state.IsChecked
+
+    let config : FieldConfig =
         { Render = render
           Update = update
-          Init = init }
+          Init = init
+          Validate = validate
+          IsValid = isValid
+          ToJson = toJson }
 
-    let create (label : string) : CheckboxState =
+    let create (label : string) : State =
         { Label = label
-          IsChecked = false }
+          IsChecked = false
+          Validators = [ ]
+          ValidationState = Valid
+          JsonLabel = None }
 
-    let withValue (value : bool ) (state : CheckboxState) =
+    let withValue (value : bool ) (state : State) =
         { state with IsChecked = value }
 
-    let withDefaultRenderer (state : CheckboxState) : FormBuilder.Types.Field =
+    let withDefaultRenderer (state : State) : Field =
         { Type = "default-checkbox"
           State = state
           Guid = Guid.NewGuid() }

@@ -2,8 +2,9 @@ namespace Thoth.Elmish.FormBuilder.Fields
 
 open Fulma
 open Fable.Helpers.React
-open Thoth.Elmish
+open Thoth.Elmish.FormBuilder.Types
 open System
+open Thoth.Json
 
 module FormCmd = Thoth.Elmish.FormBuilder.Cmd
 
@@ -12,16 +13,21 @@ module Textarea =
 
     type State =
         { Label : string
-          Value : string }
+          Value : string
+          Validators : Validator list
+          ValidationState : ValidationState
+          JsonLabel : string option }
+
+    and Validator = State -> ValidationState
 
     type Msg =
         | ChangeValue of string
-        interface FormBuilder.Types.IFieldMsg
+        interface IFieldMsg
 
-    let private init (state : FormBuilder.Types.FieldState) =
+    let private init (state : FieldState) =
         state, FormCmd.none
 
-    let private update (msg : FormBuilder.Types.FieldMsg) (state : FormBuilder.Types.FieldState) =
+    let private update (msg : FieldMsg) (state : FieldState) =
         let msg = msg :?> Msg
         let state = state :?> State
 
@@ -29,7 +35,7 @@ module Textarea =
         | ChangeValue newValue ->
             box { state with Value = newValue }, FormCmd.none
 
-    let private render (state : FormBuilder.Types.FieldState) (onChange : FormBuilder.Types.IFieldMsg -> unit) =
+    let private render (state : FieldState) (onChange : IFieldMsg -> unit) =
         let state : State = state :?> State
         Field.div [ ]
             [ Label.label [ ]
@@ -44,19 +50,48 @@ module Textarea =
             //     [ str state.ValidationState.ToText ]
                 ]
 
-    let config : FormBuilder.Types.FieldConfig =
+    let private validate (state : FieldState) =
+        let state : State = state :?> State
+        let rec applyValidators (validators : Validator list) (state : State) =
+            match validators with
+                | validator::rest ->
+                    match validator state with
+                    | Valid -> applyValidators rest state
+                    | Invalid msg ->
+                        { state with ValidationState = Invalid msg }
+                | [] -> state
+
+        applyValidators state.Validators state
+        |> toFieldState
+
+    let private isValid (state : FieldState) =
+        let state : State = state :?> State
+        state.ValidationState = Valid
+
+    let private toJson (state : FieldState) =
+        let state : State = state :?> State
+        state.JsonLabel
+            |> Option.defaultValue state.Label, Encode.string state.Value
+
+    let config : FieldConfig =
         { Render = render
           Update = update
-          Init = init }
+          Init = init
+          Validate = validate
+          IsValid = isValid
+          ToJson = toJson }
 
     let create (label : string) : State =
         { Label = label
-          Value = "" }
+          Value = ""
+          Validators = [ ]
+          ValidationState = Valid
+          JsonLabel = None }
 
     let withValue (value : string) (state : State) =
         { state with Value = value }
 
-    let withDefaultRenderer (state : State) : FormBuilder.Types.Field =
+    let withDefaultRenderer (state : State) : Field =
         { Type = "default-textarea"
           State = state
           Guid = Guid.NewGuid() }
