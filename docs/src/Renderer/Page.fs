@@ -20,7 +20,7 @@ module Renderer.Page
                         """
 **Thoth** by [Maxime Mangel](https://twitter.com/MangelMaxime)
 
-Powered by [Fulma](https://mangelmaxime.github.io/Fulma/), [Fable static-page-generator](https://github.com/fable-compiler/static-page-generator) and [Code-Lightner](https://github.com/MangelMaxime/Code-Lightner).
+Powered by [Fulma](https://mangelmaxime.github.io/Fulma/), [Fable static-web-generator](https://github.com/fable-compiler/static-web-generator) and [Code-Lightner](https://github.com/MangelMaxime/Code-Lightner).
                         """
 
             return div [ ]
