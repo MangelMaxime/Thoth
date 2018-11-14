@@ -2,11 +2,10 @@ namespace Thoth.Elmish.FormBuilder.Fields
 
 open Fulma
 open Fable.Helpers.React
+open Thoth.Elmish.FormBuilder
 open Thoth.Elmish.FormBuilder.Types
 open System
 open Thoth.Json
-
-module FormCmd = Thoth.Elmish.FormBuilder.Cmd
 
 [<RequireQualifiedAccess>]
 module Input =
@@ -33,7 +32,8 @@ module Input =
 
         match msg with
         | ChangeValue newValue ->
-            box { state with Value = newValue }, FormCmd.none
+            { state with Value = newValue }
+            |> toFieldState, FormCmd.none
 
     let private render (state : FieldState) (onChange : IFieldMsg -> unit) =
         let state : State = state :?> State
@@ -71,7 +71,7 @@ module Input =
     let private toJson (state : FieldState) =
         let state : State = state :?> State
         state.JsonLabel
-            |> Option.defaultValue state.Label, Encode.string state.Value
+        |> Option.defaultValue state.Label, Encode.string state.Value
 
     let config : FieldConfig =
         { Render = render

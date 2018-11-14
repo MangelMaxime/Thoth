@@ -6,15 +6,17 @@ open Fable.Helpers.React.Props
 open Types
 open System
 open Thoth.Json
-
-module FormCmd = Thoth.Elmish.FormBuilder.Cmd
+open Fulma
+open Fulma.FontAwesome
+open Fable.Import
 
 [<RequireQualifiedAccess>]
 module Form =
 
     let create (onFormMsg : Msg -> 'AppMsg) : Form<'AppMsg> =
         { Fields = []
-          OnFormMsg = onFormMsg }
+          OnFormMsg = onFormMsg
+          IsWaiting = false }
 
     let addField (field : Field) (form : Form<_>) =
         // Make sure that the field has a unique GUID
@@ -83,18 +85,35 @@ module Form =
 
             { form with Fields = fields }, Cmd.batch cmds
 
-    let render (config : Config) (form : Form<_>) dispatch =
-        form.Fields
-        |> List.map (fun info ->
-            let fieldConfig = Map.find info.Type config
+    let render (config : Config) (form : Form<_>) dispatch (actions : React.ReactElement) =
+        let fields =
+            form.Fields
+            |> List.map (fun info ->
+                let fieldConfig = Map.find info.Type config
 
-            let onFieldChange guid =
-                (fun v -> OnFieldMessage (guid, v)) >> form.OnFormMsg >> dispatch
+                let onFieldChange guid =
+                    (fun v -> OnFieldMessage (guid, v)) >> form.OnFormMsg >> dispatch
 
-            fragment [ FragmentProp.Key (info.Guid.ToString()) ]
-                [ fieldConfig.Render info.State (onFieldChange info.Guid) ]
-        )
-        |> ofList
+                fragment [ FragmentProp.Key (info.Guid.ToString()) ]
+                    [ fieldConfig.Render info.State (onFieldChange info.Guid) ]
+            )
+            |> ofList
+
+
+        let formClass =
+            if form.IsWaiting then
+                "thoth-form is-waiting"
+            else
+                "thoth-form"
+
+        div [ Class formClass ]
+            [ div [ Class "wait-container" ]
+                [ Icon.faIcon [ ]
+                    [ Fa.icon Fa.I.Spinner
+                      Fa.fa3x
+                      Fa.spin ] ]
+              fields
+              actions ]
 
     let validate (config : Config) (form : Form<'AppMsg>) : Form<'AppMsg> * bool =
         let newFields =
@@ -108,7 +127,7 @@ module Form =
             newFields
             |> List.filter (fun field ->
                 let fieldConfig = Map.find field.Type config
-                fieldConfig.IsValid field.State
+                not (fieldConfig.IsValid field.State)
             )
             |> List.length
             |> (=) 0
@@ -127,3 +146,9 @@ module Form =
         #else
         |> Encode.toString 0
         #endif
+
+    let setWaiting (isWaiting : bool) (form : Form<_>) : Form<_> =
+        { form with IsWaiting = isWaiting }
+
+
+    let isWaiting (form : Form<_>) = form.IsWaiting

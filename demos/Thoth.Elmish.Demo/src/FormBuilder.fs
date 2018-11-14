@@ -151,7 +151,7 @@ let getJobsList =
 //     }
 
 // TODO: This should be place has a default config in the library
-let config =
+let config : FormBuilder.Types.Config =
     Map.empty<FormBuilder.Types.FieldType, FormBuilder.Types.FieldConfig>
     |> Map.add "default-input" FormBuilder.Fields.Input.config
     |> Map.add "default-select" FormBuilder.Fields.Select.config
@@ -195,21 +195,40 @@ let private update msg model =
         let (formState, formCmd) = Form.update config msg model.FormState
         { model with FormState = formState }, Cmd.map OnFormMsg formCmd
 
-    // | Submit ->
-    //     let (newForm, isValid) = Form.validate config model.FormState
-    //     if isValid then
-    //         printfn "%s" (Form.toJson config newForm)
-    //         { model with FormState = Form.setWaiting true newForm }, Cmd.none
-    //     else
-    //         { model with FormState = newForm }, Cmd.none
+    | Submit ->
+        let (newForm, isValid) = Form.validate config model.FormState
+        printfn "%b" isValid
+        if isValid then
+            printfn "%s" (Form.toJson config newForm)
+            { model with FormState = Form.setWaiting true newForm }, Cmd.none
+        else
+            { model with FormState = newForm }, Cmd.none
 
 open Fulma
+
+let private formActions model dispatch =
+    Field.div [ Field.IsGrouped
+                Field.IsGroupedCentered ]
+        [ Control.div [ ]
+            [ Button.button [ Button.Color IsPrimary
+                              Button.IsLoading (Form.isWaiting model.FormState)
+                              Button.OnClick (fun _ ->
+                                dispatch Submit
+                              ) ]
+                [ str "Submit" ] ]
+          Control.div [ ]
+            [ Button.button [ ]
+                [ str "Reset" ] ] ]
 
 let private view model dispatch =
     Columns.columns [ ]
         [ Column.column [ Column.Width(Screen.All, Column.Is6)
                           Column.Offset(Screen.All, Column.Is3) ]
-            [ Form.render config model.FormState dispatch ] ]
+            [ Form.render
+                config
+                model.FormState
+                dispatch
+                (formActions model dispatch) ] ]
 
 open Elmish.React
 open Elmish.Debug

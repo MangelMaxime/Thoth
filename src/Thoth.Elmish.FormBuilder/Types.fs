@@ -45,9 +45,10 @@ module Types =
 
     type Form<'AppMsg> =
         { Fields : Field list
-          OnFormMsg : Msg -> 'AppMsg }
+          OnFormMsg : Msg -> 'AppMsg
+          IsWaiting : bool }
 
-    /// Record to config a field behavior
+    /// Serves as an implementation contract for the fields
     type FieldConfig =
         { Render : FieldState -> (IFieldMsg -> unit) -> React.ReactElement
           Update : FieldMsg -> FieldState -> FieldState * (Guid -> Cmd<Msg>)
@@ -56,6 +57,7 @@ module Types =
           IsValid : FieldState -> bool
           ToJson : FieldState -> string * Encode.Value }
 
+    /// Types alias used to represents a form config
     type Config = Map<FieldType, FieldConfig>
 
     let inline toFieldState state : FieldState = box state

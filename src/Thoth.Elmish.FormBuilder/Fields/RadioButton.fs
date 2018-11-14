@@ -3,11 +3,10 @@ namespace Thoth.Elmish.FormBuilder.Fields
 open Fulma
 open Fable.Helpers.React
 open Fable.Helpers.React.Props
+open Thoth.Elmish.FormBuilder
 open Thoth.Elmish.FormBuilder.Types
 open System
 open Thoth.Json
-
-module FormCmd = Thoth.Elmish.FormBuilder.Cmd
 
 [<RequireQualifiedAccess>]
 module RadioButton =
@@ -38,7 +37,8 @@ module RadioButton =
 
         match msg with
         | ChangeValue key ->
-            box { state with SelectedKey = Some key }, FormCmd.none
+            { state with SelectedKey = Some key }
+            |> toFieldState, FormCmd.none
 
     let private renderRadio (group : string) (selectedKey : Key option) (onChange : IFieldMsg -> unit) (key, value) =
         Radio.radio [ Props [ Prop.Key key ] ]
@@ -85,9 +85,9 @@ module RadioButton =
     let private toJson (state : FieldState) =
         let state : State = state :?> State
         state.JsonLabel
-            |> Option.defaultValue state.Label, state.SelectedKey
-                                                |> Option.map Encode.string
-                                                |> Option.defaultValue Encode.nil
+        |> Option.defaultValue state.Label, state.SelectedKey
+                                            |> Option.map Encode.string
+                                            |> Option.defaultValue Encode.nil
 
     let config : FieldConfig =
         { Render = render

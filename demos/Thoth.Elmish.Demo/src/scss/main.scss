@@ -11,6 +11,8 @@ $body-size: 14px;
 @import './toast.scss';
 
 .thoth-form {
+    // Set the position to relative, so it's the reference f
+    // or the `z-index` property of wait-container
     position: relative;
 
     .wait-container {

@@ -5,11 +5,10 @@ open Fable.Helpers.React
 open Fable.Helpers.React.Props
 open Fable.Import
 open Fable.PowerPack
+open Thoth.Elmish.FormBuilder
 open Thoth.Elmish.FormBuilder.Types
 open System
 open Thoth.Json
-
-module FormCmd = Thoth.Elmish.FormBuilder.Cmd
 
 module Select =
 
@@ -69,11 +68,13 @@ module Select =
 
         match msg with
         | ChangeValue selectedKey ->
-            box { state with SelectedKey = Some selectedKey }, FormCmd.none
+            { state with SelectedKey = Some selectedKey }
+            |> toFieldState, FormCmd.none
 
         | ReceivedValueFromServer values ->
-            box { state with IsLoading = false
-                             Values = values }, FormCmd.none
+            let state = { state with IsLoading = false
+                                     Values = values }
+            toFieldState state, FormCmd.none
 
     let private render (state : FieldState) (onChange : IFieldMsg -> unit) =
         let state : State = state :?> State
@@ -111,14 +112,14 @@ module Select =
 
     let private isValid (state : FieldState) =
         let state : State = state :?> State
-        not state.IsLoading || state.ValidationState = Valid
+        not state.IsLoading && state.ValidationState = Valid
 
     let private toJson (state : FieldState) =
         let state : State = state :?> State
         state.JsonLabel
-            |> Option.defaultValue state.Label, state.SelectedKey
-                                                |> Option.map Encode.string
-                                                |> Option.defaultValue Encode.nil
+        |> Option.defaultValue state.Label, state.SelectedKey
+                                            |> Option.map Encode.string
+                                            |> Option.defaultValue Encode.nil
 
     let config : FieldConfig =
         { Render = render

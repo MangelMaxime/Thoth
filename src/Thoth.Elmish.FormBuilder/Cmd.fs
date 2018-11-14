@@ -6,7 +6,7 @@ open Fable.PowerPack
 open System
 
 [<RequireQualifiedAccess>]
-module Cmd =
+module FormCmd =
 
     let none (_fieldGuid : Guid) : Cmd<Msg> =
         [ ]

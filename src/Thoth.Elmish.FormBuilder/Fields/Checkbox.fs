@@ -3,11 +3,10 @@ namespace Thoth.Elmish.FormBuilder.Fields
 open Fulma
 open Fable.Helpers.React
 open Fable.Helpers.React.Props
+open Thoth.Elmish.FormBuilder
 open Thoth.Elmish.FormBuilder.Types
 open System
 open Thoth.Json
-
-module FormCmd = Thoth.Elmish.FormBuilder.Cmd
 
 [<RequireQualifiedAccess>]
 module Checkbox =
@@ -72,7 +71,7 @@ module Checkbox =
     let private toJson (state : FieldState) =
         let state : State = state :?> State
         state.JsonLabel
-            |> Option.defaultValue state.Label, Encode.bool state.IsChecked
+        |> Option.defaultValue state.Label, Encode.bool state.IsChecked
 
     let config : FieldConfig =
         { Render = render
