@@ -11,13 +11,16 @@
 <body>
     <nav class="navbar is-fixed-top is-thoth-primary"><div class="bd-special-shadow" style="opacity:1;transform:scaleY(1)"></div><div class="container"><div class="navbar-brand"><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/index.html"><p class="title is-4">Thoth</p></a><a class="navbar-item is-hidden-desktop" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span></a><a class="navbar-item twitter is-hidden-desktop" href="https://twitter.com/MangelMaxime"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span></a><div class="navbar-burger"><span></span><span></span><span></span></div></div><div class="navbar-menu" id="navMenu"><div class="navbar-item is-hoverable has-dropdown"><div class="navbar-link">Json</div><div class="navbar-dropdown"><div class="navbar-item"><strong>Version 2</strong></div><div class="navbar-divider"></div><a class="navbar-item is-active" href="https://mangelmaxime.github.io/Thoth/json/v2/decode.html">Decode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v2/encode.html">Encode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v2/net.html">.Net &amp; NetCore</a><div class="navbar-divider"></div><div class="navbar-item"><strong>Version 1</strong></div><div class="navbar-divider"></div><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v1/decode.html">Decode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v1/encode.html">Encode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v1/net.html">.Net &amp; NetCore</a></div></div><div class="navbar-item is-hoverable has-dropdown"><div class="navbar-link">Elmish</div><div class="navbar-dropdown"><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/elmish/debouncer.html">Debouncer</a><div class="navbar-divider"></div><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/elmish/toast_docs.html">Toast - Docs</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/elmish/toast_demo.html">Toast - Demo</a></div></div></div><div class="navbar-end"><a class="navbar-item is-hidden-mobile" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span></a><a class="navbar-item twitter is-hidden-mobile" href="https://twitter.com/MangelMaxime"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span></a><div class="navbar-item"><div class="field is-grouped"><p class="control"><a class="button twitter" href="https://twitter.com/intent/tweet?via=MangelMaxime&amp;text=Thoth%20is%20a%20set%20of%20several%20libraries%20for%20working%20with%20@FableCompiler%20applications" target="_blank"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span><span>Tweet</span></a></p><p class="control"><a class="button github" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span><span>Github</span></a></p></div></div></div></div></nav>
     <div class="container">
-        <div class="content" style="margin: 1rem 0 0">
-            <article class="message is-info">
+        <section class="section">
+            <div class="columns">
+                <div class="column is-9-desktop is-12-mobile">
+                    <div class="content" style="margin: 1rem 0 0">
+                        <article class="message is-info">
   <div class="message-body">
 <strong>Version 2</strong> of Thoth.Json and Thoth.Json.Net <strong>only support</strong> Fable 2.
   </div>
 </article>
-<h1><a href="#decode" aria-hidden="true"><span class="anchor" id="decode"></span>#</a> Decode</h1>
+<h1>Decode</h1>
 <p>Turn JSON values into F# values.</p>
 <p>By using a Decoder, you will be guaranteed that the JSON structure is correct.
 This is especially useful if you use Fable without sharing your domain with the server.</p>
@@ -170,7 +173,7 @@ like <code>map2</code>, <code>map3</code>, ..., <code>map8</code>.</p>
 <li>if the decoder succeed, it returns <code>'T</code>.</li>
 <li>if the decoder failed, it will throw an exception with the explanation in the <code>Message</code> property.</li>
 </ul>
-<h4><a href="#size-optimization" aria-hidden="true"><span class="anchor" id="size-optimization"></span>#</a> Size optimization</h4>
+<h2><a href="#size-optimization" aria-hidden="true"><span class="anchor" id="size-optimization"></span>#</a> Size optimization</h2>
 <p>Note auto decoders use reflection info, which in Fable 2 is generated in the call site. If you want to save some bytes in the generated JS code, it's recommended to cache decoders instead of using <code>Decode.Auto.fromString</code> directly.</p>
 <pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A0A1A7;font-style: italic">// Instead of:</span>
 <span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">method1</span><span style="color: #383A42"> json</span><span> </span><span style="color: #A626A4">=</span>
@@ -206,7 +209,13 @@ like <code>map2</code>, <code>map3</code>, ..., <code>map8</code>.</p>
 <span>        </span><span style="color: #A626A4">{</span><span> foo </span><span style="color: #A626A4">=</span><span> get.Required.Field </span><span style="color: #50A14F">&quot;foo&quot;</span><span> fooDecoder</span>
 <span>          bar </span><span style="color: #A626A4">=</span><span> get.Required.Field </span><span style="color: #50A14F">&quot;bar&quot;</span><span> barDecoder </span><span style="color: #A626A4">})</span></code></pre>
 
-        </div>
+                    </div>
+                </div>
+                <div class="column is-3 is-hidden-touch">
+                        <nav class="toc"><ul class="toc-headings"><li><a href="#what-is-a-decoder"> What is a Decoder ?</a></li></ul><ul class="toc-headings"><li><a href="#primitives-decoders"> Primitives decoders</a></li></ul><ul class="toc-headings"><li><a href="#collections"> Collections</a></li></ul><ul class="toc-headings"><li><a href="#decoding-objects"> Decoding Objects</a><ul class="toc-sub-headings"><li><a href="#map-functions"> Map functions</a></li><li><a href="#object-builder-style"> Object builder style</a></li><li><a href="#auto-decoder"> Auto decoder</a></li></ul></li></ul><ul class="toc-headings"><li><a href="#size-optimization"> Size optimization</a></li></ul></nav>
+                </div>
+            </div>
+        </section>
     </div>
     <div><br/><div class="footer has-text-centered"><div class="container"><div class="content"><p><strong>Thoth</strong> by <a href="https://twitter.com/MangelMaxime">Maxime Mangel</a></p>
 <p>Powered by <a href="https://mangelmaxime.github.io/Fulma/">Fulma</a>, <a href="https://github.com/fable-compiler/static-web-generator">Fable static-web-generator</a> and <a href="https://github.com/MangelMaxime/Code-Lightner">Code-Lightner</a>.</p>
