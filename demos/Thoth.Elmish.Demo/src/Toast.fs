@@ -371,7 +371,7 @@ let private timeoutHelper (model : Model) =
         [ str model.DelayError ]
 
 let private viewCode (model : Model) dispatch =
-    Column.column [ Column.Width (Screen.Tablet, Column.Is5) ]
+    Column.column [ Column.Width (Screen.Tablet, Column.Is6) ]
         [ Text.div [ Modifiers [ Modifier.TextAlignment (Screen.Tablet, TextAlignment.Centered) ] ]
             [ Heading.h3 [ ]
                 [ str "Code preview" ]
@@ -387,8 +387,7 @@ let private viewCode (model : Model) dispatch =
             [ CopyButton.copyButtton [ CopyButton.Value model.Code ] ] ]
 
 let private viewBuilder (model : Model) dispatch =
-    Column.column [ Column.Width (Screen.Tablet, Column.Is5)
-                    Column.Offset (Screen.Tablet, Column.Is1) ]
+    Column.column [ Column.Width (Screen.Tablet, Column.Is6) ]
         [ Heading.h3 [ Heading.Modifiers [ Modifier.TextAlignment (Screen.Tablet, TextAlignment.Centered) ] ]
             [ str "Interactive builder" ]
           Field.div [ ]

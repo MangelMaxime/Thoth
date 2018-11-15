@@ -58,7 +58,7 @@ const anchor = (md) => {
         const tokens = state.tokens
 
         tokens
-            .filter(token => token.type === 'heading_open')
+            .filter(token => token.type === 'heading_open' && token.tag !== "h1")
             .forEach(token => {
                 // Aggregate the next token children text.
                 const title = tokens[tokens.indexOf(token) + 1].children
