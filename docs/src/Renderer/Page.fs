@@ -42,11 +42,11 @@ Powered by [Fulma](https://mangelmaxime.github.io/Fulma/), [Fable static-web-gen
                     ] ]
         }
 
+    module private Template =
+        let normal = resolve "${entryDir}/templates/template.hbs"
+        let withTOC = resolve "${entryDir}/templates/template_with_toc.hbs"
 
-    let private templatePath = resolve "${entryDir}/templates/template.hbs"
-
-
-    let tableOfContent (pageBody : string)=
+    let tableOfContent (pageBody : string) =
         let titles =
             Regex.Matches(pageBody, "<h([\d])><a href=\"(.*)\" a.*>.*<\/a>(.*)<\/h([\d])>", RegexOptions.IgnoreCase)
             |> Seq.cast<Fable.Import.JS.RegExpExecArray>
@@ -102,7 +102,7 @@ Powered by [Fulma](https://mangelmaxime.github.io/Fulma/), [Fable static-web-gen
         |> nav [ Class "toc" ]
         |> parseReactStatic
 
-    let render (config: PageConfig) =
+    let private renderWith (config: PageConfig) templatePath =
         let title =
             match config.Title with
             | Some title -> "Thoth: " + title
@@ -136,3 +136,6 @@ Powered by [Fulma](https://mangelmaxime.github.io/Fulma/), [Fable static-web-gen
             |> parseTemplate templatePath
             |> writeFile outputFile
         }
+
+    let renderNormal (pageConfig : PageConfig) = renderWith pageConfig Template.normal
+    let renderWithTOC (pageConfig : PageConfig) = renderWith pageConfig Template.withTOC

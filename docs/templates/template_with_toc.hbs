@@ -11,9 +11,18 @@
 <body>
     {{{ navbar }}}
     <div class="container">
-        <div class="content" style="margin: 1rem 0 0">
-            {{{ body }}}
-        </div>
+        <section class="section">
+            <div class="columns">
+                <div class="column is-9-desktop is-12-mobile">
+                    <div class="content" style="margin: 1rem 0 0">
+                        {{{ body }}}
+                    </div>
+                </div>
+                <div class="column is-3 is-hidden-touch">
+                        {{{ toc }}}
+                </div>
+            </div>
+        </section>
     </div>
     {{{ footer }}}
     <script type="text/javascript">
