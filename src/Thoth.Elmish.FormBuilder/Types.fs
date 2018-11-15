@@ -59,5 +59,3 @@ module Types =
 
     /// Types alias used to represents a form config
     type Config = Map<FieldType, FieldConfig>
-
-    let inline toFieldState state : FieldState = box state

@@ -33,8 +33,7 @@ module Checkbox =
 
         match msg with
         | ToggleState ->
-            { state with IsChecked = not state.IsChecked }
-            |> toFieldState, FormCmd.none
+            box { state with IsChecked = not state.IsChecked }, FormCmd.none
 
     let private render (state : FieldState) (onChange : IFieldMsg -> unit) =
         let state : State = state :?> State
@@ -46,9 +45,8 @@ module Checkbox =
                                                 onChange ToggleState
                                                ) ] ]
                       str state.Label ] ]
-            //   Help.help [ Help.Color IsDanger ]
-            //     [ str state.ValidationInputState.ToText ]
-                ]
+              Help.help [ Help.Color IsDanger ]
+                [ str state.ValidationState.ToText ] ]
 
     let private validate (state : FieldState) =
         let state : State = state :?> State
@@ -61,8 +59,7 @@ module Checkbox =
                         { state with ValidationState = Invalid msg }
                 | [] -> state
 
-        applyValidators state.Validators state
-        |> toFieldState
+        applyValidators state.Validators state |> box
 
     let private isValid (state : FieldState) =
         let state : State = state :?> State

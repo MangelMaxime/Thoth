@@ -37,8 +37,7 @@ module RadioButton =
 
         match msg with
         | ChangeValue key ->
-            { state with SelectedKey = Some key }
-            |> toFieldState, FormCmd.none
+            box { state with SelectedKey = Some key }, FormCmd.none
 
     let private renderRadio (group : string) (selectedKey : Key option) (onChange : IFieldMsg -> unit) (key, value) =
         Radio.radio [ Props [ Prop.Key key ] ]
@@ -60,9 +59,8 @@ module RadioButton =
                 [ state.Values
                   |> List.map (renderRadio state.Group state.SelectedKey onChange)
                   |> ofList ]
-            //   Help.help [ Help.Color IsDanger ]
-            //     [ str state.ValidationInputState.ToText ]
-                ]
+              Help.help [ Help.Color IsDanger ]
+                [ str state.ValidationState.ToText ] ]
 
     let private validate (state : FieldState) =
         let state : State = state :?> State
@@ -75,8 +73,7 @@ module RadioButton =
                         { state with ValidationState = Invalid msg }
                 | [] -> state
 
-        applyValidators state.Validators state
-        |> toFieldState
+        applyValidators state.Validators state |> box
 
     let private isValid (state : FieldState) =
         let state : State = state :?> State
