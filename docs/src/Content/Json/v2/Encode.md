@@ -10,7 +10,9 @@ Module for turning F# values into JSON values.
 
 *This module is inspired by [Json.Encode from Elm](http://package.elm-lang.org/packages/elm-lang/core/latest/Json-Encode).*
 
-## How to use it ?
+## Custom encoding
+
+### How to use it ?
 
 ```fsharp
     open Thoth.Json
@@ -42,6 +44,8 @@ Module for turning F# values into JSON values.
 
 ## Auto encoder
 
+### How to use it ?
+
 ```fsharp
 type User =
     { Id : int
@@ -63,3 +67,5 @@ let json = Encode.Auto.toString(4, user)
 //     "Followers": 0
 // }
 ```
+### Auto explained
+
