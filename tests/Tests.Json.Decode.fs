@@ -151,6 +151,21 @@ type MyList<'T> =
     | Nil
     | Cons of 'T * MyList<'T>
 
+type TestMaybeRecord =
+    { Maybe : string option
+      Must : string }
+
+type BaseClass =
+    class end
+
+type RecordWithOptionalClass =
+    { MaybeClass : BaseClass option
+      Must : string }
+
+type RecordWithRequiredClass =
+    { Class : BaseClass
+      Must : string }
+
 let jsonRecord =
     """{ "a": 1.0,
          "b": 2.0,
@@ -170,6 +185,31 @@ let jsonRecordInvalid =
          "f": "invalid_a_field",
          "g": "invalid_a_field",
          "h": "invalid_a_field" }"""
+
+type Shape =
+    | Circle of radius: int
+    | Rectangle of width: int * height: int
+
+    static member DecoderCircle =
+        Decode.field "radius" Decode.int
+        |> Decode.map Circle
+
+    static member DecoderRectangle =
+        Decode.tuple2
+            (Decode.field "width" Decode.int)
+            (Decode.field "height" Decode.int)
+        |> Decode.map Rectangle
+
+type MyObj =
+    { Enabled: bool
+      Shape: Shape }
+
+type MyObj2 =
+    { Enabled: bool
+      Shape: Shape option }
+
+type RecordWithPrivateConstructor = private { Foo1: int; Foo2: float }
+type UnionWithPrivateConstructor = private Bar of string | Baz
 
 exception CustomException
 
@@ -1637,6 +1677,268 @@ Expecting a string but instead got: 12
 
                 equal expected actual
 
+            testCase "get.Field.Raw works" <| fun _ ->
+                let json = """{
+    "enabled": true,
+	"shape": "circle",
+    "radius": 20
+}"""
+                let shapeDecoder =
+                    Decode.field "shape" Decode.string
+                    |> Decode.andThen (function
+                        | "circle" ->
+                            Shape.DecoderCircle
+                        | "rectangle" ->
+                            Shape.DecoderRectangle
+                        | shape ->
+                            Decode.fail (sprintf "Unknown shape type %s" shape))
+
+                let decoder =
+                    Decode.object (fun get ->
+                        { Enabled = get.Required.Field "enabled" Decode.bool
+                          Shape = get.Required.Raw shapeDecoder } : MyObj
+                    )
+
+                let actual =
+                    Decode.fromString
+                        decoder
+                        json
+
+                let expected =
+                    Ok ({ Enabled = true
+                          Shape = Circle 20 } : MyObj)
+
+                equal expected actual
+
+            testCase "get.Field.Raw returns Error if a decoder fail" <| fun _ ->
+                let json = """{
+    "enabled": true,
+	"shape": "custom_shape",
+    "radius": 20
+}"""
+                let shapeDecoder =
+                    Decode.field "shape" Decode.string
+                    |> Decode.andThen (function
+                        | "circle" ->
+                            Shape.DecoderCircle
+                        | "rectangle" ->
+                            Shape.DecoderRectangle
+                        | shape ->
+                            Decode.fail (sprintf "Unknown shape type %s" shape))
+
+                let decoder =
+                    Decode.object (fun get ->
+                        { Enabled = get.Required.Field "enabled" Decode.bool
+                          Shape = get.Required.Raw shapeDecoder } : MyObj
+                    )
+
+                let actual =
+                    Decode.fromString
+                        decoder
+                        json
+
+                let expected =
+                    Error "Error at: `$`\nI run into a `fail` decoder: Unknown shape type custom_shape"
+
+                equal expected actual
+
+            testCase "get.Field.Raw returns Error if a field is missing in the 'raw decoder'" <| fun _ ->
+                let json = """{
+    "enabled": true,
+	"shape": "circle"
+}"""
+                let shapeDecoder =
+                    Decode.field "shape" Decode.string
+                    |> Decode.andThen (function
+                        | "circle" ->
+                            Shape.DecoderCircle
+                        | "rectangle" ->
+                            Shape.DecoderRectangle
+                        | shape ->
+                            Decode.fail (sprintf "Unknown shape type %s" shape))
+
+                let decoder =
+                    Decode.object (fun get ->
+                        { Enabled = get.Required.Field "enabled" Decode.bool
+                          Shape = get.Required.Raw shapeDecoder } : MyObj
+                    )
+
+                let actual =
+                    Decode.fromString
+                        decoder
+                        json
+
+                let expected =
+                    Error (
+                        """
+Error at: `$.radius`
+Expecting an object with a field named `radius` but instead got:
+{
+    "enabled": true,
+    "shape": "circle"
+}                   """.Trim())
+
+                equal expected actual
+
+            testCase "get.Optional.Raw works" <| fun _ ->
+                let json = """{
+    "enabled": true,
+	"shape": "circle",
+    "radius": 20
+}"""
+                let shapeDecoder =
+                    Decode.field "shape" Decode.string
+                    |> Decode.andThen (function
+                        | "circle" ->
+                            Shape.DecoderCircle
+                        | "rectangle" ->
+                            Shape.DecoderRectangle
+                        | shape ->
+                            Decode.fail (sprintf "Unknown shape type %s" shape))
+
+                let decoder =
+                    Decode.object (fun get ->
+                        { Enabled = get.Required.Field "enabled" Decode.bool
+                          Shape = get.Optional.Raw shapeDecoder }
+                    )
+
+                let actual =
+                    Decode.fromString
+                        decoder
+                        json
+
+                let expected =
+                    Ok { Enabled = true
+                         Shape = Some (Circle 20) }
+
+                equal expected actual
+
+            testCase "get.Optional.Raw returns None if a field is missing" <| fun _ ->
+                let json = """{
+    "enabled": true,
+	"shape": "circle"
+}"""
+                let shapeDecoder =
+                    Decode.field "shape" Decode.string
+                    |> Decode.andThen (function
+                        | "circle" ->
+                            Shape.DecoderCircle
+                        | "rectangle" ->
+                            Shape.DecoderRectangle
+                        | shape ->
+                            Decode.fail (sprintf "Unknown shape type %s" shape))
+
+                let decoder =
+                    Decode.object (fun get ->
+                        { Enabled = get.Required.Field "enabled" Decode.bool
+                          Shape = get.Optional.Raw shapeDecoder }
+                    )
+
+                let actual =
+                    Decode.fromString
+                        decoder
+                        json
+
+                let expected =
+                    Ok { Enabled = true
+                         Shape = None }
+
+                equal expected actual
+
+            testCase "get.Optional.Raw returns an Error if a decoder fail" <| fun _ ->
+                let json = """{
+    "enabled": true,
+	"shape": "invalid_shape"
+}"""
+                let shapeDecoder =
+                    Decode.field "shape" Decode.string
+                    |> Decode.andThen (function
+                        | "circle" ->
+                            Shape.DecoderCircle
+                        | "rectangle" ->
+                            Shape.DecoderRectangle
+                        | shape ->
+                            Decode.fail (sprintf "Unknown shape type %s" shape))
+
+                let decoder =
+                    Decode.object (fun get ->
+                        { Enabled = get.Required.Field "enabled" Decode.bool
+                          Shape = get.Optional.Raw shapeDecoder }
+                    )
+
+                let actual =
+                    Decode.fromString
+                        decoder
+                        json
+
+                let expected =
+                    Error "Error at: `$`\nI run into a `fail` decoder: Unknown shape type invalid_shape"
+
+                equal expected actual
+
+            testCase "get.Optional.Raw returns an Error if the type is invalid" <| fun _ ->
+                let json = """{
+    "enabled": true,
+	"shape": "circle",
+    "radius": "maxime"
+}"""
+                let shapeDecoder =
+                    Decode.field "shape" Decode.string
+                    |> Decode.andThen (function
+                        | "circle" ->
+                            Shape.DecoderCircle
+                        | "rectangle" ->
+                            Shape.DecoderRectangle
+                        | shape ->
+                            Decode.fail (sprintf "Unknown shape type %s" shape))
+
+                let decoder =
+                    Decode.object (fun get ->
+                        { Enabled = get.Required.Field "enabled" Decode.bool
+                          Shape = get.Optional.Raw shapeDecoder }
+                    )
+
+                let actual =
+                    Decode.fromString
+                        decoder
+                        json
+
+                let expected =
+                    Error "Error at: `$.radius`\nExpecting an int but instead got: \"maxime\""
+
+                equal expected actual
+
+            testCase "get.Optional.Raw returns None if a decoder fails with null" <| fun _ ->
+                let json = """{
+    "enabled": true,
+	"shape": null
+}"""
+                let shapeDecoder =
+                    Decode.field "shape" Decode.string
+                    |> Decode.andThen (function
+                        | "circle" ->
+                            Shape.DecoderCircle
+                        | "rectangle" ->
+                            Shape.DecoderRectangle
+                        | shape ->
+                            Decode.fail (sprintf "Unknown shape type %s" shape))
+
+                let decoder =
+                    Decode.object (fun get ->
+                        { Enabled = get.Required.Field "enabled" Decode.bool
+                          Shape = get.Optional.Raw shapeDecoder }
+                    )
+
+                let actual =
+                    Decode.fromString
+                        decoder
+                        json
+
+                let expected =
+                     Ok { Enabled = true
+                          Shape = None }
+
+                equal expected actual
         ]
 
         testList "Auto" [
@@ -1832,5 +2134,95 @@ Expecting a string but instead got: 12
                 let expected = Ok { Id = 0; Name = "maxime"; Email = "mail@domain.com"; Followers = 0 }
                 equal expected user
 
+            testCase "Auto.fromString works for records with an actual value for the optional field value" <| fun _ ->
+                let json = """{ "maybe" : "maybe value", "must": "must value"}"""
+                let actual = Decode.Auto.fromString<TestMaybeRecord>(json, isCamelCase=true)
+                let expected =
+                    Ok ({ Maybe = Some "maybe value"
+                          Must = "must value" } : TestMaybeRecord)
+                equal expected actual
+
+            testCase "Auto.fromString works for records with `null` for the optional field value" <| fun _ ->
+                let json = """{ "maybe" : null, "must": "must value"}"""
+                let actual = Decode.Auto.fromString<TestMaybeRecord>(json, isCamelCase=true)
+                let expected =
+                    Ok ({ Maybe = None
+                          Must = "must value" } : TestMaybeRecord)
+                equal expected actual
+
+            testCase "Auto.fromString works for records with `null` for the optional field value on classes" <| fun _ ->
+                let json = """{ "maybeClass" : null, "must": "must value"}"""
+                let actual = Decode.Auto.fromString<RecordWithOptionalClass>(json, isCamelCase=true)
+                let expected =
+                    Ok ({ MaybeClass = None
+                          Must = "must value" } : RecordWithOptionalClass)
+                equal expected actual
+
+            testCase "Auto.fromString returns an Error for field using a non optional class" <| fun _ ->
+                let json = """{ "class" : null, "must": "must value"}"""
+                let actual = Decode.Auto.fromString<RecordWithRequiredClass>(json, isCamelCase=true)
+                #if FABLE_COMPILER
+                let expected =
+                    Error (
+                        """
+Error at: `$.class`
+I run into a `fail` decoder: Class types cannot be automatically deserialized: Tests.Decode.BaseClass
+                        """.Trim())
+                #else
+                let expected =
+                    Error (
+                        """
+Error at: `$.class`
+I run into a `fail` decoder: Class types cannot be automatically deserialized: Tests.Decode+BaseClass
+                        """.Trim())
+                #endif
+                equal expected actual
+
+            testCase "Auto.fromString works for Class marked as optional" <| fun _ ->
+                let json = """{ }"""
+
+                let actual = Decode.Auto.fromString<BaseClass option>(json, isCamelCase=true)
+                let expected = Ok None
+                equal expected actual
+
+            testCase "Auto.fromString returns an Error for Class" <| fun _ ->
+                let json = """{ }"""
+
+                let actual = Decode.Auto.fromString<BaseClass>(json, isCamelCase=true)
+                #if FABLE_COMPILER
+                let expected =
+                    Error (
+                        """
+Error at: `$`
+I run into a `fail` decoder: Class types cannot be automatically deserialized: Tests.Decode.BaseClass
+                        """.Trim())
+                #else
+                let expected =
+                    Error (
+                        """
+Error at: `$`
+I run into a `fail` decoder: Class types cannot be automatically deserialized: Tests.Decode+BaseClass
+                        """.Trim())
+                #endif
+
+                equal expected actual
+
+            testCase "Auto.fromString works for records missing an optional field" <| fun _ ->
+                let json = """{ "must": "must value"}"""
+                let actual = Decode.Auto.fromString<TestMaybeRecord>(json, isCamelCase=true)
+                let expected =
+                    Ok ({ Maybe = None
+                          Must = "must value" } : TestMaybeRecord)
+                equal expected actual
+
+            testCase "Auto.fromString works with records with private constructors" <| fun _ ->
+                let json = """{ "foo1": 5, "foo2": 7.8 }"""
+                Decode.Auto.fromString(json, isCamelCase=true)
+                |> equal (Ok ({ Foo1 = 5; Foo2 = 7.8 }: RecordWithPrivateConstructor))
+
+            testCase "Auto.fromString works with unions with private constructors" <| fun _ ->
+                let json = """[ "Baz", ["Bar", "foo"]]"""
+                Decode.Auto.fromString<UnionWithPrivateConstructor list>(json, isCamelCase=true)
+                |> equal (Ok [Baz; Bar "foo"])
         ]
     ]

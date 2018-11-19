@@ -1,3 +1,17 @@
+#### 2.5.0
+
+* Make auto decoder support record/unions with private constructors
+
+#### 2.4.0
+
+* Make auto decoder succeeds on Class marked as optional
+
+#### 2.3.0
+
+* Fix #59: Make autodecoder support optional fields when missing from JSON
+* Fix #51: Add support for `Raw` decoder in object builders
+* Added CultureInfo.InvariantCulture to all Encoder functions where it was possible (by @draganjovanovic1)
+
 #### 2.2.0
 
 * Re-add optional and optionalAt related to #51

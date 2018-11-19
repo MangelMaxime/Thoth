@@ -370,7 +370,7 @@ let private timeoutHelper (model : Model) =
       Help.help [ Help.Color IsDanger ]
         [ str model.DelayError ]
 
-let private viewCode (model : Model) dispatch =
+let private viewCode (model : Model) =
     Column.column [ Column.Width (Screen.Tablet, Column.Is5) ]
         [ Text.div [ Modifiers [ Modifier.TextAlignment (Screen.Tablet, TextAlignment.Centered) ] ]
             [ Heading.h3 [ ]
@@ -493,7 +493,7 @@ let private view model dispatch =
                     [ str "Fulma" ] ] ]
           Columns.columns [ ]
             [ viewBuilder model dispatch
-              viewCode model dispatch ] ]
+              viewCode model ] ]
 
 open Elmish.React
 open Elmish.Debug

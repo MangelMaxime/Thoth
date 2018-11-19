@@ -105,3 +105,24 @@ $fa-font-path: "./fonts/";
     }
 
 }
+
+.toc {
+    position: fixed;
+    border-left: 1px solid #e0e0e0;
+
+    a {
+        color: $menu-label-color;
+        &:hover {
+            color: $link;
+        }
+    }
+
+    .toc-headings {
+        padding: 10px 0 2px 15px;
+        // padding: 1em 0 0 1em;
+
+        .toc-sub-headings {
+            padding: 6px 0 2px 20px;
+        }
+    }
+}

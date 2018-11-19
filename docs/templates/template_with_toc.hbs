@@ -1,0 +1,57 @@
+<!doctype html>
+<html class="has-navbar-fixed-top">
+
+<head>
+    <title>{{ title }}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /> {{{ styles }}}
+</head>
+
+<body>
+    {{{ navbar }}}
+    <div class="container">
+        <section class="section">
+            <div class="columns">
+                <div class="column is-9-desktop is-12-mobile">
+                    <div class="content" style="margin: 1rem 0 0">
+                        {{{ body }}}
+                    </div>
+                </div>
+                <div class="column is-3 is-hidden-touch">
+                        {{{ toc }}}
+                </div>
+            </div>
+        </section>
+    </div>
+    {{{ footer }}}
+    <script type="text/javascript">
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Get all "navbar-burger" elements
+            var $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+
+            // Check if there are any navbar burgers
+            if ($navbarBurgers.length > 0) {
+
+                // Add a click event on each of them
+                $navbarBurgers.forEach(function ($el) {
+                    $el.addEventListener('click', function () {
+
+                        var $target = document.getElementById("navMenu");
+
+                        // Toggle the class on both the "navbar-burger" and the "navbar-menu"
+                        $el.classList.toggle('is-active');
+                        $target.classList.toggle('is-active');
+
+                    });
+                });
+            }
+
+        });
+
+    </script>
+</body>
+
+</html>
