@@ -825,7 +825,6 @@ module Decode =
     // Reflection ///
     ////////////////
 
-    open System.Reflection
     open FSharp.Reflection
 
     type FieldType =
@@ -958,22 +957,21 @@ module Decode =
                         System.Activator.CreateInstance(mapType, kvs) |> Ok
 
     and private makeUnion t isCamelCase name (path : string) (values: JToken[]) =
-        // The flags are necessary for unions or records with private constructors
-        match FSharpType.GetUnionCases(t, BindingFlags.Public ||| BindingFlags.NonPublic) |> Array.tryFind (fun x -> x.Name = name) with
+        match FSharpType.GetUnionCases(t) |> Array.tryFind (fun x -> x.Name = name) with
         | None -> (path, FailMessage("Cannot find case " + name + " in " + t.FullName)) |> Error
         | Some uci ->
             if values.Length = 0 then
-                FSharpValue.MakeUnion(uci, [||], BindingFlags.Public ||| BindingFlags.NonPublic) |> Ok
+                FSharpValue.MakeUnion(uci, [||]) |> Ok
             else
                 let decoders = uci.GetFields() |> Array.map (fun fi -> autoDecoder isCamelCase false fi.PropertyType)
                 mixedArray "union fields" decoders path values
-                |> Result.map (fun values -> FSharpValue.MakeUnion(uci, List.toArray values, BindingFlags.Public ||| BindingFlags.NonPublic))
+                |> Result.map (fun values -> FSharpValue.MakeUnion(uci, List.toArray values))
 
     and private autoDecodeRecordsAndUnions (t: System.Type) (isCamelCase : bool) (isOptional : bool) : BoxedDecoder =
-        if FSharpType.IsRecord(t, BindingFlags.Public ||| BindingFlags.NonPublic) then
+        if FSharpType.IsRecord(t) then
             boxDecoder(fun path value ->
                 let decoders =
-                    FSharpType.GetRecordFields(t, BindingFlags.Public ||| BindingFlags.NonPublic)
+                    FSharpType.GetRecordFields(t)
                     |> Array.map (fun fi ->
                         let name =
                             if isCamelCase then
@@ -993,9 +991,9 @@ module Decode =
 
                         fieldType, name, autoDecoder isCamelCase fieldType.ToBool propertyType)
                 autoObject decoders path value
-                |> Result.map (fun xs -> FSharpValue.MakeRecord(t, List.toArray xs, BindingFlags.Public ||| BindingFlags.NonPublic)))
+                |> Result.map (fun xs -> FSharpValue.MakeRecord(t, List.toArray xs)))
 
-        elif FSharpType.IsUnion(t, BindingFlags.Public ||| BindingFlags.NonPublic) then
+        elif FSharpType.IsUnion(t) then
             boxDecoder(fun path (value: JToken) ->
                 if Helpers.isString(value) then
                     let name = Helpers.asString value
