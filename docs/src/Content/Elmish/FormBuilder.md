@@ -73,7 +73,7 @@ type Msg =
 
 ---------------
 
-2. Store the `FormBuilder` instance your model
+2. Store the `FormBuilder` instance in your model
 
 ```fsharp
 type Model =
@@ -113,12 +113,12 @@ let (formState, formConfig) =
 <div class="message is-warning">
 <div class="message-body">
 
-Each field needs to have a unique `name`. The name is used to linked the `label` with its form elements. And it will also be used as the key for the JSON.
+Each field needs to have a unique `name`. The name is used to link the `label` with its form elements. It will also be used as the key for the JSON.
 
 If you don't set a unique `name` per field, you will see this message in the console:
 
 ```fsharp
-Each field needs to have a unique name. I found the following duplicates name:
+Each field needs to have a unique name. I found the following duplicate names:
 
 - name
 - description
