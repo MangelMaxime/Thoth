@@ -1,0 +1,780 @@
+<!doctype html>
+<html class="has-navbar-fixed-top">
+
+<head>
+    <title>Thoth</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /> <link rel="stylesheet" type="text/css" href="https://mangelmaxime.github.io/Thoth/main.css"/>
+</head>
+
+<body>
+    <nav class="navbar is-fixed-top is-thoth-primary"><div class="bd-special-shadow" style="opacity:1;transform:scaleY(1)"></div><div class="container"><div class="navbar-brand"><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/index.html"><p class="title is-4">Thoth</p></a><a class="navbar-item is-hidden-desktop" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span></a><a class="navbar-item twitter is-hidden-desktop" href="https://twitter.com/MangelMaxime"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span></a><div class="navbar-burger"><span></span><span></span><span></span></div></div><div class="navbar-menu" id="navMenu"><div class="navbar-item is-hoverable has-dropdown"><div class="navbar-link">Json</div><div class="navbar-dropdown"><div class="navbar-item"><strong>Version 2</strong></div><div class="navbar-divider"></div><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v2/decode.html">Decode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v2/encode.html">Encode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v2/net.html">.Net &amp; NetCore</a><div class="navbar-divider"></div><div class="navbar-item"><strong>Version 1</strong></div><div class="navbar-divider"></div><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v1/decode.html">Decode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v1/encode.html">Encode</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v1/net.html">.Net &amp; NetCore</a></div></div><div class="navbar-item is-hoverable has-dropdown"><div class="navbar-link">Elmish</div><div class="navbar-dropdown"><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/elmish/debouncer.html">Debouncer</a><div class="navbar-divider"></div><a class="navbar-item is-active" href="https://mangelmaxime.github.io/Thoth/elmish/FormBuilder.html">FormBuilder</a><div class="navbar-divider"></div><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/elmish/toast_docs.html">Toast - Docs</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/elmish/toast_demo.html">Toast - Demo</a></div></div></div><div class="navbar-end"><a class="navbar-item is-hidden-mobile" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span></a><a class="navbar-item twitter is-hidden-mobile" href="https://twitter.com/MangelMaxime"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span></a><div class="navbar-item"><div class="field is-grouped"><p class="control"><a class="button twitter" href="https://twitter.com/intent/tweet?via=MangelMaxime&amp;text=Thoth%20is%20a%20set%20of%20several%20libraries%20for%20working%20with%20@FableCompiler%20applications" target="_blank"><span class="icon"><i class="fa  fa-twitter fa-lg"></i></span><span>Tweet</span></a></p><p class="control"><a class="button github" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class="fa  fa-github fa-lg"></i></span><span>Github</span></a></p></div></div></div></div></nav>
+    <div class="container">
+        <section class="section">
+            <div class="columns">
+                <div class="column is-9-desktop is-12-mobile">
+                    <div class="content" style="margin: 1rem 0 0">
+                        <h1>FormBuilder</h1>
+<article class="message is-warning">
+  <div class="message-body">
+<p>This library is marked in <strong>Alpha</strong> stage but is <strong>already used in production</strong>.</p>
+<p>I released it in <strong>Alpha</strong> so we can work as a community on improving it and still able to introduce changes if needed.</p>
+  </div>
+</article>
+<h2><a href="#introduction" aria-hidden="true"><span class="anchor" id="introduction"></span>#</a> Introduction</h2>
+<p>When working with forms in an Elmish application, we end up writing a lot of lines. I explained the situation in <a href="https://www.youtube.com/watch?v=Ry4qQxU0380">my keynote at FableConf 2018</a>.</p>
+<p>The conclusion was for <a href="https://slides.com/mangelmaxime/fableconf_2018_keynote/live#/2/1">a basic form management</a> we need to write at least <strong>23 lines of code per field</strong> and have a lot of <strong>duplication</strong>.</p>
+<p>This library is trying to solve this problem.</p>
+<h2><a href="#demo" aria-hidden="true"><span class="anchor" id="demo"></span>#</a> Demo</h2>
+<div class="columns">
+    <div class="column is-8 is-offset-2">
+        <div id="form_demo"></div>
+    </div>
+</div>
+<div class="has-text-centered">
+<p><em><a href="https://github.com/MangelMaxime/Thoth/blob/master/demos/Thoth.Elmish.Demo/src/FormBuilder.fs">View the code</a></em></p>
+</div>
+<script type="text/javascript" src="../demos/vendors.js"></script>
+<script type="text/javascript" src="../demos/demo.js"></script>
+<script type="text/javascript">
+    Demos.FormBuilder("form_demo");
+</script>
+<h2><a href="#how-to-use" aria-hidden="true"><span class="anchor" id="how-to-use"></span>#</a> How to use ?</h2>
+<h3><a href="#installation" aria-hidden="true"><span class="anchor" id="installation"></span>#</a> Installation</h3>
+<p>Add the <code>Thoth.Elmish.FormBuilder</code> dependency in your <a href="https://fsprojects.github.io/Paket/">Paket</a> files: <code>paket add Thoth.Elmish.FormBuilder --project &lt;your project&gt;</code>.</p>
+<p>If you are trying this library for the first time you probably wants to add <code>Thoth.Elmish.FormBuilder.BasicFields</code> too. It provides some ready to use fields.</p>
+<p>For using, the default view of <code>Thoth.Elmish.FormBuilder.BasicFields</code>, you need to include <a href="http://bulma.io/">Bulma</a> in your project.</p>
+<h3><a href="#basicfields-basic-usage" aria-hidden="true"><span class="anchor" id="basicfields-basic-usage"></span>#</a> BasicFields - Basic usage</h3>
+<div class="message is-info">
+<div class="message-header">
+Information
+</div>
+<div class="message-body">
+<p>In this part, we are going to use <code>Thoth.Elmish.FormBuilder.BasicFields</code> in order to have ready to use fields.</p>
+<p>Later, we will learn how to build custom fields.</p>
+</div>
+</div>
+<hr>
+<ol>
+<li>Register the message dedicated to the <code>FormBuilder</code></li>
+</ol>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">type</span><span> </span><span style="color: #C18401">Msg </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">|</span><span> OnFormMsg </span><span style="color: #A626A4">of</span><span> </span><span style="color: #C18401">FormBuilder.Types.Msg</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">// ...</span></code></pre>
+<hr>
+<ol start="2">
+<li>Store the <code>FormBuilder</code> instance your model</li>
+</ol>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">type</span><span> </span><span style="color: #C18401">Model </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">{</span><span> FormState </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">FormBuilder</span><span>.</span><span style="color: #C18401">Types</span><span>.</span><span style="color: #C18401">State</span>
+<span>      </span><span style="color: #A0A1A7;font-style: italic">// ...</span>
+<span>    </span><span style="color: #A626A4">}</span></code></pre>
+<hr>
+<ol start="3">
+<li>Create your form using the builder API</li>
+</ol>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #A626A4">(</span><span style="color: #383A42">formState</span><span style="color: #A626A4">,</span><span style="color: #383A42"> formConfig</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>    Form</span><span style="color: #A626A4">&lt;</span><span>Msg</span><span style="color: #A626A4">&gt;</span>
+<span>        .Create</span><span style="color: #A626A4">(</span><span>OnFormMsg</span><span style="color: #A626A4">)</span>
+<span>        .AddField</span><span style="color: #A626A4">(</span>
+<span>            BasicInput</span>
+<span>                .Create</span><span style="color: #A626A4">(</span><span style="color: #50A14F">&quot;name&quot;</span><span style="color: #A626A4">)</span>
+<span>                .WithLabel</span><span style="color: #A626A4">(</span><span style="color: #50A14F">&quot;Name&quot;</span><span style="color: #A626A4">)</span>
+<span>                .IsRequired</span><span style="color: #986801">()</span>
+<span>                .WithDefaultView</span><span style="color: #986801">()</span>
+<span>        </span><span style="color: #A626A4">)</span>
+<span>        .AddField</span><span style="color: #A626A4">(</span>
+<span>            BasicSelect</span>
+<span>                .Create</span><span style="color: #A626A4">(</span><span style="color: #50A14F">&quot;favLang&quot;</span><span style="color: #A626A4">)</span>
+<span>                .WithLabel</span><span style="color: #A626A4">(</span><span style="color: #50A14F">&quot;Favorite language&quot;</span><span style="color: #A626A4">)</span>
+<span>                .WithValuesFromServer</span><span style="color: #A626A4">(</span><span>getLanguages</span><span style="color: #A626A4">)</span>
+<span>                .WithPlaceholder</span><span style="color: #A626A4">(</span><span style="color: #50A14F">&quot;&quot;</span><span style="color: #A626A4">)</span>
+<span>                .IsRequired</span><span style="color: #A626A4">(</span><span style="color: #50A14F">&quot;I know it&#039;s hard but you need to choose&quot;</span><span style="color: #A626A4">)</span>
+<span>                .WithDefaultView</span><span style="color: #986801">()</span>
+<span>        </span><span style="color: #A626A4">)</span>
+<span>        </span><span style="color: #A0A1A7;font-style: italic">// When you are done with adding fields, you need to call `.Build()`</span>
+<span>        .Build</span><span style="color: #986801">()</span></code></pre>
+<div class="message is-warning">
+<div class="message-body">
+<p>Each field needs to have a unique <code>name</code>. The name is used to linked the <code>label</code> with its form elements. And it will also be used as the key for the JSON.</p>
+<p>If you don't set a unique <code>name</code> per field, you will see this message in the console:</p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span>Each field needs </span><span style="color: #A626A4">to</span><span> have a unique name. I found the following duplicates name</span><span style="color: #A626A4">:</span>
+
+<span style="color: #A626A4">-</span><span> name</span>
+<span style="color: #A626A4">-</span><span> description</span></code></pre>
+</div>
+</div>
+<hr>
+<ol start="4">
+<li>Initialize the <code>FormBuilder</code> in your init function</li>
+</ol>
+<div class="message is-warning">
+<div class="message-body">
+<span>
+<span class="icon has-text-warning is-medium"><i class="fa fa-lg fa-warning"></i></span>Never store <code>formConfig</code> in your model
+<span>
+</div>
+</div>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #A626A4">private</span><span> </span><span style="color: #E45649">init</span><span style="color: #383A42"> _</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">let</span><span> </span><span style="color: #A626A4">(</span><span style="color: #383A42">formState</span><span style="color: #A626A4">,</span><span style="color: #383A42"> formCmds</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span><span> Form.init formConfig formState</span>
+<span>    </span><span style="color: #A626A4">{</span><span> FormState </span><span style="color: #A626A4">=</span><span> formState </span><span style="color: #A626A4">},</span><span> Cmd.map OnFormMsg formCmds</span></code></pre>
+<hr>
+<ol start="5">
+<li>Handle <code>OnFormMsg</code> in your update function</li>
+</ol>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #A626A4">private</span><span> </span><span style="color: #E45649">update</span><span style="color: #383A42"> msg model</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">match</span><span> msg </span><span style="color: #A626A4">with</span>
+<span>    </span><span style="color: #A626A4">|</span><span> OnFormMsg msg </span><span style="color: #A626A4">-&gt;</span>
+<span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #A626A4">(</span><span style="color: #383A42">formState</span><span style="color: #A626A4">,</span><span style="color: #383A42"> formCmd</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span><span> Form.update formConfig msg model.FormState</span>
+<span>        </span><span style="color: #A626A4">{</span><span> model </span><span style="color: #A626A4">with</span><span> FormState </span><span style="color: #A626A4">=</span><span> formState </span><span style="color: #A626A4">},</span><span> Cmd.map OnFormMsg formCmd</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">// ...</span></code></pre>
+<hr>
+<ol start="6">
+<li>Render your form in your view function</li>
+</ol>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #A626A4">private</span><span> </span><span style="color: #E45649">formActions</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">formState </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">FormSate</span><span style="color: #A626A4">)</span><span style="color: #383A42"> dispatch</span><span> </span><span style="color: #A626A4">=</span>
+<span>    div </span><span style="color: #A626A4">[</span><span> </span><span style="color: #A626A4">]</span>
+<span>        </span><span style="color: #A626A4">[</span><span> button </span><span style="color: #A626A4">[</span><span> OnClick </span><span style="color: #A626A4">(fun</span><span style="color: #383A42"> _ </span><span style="color: #A626A4">-&gt;</span>
+<span>                    dispatch Submit</span>
+<span>                   </span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">]</span>
+<span>            </span><span style="color: #A626A4">[</span><span> str </span><span style="color: #50A14F">&quot;Submit&quot;</span><span> </span><span style="color: #A626A4">]</span><span> </span><span style="color: #A626A4">]</span>
+
+<span style="color: #A626A4">let</span><span> </span><span style="color: #A626A4">private</span><span> </span><span style="color: #E45649">view</span><span style="color: #383A42"> model dispatch</span><span> </span><span style="color: #A626A4">=</span>
+<span>    Form.render</span>
+<span>        </span><span style="color: #A626A4">{</span><span> Config </span><span style="color: #A626A4">=</span><span> formConfig</span>
+<span>          State </span><span style="color: #A626A4">=</span><span> formState</span>
+<span>          Dispatch </span><span style="color: #A626A4">=</span><span> dispatch</span>
+<span>          ActionsArea </span><span style="color: #A626A4">=</span><span> </span><span style="color: #A626A4">(</span><span>formActions formState dispatch</span><span style="color: #A626A4">)</span>
+<span>          Loader </span><span style="color: #A626A4">=</span><span> Form.DefaultLoader </span><span style="color: #A626A4">}</span></code></pre>
+<h3><a href="#basicfields-custom-views" aria-hidden="true"><span class="anchor" id="basicfields-custom-views"></span>#</a> BasicFields - Custom views</h3>
+<p>If you are not using <a href="http://bulma.io/">Bulma</a> in your project, <code>Thoth.Elmish.FormBuilder.BasicFields</code> provide a <code>WithCustomView</code> API allowing you to customize the field view.</p>
+<p>Example:</p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span>.AddField</span><span style="color: #A626A4">(</span>
+<span>    BasicInput</span>
+<span>        .Create</span><span style="color: #A626A4">(</span><span style="color: #50A14F">&quot;name&quot;</span><span style="color: #A626A4">)</span>
+<span>        .WithLabel</span><span style="color: #A626A4">(</span><span style="color: #50A14F">&quot;Name&quot;</span><span style="color: #A626A4">)</span>
+<span>        .IsRequired</span><span style="color: #986801">()</span>
+<span>        .WithCustomView</span><span style="color: #A626A4">(fun</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">state </span><span style="color: #A626A4">:</span><span style="color: #C18401"> Types.FieldState</span><span style="color: #A626A4">)</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">dispatch </span><span style="color: #A626A4">:</span><span style="color: #C18401"> Types.IFieldMsg </span><span style="color: #A626A4">-&gt;</span><span> </span><span style="color: #C18401">unit</span><span style="color: #A626A4">)</span><span style="color: #383A42"> </span><span style="color: #A626A4">-&gt;</span>
+<span>            </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">state</span><span style="color: #383A42"> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Input.State </span><span style="color: #A626A4">=</span><span> state </span><span style="color: #A626A4">:?&gt;</span><span> Input.State</span>
+
+<span>            </span><span style="color: #A0A1A7;font-style: italic">// You can write your view here</span>
+<span>            input </span><span style="color: #A626A4">[</span><span> Value  state.Value</span>
+<span>                    OnChange </span><span style="color: #A626A4">(fun</span><span style="color: #383A42"> ev </span><span style="color: #A626A4">-&gt;</span><span> ev.Value </span><span style="color: #A626A4">|&gt;</span><span> Input.ChangeValue </span><span style="color: #A626A4">|&gt;</span><span> dispatch </span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">]</span>
+<span>        </span><span style="color: #A626A4">)</span>
+<span style="color: #A626A4">)</span></code></pre>
+<h3><a href="#server-side-validation" aria-hidden="true"><span class="anchor" id="server-side-validation"></span>#</a> Server side validation</h3>
+<p>In order to support server side validation, the library define the type <code>ErrorDef</code>.</p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">type</span><span> </span><span style="color: #C18401">ErrorDef </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">{</span><span> Text </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string</span>
+<span>      Key </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string </span><span style="color: #A626A4">}</span></code></pre>
+<ul>
+<li><code>Text</code> is the error message to display</li>
+<li><code>Key</code> is the name of the field related to the error.</li>
+</ul>
+<article class="message is-info">
+  <div class="message-body">
+<p>I included the <code>Decoder</code> and <code>Encoder</code> definition for usage in your Fable client.</p>
+<p>If you need it on the server, you will need to copy the type definition for now.</p>
+  </div>
+</article>
+<p>When you receive a <code>ErrorDef list</code> from your server, you can call <code>Form.setErrors</code> to display them in the form.</p>
+<p>Example:</p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">|</span><span> CreationResponse.Errors errors </span><span style="color: #A626A4">-&gt;</span>
+<span>    </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">newFormState</span><span> </span><span style="color: #A626A4">=</span>
+<span>        model.State</span>
+<span>        </span><span style="color: #A626A4">|&gt;</span><span> Form.setLoading </span><span style="color: #986801">false</span>
+<span>        </span><span style="color: #A626A4">|&gt;</span><span> Form.setErrors formConfig errors</span>
+<span>    </span><span style="color: #A626A4">{</span><span> model </span><span style="color: #A626A4">with</span><span> State </span><span style="color: #A626A4">=</span><span> newFormState </span><span style="color: #A626A4">},</span><span> Cmd.none</span></code></pre>
+<h3><a href="#create-a-custom-field" aria-hidden="true"><span class="anchor" id="create-a-custom-field"></span>#</a> Create a custom field</h3>
+<h4><a href="#prelude" aria-hidden="true"><span class="anchor" id="prelude"></span>#</a> Prelude</h4>
+<p>In this section, you will learn:</p>
+<ul>
+<li>how to create a custom fields</li>
+<li>the convention I use when designing a field, I encourage you to follow them 😊</li>
+<li>general comments on why I structure my code in a specific way</li>
+</ul>
+<p>You will see usage of boxing <code>box</code> and casting <code>:?&gt;</code>. If you wants to learn more about that after reading this section you can take a look at the <a href="#can-we-avoid-boxing-casting">F.A.Q</a></p>
+<h4><a href="#file-structure" aria-hidden="true"><span class="anchor" id="file-structure"></span>#</a> File structure</h4>
+<p>When designing a field I encourage you to follow this structure:</p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">namespace</span><span style="color: #4078F2"> MyCustomFieldLibrary</span>
+
+<span style="color: #0184BC">[&lt;RequireQualifiedAccess&gt;]</span>
+<span style="color: #A626A4">module</span><span style="color: #4078F2"> MyField </span><span style="color: #A626A4">=</span>
+
+<span>    </span><span style="color: #A0A1A7;font-style: italic">// Here goes the logic for your field</span>
+
+<span style="color: #A626A4">type</span><span> </span><span style="color: #C18401">MyField private </span><span style="color: #A626A4">(</span><span style="color: #383A42">state </span><span style="color: #A626A4">:</span><span style="color: #C18401"> MyField.State</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">// Here goes the Fluent API that will be exposed and used to register a field in a Form</span>
+
+<span>    </span><span style="color: #A626A4">static member</span><span> </span><span style="color: #E45649">Create</span><span style="color: #A626A4">(</span><span style="color: #383A42">name </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>        </span><span style="color: #A0A1A7;font-style: italic">// ...</span></code></pre>
+<p>By using this architecture, you can then use your API like that:</p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">module</span><span style="color: #4078F2"> MyApp.PageA</span>
+
+<span style="color: #A626A4">open</span><span> </span><span style="color: #4078F2">Thoth.Elmish.FormBuilder</span>
+<span style="color: #A626A4">open</span><span> </span><span style="color: #4078F2">MyCustomFieldLibrary</span>
+
+<span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">formState,</span><span style="color: #383A42"> formConfig</span><span> </span><span style="color: #A626A4">=</span>
+<span>    Form</span><span style="color: #A626A4">&lt;</span><span>Msg</span><span style="color: #A626A4">&gt;</span>
+<span>    .Create</span><span style="color: #A626A4">(</span><span>OnFormMsg</span><span style="color: #A626A4">)</span>
+<span>        .AddField</span><span style="color: #A626A4">(</span>
+<span>            MyField</span>
+<span>                .Create</span><span style="color: #A626A4">(</span><span style="color: #50A14F">&quot;name&quot;</span><span style="color: #A626A4">)</span>
+<span>                </span><span style="color: #A0A1A7;font-style: italic">// ...</span>
+<span>        </span><span style="color: #A626A4">)</span></code></pre>
+<p>The benefits are:</p>
+<ul>
+<li>Each field consist of a <strong>single file</strong></li>
+<li>By using <strong>1 open statement</strong> you get access to all yours fields API</li>
+</ul>
+<p><em>This is the structure used in <a href="https://github.com/MangelMaxime/Thoth/tree/master/src/Thoth.Elmish.FormBuilder.BasicFields">Thoth.Elmish.FormBuilder.BasicFields</a></em></p>
+<h4><a href="#implement-your-field-logic-and-config-contract" aria-hidden="true"><span class="anchor" id="implement-your-field-logic-and-config-contract"></span>#</a> Implement your field logic and config contract</h4>
+<p>Designing a custom field is similar to designing an Elmish components.</p>
+<p>Here is the contract that all field needs to implements. Don't worry, we are going to go step by step.</p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A0A1A7;font-style: italic">/// Contract for registering fields in the `Config`</span>
+<span style="color: #A626A4">type</span><span> </span><span style="color: #C18401">FieldConfig </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">{</span><span> View </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">FieldState </span><span style="color: #A626A4">-&gt;</span><span style="color: #C18401"> </span><span style="color: #A626A4">(</span><span style="color: #C18401">IFieldMsg </span><span style="color: #A626A4">-&gt;</span><span style="color: #C18401"> unit</span><span style="color: #A626A4">)</span><span style="color: #C18401"> </span><span style="color: #A626A4">-&gt;</span><span style="color: #C18401"> React</span><span>.</span><span style="color: #C18401">ReactElement</span>
+<span>      Update </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">FieldMsg </span><span style="color: #A626A4">-&gt;</span><span style="color: #C18401"> FieldState </span><span style="color: #A626A4">-&gt;</span><span style="color: #C18401"> FieldState </span><span style="color: #A626A4">*</span><span style="color: #C18401"> </span><span style="color: #A626A4">(</span><span style="color: #C18401">string </span><span style="color: #A626A4">-&gt;</span><span style="color: #C18401"> Cmd</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">Msg</span><span style="color: #A626A4">&gt;)</span>
+<span>      Init </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">FieldState </span><span style="color: #A626A4">-&gt;</span><span style="color: #C18401"> FieldState </span><span style="color: #A626A4">*</span><span style="color: #C18401"> </span><span style="color: #A626A4">(</span><span style="color: #C18401">string </span><span style="color: #A626A4">-&gt;</span><span style="color: #C18401"> Cmd</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">Msg</span><span style="color: #A626A4">&gt;)</span>
+<span>      Validate </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">FieldState </span><span style="color: #A626A4">-&gt;</span><span style="color: #C18401"> FieldState</span>
+<span>      IsValid </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">FieldState </span><span style="color: #A626A4">-&gt;</span><span style="color: #C18401"> bool</span>
+<span>      ToJson </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">FieldState </span><span style="color: #A626A4">-&gt;</span><span style="color: #C18401"> string </span><span style="color: #A626A4">*</span><span style="color: #C18401"> Encode</span><span>.</span><span style="color: #C18401">Value</span>
+<span>      SetError </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">FieldState </span><span style="color: #A626A4">-&gt;</span><span style="color: #C18401"> string </span><span style="color: #A626A4">-&gt;</span><span style="color: #C18401"> FieldState </span><span style="color: #A626A4">}</span></code></pre>
+<p>As an example of a custom field, we will re-implement a basic <code>Input</code>.</p>
+<hr>
+<ol>
+<li><code>State</code> and <code>Validator</code> types</li>
+</ol>
+<p><em><code>State</code> is similar to <code>Model</code> in Elmish terms</em></p>
+<p><strong>Every</strong> fields <strong>needs to have</strong> a <code>Name</code> property. This will be used later to identify each field uniquely and to generate the JSON representation of the field.</p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">type</span><span> </span><span style="color: #C18401">State </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">{</span><span> Label </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string</span>
+<span>      Value </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string</span>
+<span>      Type </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string</span>
+<span>      Placeholder </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string option</span>
+<span>      Validators </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Validator list</span>
+<span>      ValidationState </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">ValidationState</span>
+<span>      Name </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string </span><span style="color: #A626A4">}</span>
+
+<span style="color: #A626A4">and</span><span> Validator </span><span style="color: #A626A4">=</span><span> State </span><span style="color: #A626A4">-&gt;</span><span> ValidationState</span></code></pre>
+<hr>
+<ol start="2">
+<li><code>Msg</code> type</li>
+</ol>
+<p>As in Elmish, your fields are going to react to <code>Msg</code>. But you need to interface with <code>IFieldMsg</code>.</p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">type</span><span> </span><span style="color: #C18401">Msg </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">|</span><span> ChangeValue </span><span style="color: #A626A4">of</span><span> </span><span style="color: #C18401">string</span>
+<span>    </span><span style="color: #A626A4">interface</span><span> IFieldMsg</span></code></pre>
+<hr>
+<ol start="3">
+<li><code>init</code> function</li>
+</ol>
+<p>This function will be called when initializing yours forms.</p>
+<p>For example, if your field needs to fetch data from the server you can trigger the request here. <a href="https://github.com/MangelMaxime/Thoth/blob/master/src/Thoth.Elmish.FormBuilder.BasicFields/Select.fs">See the select field for an example</a></p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #A626A4">private</span><span> </span><span style="color: #E45649">init</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">state </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">FieldState</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>    state</span><span style="color: #A626A4">,</span><span> FormCmd.none</span></code></pre>
+<hr>
+<ol start="4">
+<li><code>validate</code> and <code>setError</code> function</li>
+</ol>
+<p>If you used the same names for <code>ValidationState</code> and <code>Validators</code> properties, you can copy/paste these functions in all your fields definition.</p>
+<p><em>I didn't find a way to make it generic for any fields</em></p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #A626A4">private</span><span> </span><span style="color: #E45649">validate</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">state </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">FieldState</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">state</span><span style="color: #383A42"> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">State </span><span style="color: #A626A4">=</span><span> state </span><span style="color: #A626A4">:?&gt;</span><span> State</span>
+<span>    </span><span style="color: #A626A4">let rec</span><span> </span><span style="color: #E45649">applyValidators</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">validators </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Validator list</span><span style="color: #A626A4">)</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">state </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">State</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>        </span><span style="color: #A626A4">match</span><span> validators </span><span style="color: #A626A4">with</span>
+<span>            </span><span style="color: #A626A4">|</span><span> validator</span><span style="color: #A626A4">::</span><span>rest </span><span style="color: #A626A4">-&gt;</span>
+<span>                </span><span style="color: #A626A4">match</span><span> validator state </span><span style="color: #A626A4">with</span>
+<span>                </span><span style="color: #A626A4">|</span><span> Valid </span><span style="color: #A626A4">-&gt;</span><span> applyValidators rest state</span>
+<span>                </span><span style="color: #A626A4">|</span><span> Invalid msg </span><span style="color: #A626A4">-&gt;</span>
+<span>                    </span><span style="color: #A626A4">{</span><span> state </span><span style="color: #A626A4">with</span><span> ValidationState </span><span style="color: #A626A4">=</span><span> Invalid msg </span><span style="color: #A626A4">}</span>
+<span>            </span><span style="color: #A626A4">|</span><span> </span><span style="color: #A626A4">[]</span><span> </span><span style="color: #A626A4">-&gt;</span><span> state</span>
+
+<span>    applyValidators state.Validators </span><span style="color: #A626A4">{</span><span> state </span><span style="color: #A626A4">with</span><span> ValidationState </span><span style="color: #A626A4">=</span><span> Valid </span><span style="color: #A626A4">}</span><span> </span><span style="color: #A626A4">|&gt;</span><span> box</span>
+
+<span style="color: #A626A4">let</span><span> </span><span style="color: #A626A4">private</span><span> </span><span style="color: #E45649">setError</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">state </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">FieldState</span><span style="color: #A626A4">)</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">message </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string</span><span style="color: #A626A4">)=</span>
+<span>    </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">state</span><span style="color: #383A42"> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">State </span><span style="color: #A626A4">=</span><span> state </span><span style="color: #A626A4">:?&gt;</span><span> State</span>
+<span>    </span><span style="color: #A626A4">{</span><span> state </span><span style="color: #A626A4">with</span><span> ValidationState </span><span style="color: #A626A4">=</span><span> Invalid message </span><span style="color: #A626A4">}</span><span> </span><span style="color: #A626A4">|&gt;</span><span> box</span></code></pre>
+<hr>
+<ol start="5">
+<li><code>isValid</code> function</li>
+</ol>
+<p>This function will be called to check if your fields is in a valid state or no.</p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #A626A4">private</span><span> </span><span style="color: #E45649">isValid</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">state </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">FieldState</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">state</span><span style="color: #383A42"> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">State </span><span style="color: #A626A4">=</span><span> state </span><span style="color: #A626A4">:?&gt;</span><span> State</span>
+<span>    state.ValidationState </span><span style="color: #A626A4">=</span><span> Valid</span></code></pre>
+<hr>
+<ol start="6">
+<li><code>toJson</code> function</li>
+</ol>
+<p>This function will be called by the form in order to generate the JSON representation of your field.</p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #A626A4">private</span><span> </span><span style="color: #E45649">toJson</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">state </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">FieldState</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">state</span><span style="color: #383A42"> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">State </span><span style="color: #A626A4">=</span><span> state </span><span style="color: #A626A4">:?&gt;</span><span> State</span>
+<span>    state.Name</span><span style="color: #A626A4">,</span><span> Encode.string state.Value</span></code></pre>
+<hr>
+<ol start="7">
+<li><code>update</code> function</li>
+</ol>
+<p>Similar as in Elmish, this is called for updating your <code>State</code> when receiving a <code>Msg</code> for this field.</p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #A626A4">private</span><span> </span><span style="color: #E45649">update</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">msg </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">FieldMsg</span><span style="color: #A626A4">)</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">state </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">FieldState</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">// Cast the received message into it&#039;s real type</span>
+<span>    </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">msg</span><span> </span><span style="color: #A626A4">=</span><span> msg </span><span style="color: #A626A4">:?&gt;</span><span> Msg</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">// Cast the received into it&#039;s real type</span>
+<span>    </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">state</span><span> </span><span style="color: #A626A4">=</span><span> state </span><span style="color: #A626A4">:?&gt;</span><span> State</span>
+
+<span>    </span><span style="color: #A626A4">match</span><span> msg </span><span style="color: #A626A4">with</span>
+<span>    </span><span style="color: #A626A4">|</span><span> ChangeValue newValue </span><span style="color: #A626A4">-&gt;</span>
+<span>        </span><span style="color: #A626A4">{</span><span> state </span><span style="color: #A626A4">with</span><span> Value </span><span style="color: #A626A4">=</span><span> newValue </span><span style="color: #A626A4">}</span>
+<span>        </span><span style="color: #A626A4">|&gt;</span><span> validate</span>
+<span>        </span><span style="color: #A0A1A7;font-style: italic">// We need to box the returned state</span>
+<span>        </span><span style="color: #A626A4">|&gt;</span><span> box</span><span style="color: #A626A4">,</span><span> FormCmd.none</span></code></pre>
+<p><strong>Notes</strong></p>
+<ul>
+<li>You needs to call <code>validate</code> youself after updating your model. This is required because not every message of field needs to trigger a validation.</li>
+<li>Instead of using <code>Cmd</code> module from Elmish, you needs to use <code>FormCmd</code>. This modules implements the same API as <code>Cmd</code> module.</li>
+</ul>
+<hr>
+<ol start="8">
+<li><code>view</code> function</li>
+</ol>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #A626A4">private</span><span> </span><span style="color: #E45649">view</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">state </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">FieldState</span><span style="color: #A626A4">)</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">dispatch </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">IFieldMsg </span><span style="color: #A626A4">-&gt;</span><span> </span><span style="color: #C18401">unit</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">state</span><span style="color: #383A42"> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">State </span><span style="color: #A626A4">=</span><span> state </span><span style="color: #A626A4">:?&gt;</span><span> State</span>
+<span>    </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">className</span><span> </span><span style="color: #A626A4">=</span>
+<span>        </span><span style="color: #A626A4">if</span><span> isValid state </span><span style="color: #A626A4">then</span>
+<span>            </span><span style="color: #50A14F">&quot;input&quot;</span>
+<span>        </span><span style="color: #A626A4">else</span>
+<span>            </span><span style="color: #50A14F">&quot;input is-danger&quot;</span>
+
+<span>    div </span><span style="color: #A626A4">[</span><span> Class </span><span style="color: #50A14F">&quot;field&quot;</span><span> </span><span style="color: #A626A4">]</span>
+<span>        </span><span style="color: #A626A4">[</span><span> label </span><span style="color: #A626A4">[</span><span> Class </span><span style="color: #50A14F">&quot;label&quot;</span>
+<span>                  HtmlFor state.Name </span><span style="color: #A626A4">]</span>
+<span>            </span><span style="color: #A626A4">[</span><span> str state.Label </span><span style="color: #A626A4">]</span>
+<span>          div </span><span style="color: #A626A4">[</span><span> Class </span><span style="color: #50A14F">&quot;control&quot;</span><span> </span><span style="color: #A626A4">]</span>
+<span>            </span><span style="color: #A626A4">[</span><span> input </span><span style="color: #A626A4">[</span><span> Value state.Value</span>
+<span>                      Placeholder </span><span style="color: #A626A4">(</span><span>state.Placeholder </span><span style="color: #A626A4">|&gt;</span><span> Option.defaultValue </span><span style="color: #50A14F">&quot;&quot;</span><span style="color: #A626A4">)</span>
+<span>                      Id state.Name</span>
+<span>                      Class className</span>
+<span>                      OnChange </span><span style="color: #A626A4">(fun</span><span style="color: #383A42"> ev </span><span style="color: #A626A4">-&gt;</span>
+<span>                        ChangeValue ev.Value </span><span style="color: #A626A4">|&gt;</span><span> dispatch</span>
+<span>                      </span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">]</span><span> </span><span style="color: #A626A4">]</span>
+<span>          span </span><span style="color: #A626A4">[</span><span> Class </span><span style="color: #50A14F">&quot;help is-danger&quot;</span><span> </span><span style="color: #A626A4">]</span>
+<span>            </span><span style="color: #A626A4">[</span><span> str state.ValidationState.Text </span><span style="color: #A626A4">]</span><span> </span><span style="color: #A626A4">]</span></code></pre>
+<hr>
+<ol start="9">
+<li>Expose your <code>config</code></li>
+</ol>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">config</span><span style="color: #383A42"> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">FieldConfig </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">{</span><span> View </span><span style="color: #A626A4">=</span><span> view</span>
+<span>      Update </span><span style="color: #A626A4">=</span><span> update</span>
+<span>      Init </span><span style="color: #A626A4">=</span><span> init</span>
+<span>      Validate </span><span style="color: #A626A4">=</span><span> validate</span>
+<span>      IsValid </span><span style="color: #A626A4">=</span><span> isValid</span>
+<span>      ToJson </span><span style="color: #A626A4">=</span><span> toJson</span>
+<span>      SetError </span><span style="color: #A626A4">=</span><span> setError </span><span style="color: #A626A4">}</span></code></pre>
+<h4><a href="#expose-a-fluent-api" aria-hidden="true"><span class="anchor" id="expose-a-fluent-api"></span>#</a> Expose a fluent API</h4>
+<p>See the <a href="#why-use-a-fluent-api">F.A.Q</a> for why I choose to expose a fluent API.</p>
+<ol>
+<li>In order to design an immutable fluent API, you need to mark your <code>constructor</code> as <code>private</code>.</li>
+</ol>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">type</span><span> </span><span style="color: #C18401">BasicInput private </span><span style="color: #A626A4">(</span><span style="color: #383A42">state </span><span style="color: #A626A4">:</span><span style="color: #C18401"> Input.State</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span></code></pre>
+<hr>
+<ol start="2">
+<li>Expose a <code>static member Create(name : string)</code></li>
+</ol>
+<span>
+<span class="icon has-text-info"><i class="fa fa-lg fa-info"></i></span>Each field should have a <code>name</code> property as recommanded in HTML5. This name will be used to identify the field for dispatching the messages in your form.
+<span>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">static member</span><span> </span><span style="color: #E45649">Create</span><span style="color: #A626A4">(</span><span style="color: #383A42">name </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>    BasicInput</span>
+<span>        </span><span style="color: #A626A4">{</span><span> Label </span><span style="color: #A626A4">=</span><span> </span><span style="color: #50A14F">&quot;&quot;</span>
+<span>          Value </span><span style="color: #A626A4">=</span><span> </span><span style="color: #50A14F">&quot;&quot;</span>
+<span>          Type </span><span style="color: #A626A4">=</span><span> </span><span style="color: #50A14F">&quot;text&quot;</span>
+<span>          Placeholder </span><span style="color: #A626A4">=</span><span> None</span>
+<span>          Validators </span><span style="color: #A626A4">=</span><span> </span><span style="color: #A626A4">[</span><span> </span><span style="color: #A626A4">]</span>
+<span>          ValidationState </span><span style="color: #A626A4">=</span><span> Valid</span>
+<span>          Name </span><span style="color: #A626A4">=</span><span> name </span><span style="color: #A626A4">}</span></code></pre>
+<hr>
+<ol start="3">
+<li>Create a member to return a <code>FieldBuilder</code></li>
+</ol>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">member</span><span> </span><span style="color: #E45649">__.WithDefaultView</span><span style="color: #383A42"> </span><span style="color: #986801">()</span><span style="color: #383A42"> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">FieldBuilder </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">{</span><span> Type </span><span style="color: #A626A4">=</span><span> </span><span style="color: #50A14F">&quot;basic-input&quot;</span>
+<span>      State </span><span style="color: #A626A4">=</span><span> state</span>
+<span>      Name </span><span style="color: #A626A4">=</span><span> state.Name</span>
+<span>      Config </span><span style="color: #A626A4">=</span><span> Input.config </span><span style="color: #A626A4">}</span></code></pre>
+<p><strong>Notes</strong></p>
+<ul>
+<li>The <code>Type</code> value needs to a unique name to identify your fields type. For example, <code>basic-input</code>, <code>fulma-input</code>, <code>my-lib-special-dropdown</code>, etc.</li>
+<li>The <code>Config</code> properties refer to the exposed config you wrote earlier.</li>
+</ul>
+<hr>
+<ol start="4">
+<li>Create on member per property you want to customize</li>
+</ol>
+<p>Here are some examples:</p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">member</span><span> </span><span style="color: #E45649">__.WithLabel</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">label </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>    BasicInput </span><span style="color: #A626A4">{</span><span> state </span><span style="color: #A626A4">with</span><span> Label </span><span style="color: #A626A4">=</span><span> label </span><span style="color: #A626A4">}</span>
+
+<span style="color: #A626A4">member</span><span> </span><span style="color: #E45649">__.WithPlaceholder</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">placeholder </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>    BasicInput </span><span style="color: #A626A4">{</span><span> state </span><span style="color: #A626A4">with</span><span> Placeholder </span><span style="color: #A626A4">=</span><span> Some placeholder </span><span style="color: #A626A4">}</span>
+
+<span style="color: #A626A4">member</span><span> </span><span style="color: #E45649">__.IsRequired</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span>?</span><span style="color: #383A42">msg </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">String</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">msg</span><span> </span><span style="color: #A626A4">=</span><span> defaultArg msg </span><span style="color: #50A14F">&quot;This field is required&quot;</span>
+
+<span>    </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">validator</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">state </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Input.State</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>        </span><span style="color: #A626A4">if</span><span> String.IsNullOrWhiteSpace state.Value </span><span style="color: #A626A4">then</span>
+<span>            Invalid msg</span>
+<span>        </span><span style="color: #A626A4">else</span>
+<span>            Valid</span>
+
+<span>    BasicInput </span><span style="color: #A626A4">{</span><span> state </span><span style="color: #A626A4">with</span><span> Validators </span><span style="color: #A626A4">=</span><span> state.Validators </span><span style="color: #A626A4">@</span><span> </span><span style="color: #A626A4">[</span><span> validator </span><span style="color: #A626A4">]</span><span> </span><span style="color: #A626A4">}</span>
+
+<span style="color: #A626A4">member</span><span> </span><span style="color: #E45649">__.AddValidator</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">validator</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>    BasicInput </span><span style="color: #A626A4">{</span><span> state </span><span style="color: #A626A4">with</span><span> Validators </span><span style="color: #A626A4">=</span><span> state.Validators </span><span style="color: #A626A4">@</span><span> </span><span style="color: #A626A4">[</span><span> validator </span><span style="color: #A626A4">]</span><span> </span><span style="color: #A626A4">}</span></code></pre>
+<article class="message is-success has-text-centered">
+<div class="message-header">
+🎉 Congrats 🎉
+</div>
+<div class="message-body">
+<p>You now have a <strong>working field</strong> with a <strong>flexible API</strong> exposed</p>
+</div>
+</article>
+<h2><a href="#api" aria-hidden="true"><span class="anchor" id="api"></span>#</a> API</h2>
+<h3><a href="#formbuildertypes" aria-hidden="true"><span class="anchor" id="formbuildertypes"></span>#</a> FormBuilder.Types</h3>
+<table>
+<thead>
+<tr>
+<th>Types</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ErrorDef</code></td>
+<td>Error reprensation to support server side validation</td>
+</tr>
+<tr>
+<td><code>ValidationState</code></td>
+<td>Used to describe is a field is <code>Valid</code> or <code>Invalid</code> with the message to display</td>
+</tr>
+<tr>
+<td><code>IFieldMsg</code></td>
+<td>Interface to be implemented by any field <code>Msg</code></td>
+</tr>
+<tr>
+<td><code>FieldState</code></td>
+<td>Type alias for the field <code>State</code>, should be casted</td>
+</tr>
+<tr>
+<td><code>FieldMsg</code></td>
+<td>Type alias for the field <code>Msg</code>, should be casted</td>
+</tr>
+<tr>
+<td><code>Field</code></td>
+<td>Record to register a field in a <code>Form</code> instance</td>
+</tr>
+<tr>
+<td><code>Msg</code></td>
+<td>Internal <code>Msg</code> used by the Form library</td>
+</tr>
+<tr>
+<td><code>State</code></td>
+<td>Track current state of the Form</td>
+</tr>
+<tr>
+<td><code>FieldConfig</code></td>
+<td>Contract for registering fields in the <code>Config</code></td>
+</tr>
+<tr>
+<td><code>Config</code></td>
+<td>Configuration for the Form</td>
+</tr>
+</tbody>
+</table>
+<h3><a href="#formbuilderform" aria-hidden="true"><span class="anchor" id="formbuilderform"></span>#</a> FormBuilder.Form</h3>
+<table>
+<thead>
+<tr>
+<th>Types</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Form.init</code></td>
+<td><code>init</code> function to call from your <code>init</code> to initialize the form</td>
+</tr>
+<tr>
+<td><code>Form.update</code></td>
+<td><code>update</code> function to call when you received a message for the form</td>
+</tr>
+<tr>
+<td><code>Form.render</code></td>
+<td>Render the form in your view</td>
+</tr>
+<tr>
+<td><code>Form.valide</code></td>
+<td>Validate the model and check if it's valid</td>
+</tr>
+<tr>
+<td><code>Form.toJson</code></td>
+<td>Generate a JSON representation from the current state</td>
+</tr>
+<tr>
+<td><code>Form.setLoading</code></td>
+<td>Set the loading state of the form</td>
+</tr>
+<tr>
+<td><code>Form.isLoading</code></td>
+<td>Check if the form is loading</td>
+</tr>
+<tr>
+<td><code>Form.setErrors</code></td>
+<td>Set error for each field based on a <code>ErrorDef list</code></td>
+</tr>
+</tbody>
+</table>
+<h3><a href="#formbuilderformcmd" aria-hidden="true"><span class="anchor" id="formbuilderformcmd"></span>#</a> FormBuilder.FormCmd</h3>
+<table>
+<thead>
+<tr>
+<th>Types</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FormCmd.none</code></td>
+<td>None - no commands, also known as <code>[]</code></td>
+</tr>
+<tr>
+<td><code>FormCmd.ofMsg</code></td>
+<td>Command to issue a specific message</td>
+</tr>
+<tr>
+<td><code>FormCmd.map</code></td>
+<td>When emitting the message, map to another type</td>
+</tr>
+<tr>
+<td><code>FormCmd.batch</code></td>
+<td>Aggregate multiple commands</td>
+</tr>
+<tr>
+<td><code>FormCmd.ofAsync</code></td>
+<td>ommand that will evaluate an async block and map the result into success or error (of exception)</td>
+</tr>
+<tr>
+<td><code>FormCmd.ofFunc</code></td>
+<td>Command to evaluate a simple function and map the result into success or error (of exception)</td>
+</tr>
+<tr>
+<td><code>FormCmd.performFunc</code></td>
+<td>Command to evaluate a simple function and map the success to a message discarding any possible error</td>
+</tr>
+<tr>
+<td><code>FormCmd.attemptFunc</code></td>
+<td>Command to evaluate a simple function and map the error (in case of exception)</td>
+</tr>
+<tr>
+<td><code>FormCmd.ofPromise</code></td>
+<td>Command to call <code>promise</code> block and map the results</td>
+</tr>
+</tbody>
+</table>
+<h2><a href="#faq" aria-hidden="true"><span class="anchor" id="faq"></span>#</a> F.A.Q</h2>
+<h3><a href="#can-we-avoid-boxing-casting" aria-hidden="true"><span class="anchor" id="can-we-avoid-boxing-casting"></span>#</a> Can we avoid boxing / casting ?</h3>
+<p>This library is using boxing / casting a lot in order to allow us to store different types in a common list. I tried to use interface for <code>FieldConfig</code> in order to have something like:</p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">type</span><span> </span><span style="color: #C18401">FieldConfig</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">&#039;State</span><span style="color: #A626A4">,</span><span style="color: #C18401"> &#039;Msg</span><span style="color: #A626A4">&gt;</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">abstract</span><span> </span><span style="color: #A626A4">member</span><span> View </span><span style="color: #A626A4">:</span><span> &#039;</span><span style="color: #C18401">State</span><span> </span><span style="color: #A626A4">*</span><span> </span><span style="color: #A626A4">(</span><span>&#039;</span><span style="color: #C18401">Msg</span><span> </span><span style="color: #A626A4">-&gt;</span><span> </span><span style="color: #C18401">unit</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">-&gt;</span><span> </span><span style="color: #C18401">obj</span>
+<span>    </span><span style="color: #A626A4">abstract</span><span> </span><span style="color: #A626A4">member</span><span> Update </span><span style="color: #A626A4">:</span><span> &#039;</span><span style="color: #C18401">Msg</span><span> </span><span style="color: #A626A4">*</span><span> &#039;</span><span style="color: #C18401">State</span><span> </span><span style="color: #A626A4">-&gt;</span><span> &#039;</span><span style="color: #C18401">State</span><span> </span><span style="color: #A626A4">*</span><span> </span><span style="color: #A626A4">(</span><span style="color: #C18401">string</span><span> </span><span style="color: #A626A4">-&gt;</span><span> </span><span style="color: #C18401">Cmd</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">&#039;Msg</span><span style="color: #A626A4">&gt;)</span>
+<span>    </span><span style="color: #A626A4">abstract</span><span> </span><span style="color: #A626A4">member</span><span> Init </span><span style="color: #A626A4">:</span><span> &#039;</span><span style="color: #C18401">State</span><span> </span><span style="color: #A626A4">-&gt;</span><span> &#039;</span><span style="color: #C18401">State</span><span> </span><span style="color: #A626A4">*</span><span> </span><span style="color: #A626A4">(</span><span style="color: #C18401">string</span><span> </span><span style="color: #A626A4">-&gt;</span><span> </span><span style="color: #C18401">Cmd</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">&#039;Msg</span><span style="color: #A626A4">&gt;)</span>
+<span>    </span><span style="color: #A626A4">abstract</span><span> </span><span style="color: #A626A4">member</span><span> Validate </span><span style="color: #A626A4">:</span><span> &#039;</span><span style="color: #C18401">State</span><span> </span><span style="color: #A626A4">-&gt;</span><span> &#039;</span><span style="color: #C18401">State</span>
+<span>    </span><span style="color: #A626A4">abstract</span><span> </span><span style="color: #A626A4">member</span><span> IsValid </span><span style="color: #A626A4">:</span><span> &#039;</span><span style="color: #C18401">State</span><span> </span><span style="color: #A626A4">-&gt;</span><span> </span><span style="color: #C18401">bool</span>
+<span>    </span><span style="color: #A626A4">abstract</span><span> </span><span style="color: #A626A4">member</span><span> ToJson </span><span style="color: #A626A4">:</span><span> &#039;</span><span style="color: #C18401">State</span><span> </span><span style="color: #A626A4">-&gt;</span><span> </span><span style="color: #C18401">string</span><span> </span><span style="color: #A626A4">*</span><span> </span><span style="color: #C18401">Encode.Value</span>
+<span>    </span><span style="color: #A626A4">abstract</span><span> </span><span style="color: #A626A4">member</span><span> SetError </span><span style="color: #A626A4">:</span><span> &#039;</span><span style="color: #C18401">State</span><span> </span><span style="color: #A626A4">*</span><span> </span><span style="color: #C18401">string</span><span> </span><span style="color: #A626A4">-&gt;</span><span> &#039;</span><span style="color: #C18401">State</span></code></pre>
+<p>But then I didn't found a way to store all the fields <code>FieldConfig&lt;'State, 'Msg&gt;</code> in a list inside <code>Config&lt;'AppMsg&gt;</code>.</p>
+<p>If you find a way to either hide the boxing / casting things from the user view or to make everything strongly typed please open an issue to discuss it.</p>
+<h3><a href="#why-use-a-fluent-api" aria-hidden="true"><span class="anchor" id="why-use-a-fluent-api"></span>#</a> Why use a fluent API ?</h3>
+<p>When writing this library I explored several ways for building the DSL. Here is my analysis:</p>
+<table>
+    <thead>
+        <tr>
+            <th style="text-align:center"></th>
+            <th style="text-align:center">
+                <span>
+                    Computation Expression
+                </span>
+            </th>
+            <th style="text-align:center">
+                <span>
+                    Pipeline
+                </span>
+            </th>
+            <th style="text-align:center">
+                <span>
+                    Fluent
+                </span>
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td style="text-align:center">
+                Easy to create
+            </td>
+            <td style="text-align:center">
+                <i class="fa fa-circle has-text-danger"></i>
+            </td>
+            <td style="text-align:center">
+                <i class="fa fa-circle has-text-success"></i>
+            </td>
+            <td style="text-align:center">
+                <i class="fa fa-circle has-text-warning"></i>
+            </td>
+        </tr>
+        <tr>
+            <td style="text-align:center">
+                Easy to extend
+            </td>
+            <td style="text-align:center">
+                <i class="fa fa-circle has-text-danger"></i>
+            </td>
+            <td style="text-align:center">
+                <i class="fa fa-circle has-text-success"></i>
+            </td>
+            <td style="text-align:center">
+                <i class="fa fa-circle has-text-success"></i>
+            </td>
+        </tr>
+        <tr>
+            <td style="text-align:center">
+                Terse
+            </td>
+            <td style="text-align:center">
+                <i class="fa fa-circle has-text-warning"></i>
+            </td>
+            <td style="text-align:center">
+                <i class="fa fa-circle has-text-danger"></i>
+            </td>
+            <td style="text-align:center">
+                <i class="fa fa-circle has-text-success"></i>
+            </td>
+        </tr>
+        <tr>
+            <td style="text-align:center">
+                Discoverability
+            </td>
+            <td style="text-align:center">
+                <i class="fa fa-circle has-text-warning"></i>
+            </td>
+            <td style="text-align:center">
+                <i class="fa fa-circle has-text-success"></i>
+            </td>
+            <td style="text-align:center">
+                <i class="fa fa-circle has-text-success"></i>
+            </td>
+        </tr>
+        <tr>
+            <td style="text-align:center">
+                <span>
+                    Naturally follows indentation
+                    <span class="icon tooltip is-tooltip-multiline has-text-grey-light" data-tooltip="Evaluation is based on how easy it is to distinguish the different blocks">
+                        <i class="fa fa-question-circle"></i>
+                    </span>
+                </span>
+            </td>
+            <td style="text-align:center">
+                <i class="fa fa-circle has-text-success"></i>
+            </td>
+            <td style="text-align:center">
+                <i class="fa fa-circle has-text-warning"></i>
+            </td>
+            <td style="text-align:center">
+                <i class="fa fa-circle has-text-success"></i>
+            </td>
+        </tr>
+        <tr>
+            <td style="text-align:center">
+                <span>
+                    Allow optional arguments
+                    <span class="icon tooltip is-tooltip-multiline has-text-grey-light" data-tooltip="This is useful for the validators. For example, you can make a 'custom error message' optional">
+                        <i class="fa fa-question-circle"></i>
+                    </span>
+                </span>
+            </td>
+            <td style="text-align:center">
+                <i class="fa fa-circle has-text-danger"></i>
+            </td>
+            <td style="text-align:center">
+                <i class="fa fa-circle has-text-danger"></i>
+            </td>
+            <td style="text-align:center">
+                <i class="fa fa-circle has-text-success"></i>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<h3><a href="#am-i-forced-to-use-bulmafulma" aria-hidden="true"><span class="anchor" id="am-i-forced-to-use-bulmafulma"></span>#</a> Am I forced to use Bulma/Fulma ?</h3>
+<p>No, I used <code>Bulma</code> in <code>Thoth.Elmish.FormBuilder.BasicFields</code> because it was easier for me as I already know this framework. You can use <code>WithCustomView</code> to customize the views.</p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span>BasicInput</span>
+<span>    .Create</span><span style="color: #A626A4">(</span><span style="color: #50A14F">&quot;condition&quot;</span><span style="color: #A626A4">)</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">// Here you can customize the view function</span>
+<span>    .WithCustomView</span><span style="color: #A626A4">(fun</span><span style="color: #383A42"> state dispatch </span><span style="color: #A626A4">-&gt;</span>
+<span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">state</span><span> </span><span style="color: #A626A4">=</span><span> state </span><span style="color: #A626A4">:?&gt;</span><span> Checkbox.State</span>
+
+<span>        div </span><span style="color: #A626A4">[</span><span> </span><span style="color: #A626A4">]</span>
+<span>            </span><span style="color: #A626A4">[</span><span> label </span><span style="color: #A626A4">[</span><span> Class </span><span style="color: #50A14F">&quot;my-custom-label&quot;</span><span> </span><span style="color: #A626A4">]</span>
+<span>                </span><span style="color: #A626A4">[</span><span> str state.Label </span><span style="color: #A626A4">]</span>
+<span>              input </span><span style="color: #A626A4">[</span><span> Class </span><span style="color: #50A14F">&quot;my-custom-input&quot;</span>
+<span>                      </span><span style="color: #A0A1A7;font-style: italic">// others properties</span>
+<span>                    </span><span style="color: #A626A4">]</span><span> </span><span style="color: #A626A4">]</span>
+<span>    </span><span style="color: #A626A4">)</span></code></pre>
+<h3><a href="#will-there-be-a-fulma-based-library" aria-hidden="true"><span class="anchor" id="will-there-be-a-fulma-based-library"></span>#</a> Will there be a Fulma based library ?</h3>
+<p>Yes, I am already working on it but it's not ready yet for a public release. Because, I want to support all/most of Bulma features and it takes times to designs</p>
+<h3><a href="#is-there-any-css-included" aria-hidden="true"><span class="anchor" id="is-there-any-css-included"></span>#</a> Is there any CSS included ?</h3>
+<p><code>Thoth.Elmish.FormBuilder</code> has been designed to be really thin and not tied to a specific CSS framework.</p>
+<p>The only special case is if you use the <code>DefaultLoader</code>. Then the library will inject <strong>7 lines</strong> of CSS in your <code>document</code>.</p>
+<p>But if you use a <code>CustomLoader</code> then no CSS is injected.</p>
+
+                    </div>
+                </div>
+                <div class="column is-3 is-hidden-touch">
+                        <nav class="toc"><ul class="toc-headings"><li><a href="#introduction"> Introduction</a></li></ul><ul class="toc-headings"><li><a href="#demo"> Demo</a></li></ul><ul class="toc-headings"><li><a href="#how-to-use"> How to use ?</a><ul class="toc-sub-headings"><li><a href="#installation"> Installation</a></li><li><a href="#basicfields-basic-usage"> BasicFields - Basic usage</a></li><li><a href="#basicfields-custom-views"> BasicFields - Custom views</a></li><li><a href="#server-side-validation"> Server side validation</a></li><li><a href="#create-a-custom-field"> Create a custom field</a></li></ul></li></ul><ul class="toc-headings"><li><a href="#api"> API</a><ul class="toc-sub-headings"><li><a href="#formbuildertypes"> FormBuilder.Types</a></li><li><a href="#formbuilderform"> FormBuilder.Form</a></li><li><a href="#formbuilderformcmd"> FormBuilder.FormCmd</a></li></ul></li></ul><ul class="toc-headings"><li><a href="#faq"> F.A.Q</a><ul class="toc-sub-headings"><li><a href="#can-we-avoid-boxing-casting"> Can we avoid boxing / casting ?</a></li><li><a href="#why-use-a-fluent-api"> Why use a fluent API ?</a></li><li><a href="#am-i-forced-to-use-bulmafulma"> Am I forced to use Bulma/Fulma ?</a></li><li><a href="#will-there-be-a-fulma-based-library"> Will there be a Fulma based library ?</a></li><li><a href="#is-there-any-css-included"> Is there any CSS included ?</a></li></ul></li></ul></nav>
+                </div>
+            </div>
+        </section>
+    </div>
+    <div><br/><div class="footer has-text-centered"><div class="container"><div class="content"><p><strong>Thoth</strong> by <a href="https://twitter.com/MangelMaxime">Maxime Mangel</a></p>
+<p>Powered by <a href="https://mangelmaxime.github.io/Fulma/">Fulma</a>, <a href="https://github.com/fable-compiler/static-web-generator">Fable static-web-generator</a> and <a href="https://github.com/MangelMaxime/Code-Lightner">Code-Lightner</a>.</p>
+</div></div></div></div>
+    <script type="text/javascript">
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Get all "navbar-burger" elements
+            var $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+
+            // Check if there are any navbar burgers
+            if ($navbarBurgers.length > 0) {
+
+                // Add a click event on each of them
+                $navbarBurgers.forEach(function ($el) {
+                    $el.addEventListener('click', function () {
+
+                        var $target = document.getElementById("navMenu");
+
+                        // Toggle the class on both the "navbar-burger" and the "navbar-menu"
+                        $el.classList.toggle('is-active');
+                        $target.classList.toggle('is-active');
+
+                    });
+                });
+            }
+
+        });
+
+    </script>
+</body>
+
+</html>
