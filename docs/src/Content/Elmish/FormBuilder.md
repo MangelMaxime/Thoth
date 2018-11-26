@@ -204,7 +204,7 @@ Example:
 
 ### Server side validation
 
-In order to support server side validation, the library define the type `ErrorDef`.
+In order to support server side validation, the library defines the type `ErrorDef`.
 
 ```fsharp
 type ErrorDef =
