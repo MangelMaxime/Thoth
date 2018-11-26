@@ -7,16 +7,35 @@ open System
 
 module Types =
 
-    type ValidationState=
+    /// Error reprensation to support server side validation
+    type ErrorDef =
+        { Text : string
+          Key : string }
+
+        static member Decoder =
+            Decode.object
+                (fun get ->
+                    { Text = get.Required.Field "text" Decode.string
+                      Key = get.Required.Field "key" Decode.string } : ErrorDef )
+
+        static member Encoder (error : ErrorDef) =
+            Encode.object [
+                "text", Encode.string error.Text
+                "key", Encode.string error.Key
+            ]
+
+    /// Used to describe is a field is `Valid` or `Invalid` with the message to display
+    type ValidationState =
         | Valid
         | Invalid of string
 
-        member this.ToText
+        member this.Text
             with get () =
                 match this with
                 | Valid -> ""
                 | Invalid msg -> msg
 
+    /// Interface to be implemented by any field `Msg`
     type IFieldMsg =
         interface end
 
@@ -30,6 +49,10 @@ module Types =
     /// Type alias for the field `Msg`, should be casted
     type FieldMsg = obj
 
+    /// Field identifier
+    /// The name should be unique per form instance
+    type FieldName = string
+
     /// Record to register a field
     type Field =
         { /// Type alias to identify the type of the field
@@ -37,25 +60,34 @@ module Types =
           /// Current state of the field in the form
           State : FieldState
           /// Unique Id of the field in the form
-          Guid : Guid }
+          Name : FieldName }
 
     type Msg =
         // | DebouncerSelfMsg of Debouncer.SelfMessage<Msg>
-        | OnFieldMessage of Guid * FieldState
+        | OnFieldMessage of FieldName * FieldState
 
-    type Form<'AppMsg> =
+    /// Track current state of the Form
+    type State =
         { Fields : Field list
-          OnFormMsg : Msg -> 'AppMsg
-          IsWaiting : bool }
+          IsLoading : bool }
 
-    /// Serves as an implementation contract for the fields
+    /// Contract for registering fields in the `Config`
     type FieldConfig =
-        { Render : FieldState -> (IFieldMsg -> unit) -> React.ReactElement
-          Update : FieldMsg -> FieldState -> FieldState * (Guid -> Cmd<Msg>)
-          Init : FieldState -> FieldState * (Guid -> Cmd<Msg>)
+        { View : FieldState -> (IFieldMsg -> unit) -> React.ReactElement
+          Update : FieldMsg -> FieldState -> FieldState * (string -> Cmd<Msg>)
+          Init : FieldState -> FieldState * (string -> Cmd<Msg>)
           Validate : FieldState -> FieldState
           IsValid : FieldState -> bool
-          ToJson : FieldState -> string * Encode.Value }
+          ToJson : FieldState -> string * Encode.Value
+          SetError : FieldState -> string -> FieldState }
 
-    /// Types alias used to represents a form config
-    type Config = Map<FieldType, FieldConfig>
+    /// Configuration for the Form
+    type Config<'AppMsg> =
+        { ToMsg : Msg -> 'AppMsg
+          FieldsConfig : Map<FieldType, FieldConfig> }
+
+    type FieldBuilder =
+        { Type : FieldType
+          State : FieldState
+          Name : FieldName
+          Config : FieldConfig }

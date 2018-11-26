@@ -1,52 +1,31 @@
-namespace Thoth.Elmish.FormBuilder.Fields
+namespace Fulma.FormBuilder
 
-open Fulma
 open Fable.Helpers.React
+open Fable.Helpers.React.Props
 open Thoth.Elmish.FormBuilder
 open Thoth.Elmish.FormBuilder.Types
 open System
 open Thoth.Json
+open Fulma
 
 [<RequireQualifiedAccess>]
-module Textarea =
+module Checkbox =
 
     type State =
         { Label : string
-          Value : string
+          IsChecked : bool
           Validators : Validator list
           ValidationState : ValidationState
-          JsonLabel : string option }
+          Name : string }
 
     and Validator = State -> ValidationState
 
     type Msg =
-        | ChangeValue of string
+        | ToggleState
         interface IFieldMsg
 
     let private init (state : FieldState) =
         state, FormCmd.none
-
-    let private update (msg : FieldMsg) (state : FieldState) =
-        let msg = msg :?> Msg
-        let state = state :?> State
-
-        match msg with
-        | ChangeValue newValue ->
-            box { state with Value = newValue }, FormCmd.none
-
-    let private render (state : FieldState) (onChange : IFieldMsg -> unit) =
-        let state : State = state :?> State
-        Field.div [ ]
-            [ Label.label [ ]
-                [ str state.Label ]
-              Control.div [ ]
-                [ Textarea.textarea [ Textarea.Value state.Value
-                                      Textarea.OnChange (fun ev ->
-                                        ev.Value |> ChangeValue |> onChange
-                                      ) ]
-                    [ ] ]
-              Help.help [ Help.Color IsDanger ]
-                [ str state.ValidationState.ToText ] ]
 
     let private validate (state : FieldState) =
         let state : State = state :?> State
@@ -67,28 +46,51 @@ module Textarea =
 
     let private toJson (state : FieldState) =
         let state : State = state :?> State
-        state.JsonLabel
-        |> Option.defaultValue state.Label, Encode.string state.Value
+        state.Name, Encode.bool state.IsChecked
+
+    let private update (msg : FieldMsg) (state : FieldState) =
+        let msg = msg :?> Msg
+        let state = state :?> State
+
+        match msg with
+        | ToggleState ->
+            box { state with IsChecked = not state.IsChecked }, FormCmd.none
+
+    let private view (state : FieldState) (dispatch : IFieldMsg -> unit) =
+        let state : State = state :?> State
+        Field.div [ ]
+            [ Control.div [ ]
+                [ Checkbox.checkbox [ ]
+                    [ Checkbox.input [ Props [ Checked state.IsChecked
+                                               OnChange (fun _ ->
+                                                onChange ToggleState
+                                               ) ] ]
+                      str state.Label ] ]
+              Help.help [ Help.Color IsDanger ]
+                [ str state.ValidationState.ToText ] ]
 
     let config : FieldConfig =
-        { Render = render
+        { View = view
           Update = update
           Init = init
           Validate = validate
           IsValid = isValid
           ToJson = toJson }
 
-    let create (label : string) : State =
-        { Label = label
-          Value = ""
+    let create (name : string) : State =
+        { Label = ""
+          IsChecked = false
           Validators = [ ]
           ValidationState = Valid
-          JsonLabel = None }
+          Name = name }
 
-    let withValue (value : string) (state : State) =
-        { state with Value = value }
+    let withValue (value : bool ) (state : State) =
+        { state with IsChecked = value }
+
+    let withLabel (label : string ) (state : State) =
+        { state with Label = label }
 
     let withDefaultRenderer (state : State) : Field =
-        { Type = "default-textarea"
+        { Type = "fulma-checkbox"
           State = state
           Guid = Guid.NewGuid() }

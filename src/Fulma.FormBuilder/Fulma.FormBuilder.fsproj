@@ -14,13 +14,15 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="../../src/Thoth.Elmish/Thoth.Elmish.fsproj" />
+        <ProjectReference Include="../../src/Thoth.Elmish.FormBuilder/Thoth.Elmish.FormBuilder.fsproj" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="Helpers.fs" />
-        <Compile Include="Types.fs" />
-        <Compile Include="Cmd.fs" />
-        <Compile Include="Form.fs" />
+        <Compile Include="Checkbox.fs" />
+        <Compile Include="Input.fs" />
+        <Compile Include="RadioButton.fs" />
+        <Compile Include="Select.fs" />
+        <Compile Include="Textarea.fs" />
+        <Compile Include="Prelude.fs" />
     </ItemGroup>
     <ItemGroup>
         <Content Include="*.fsproj; **\*.fs; **\*.js; **\*.css" PackagePath="fable" />

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Description>Form abstraction making it easier to works with form in Elmish application</Description>
+        <Description></Description>
         <PackageProjectUrl>https://github.com/MangelMaxime/Thoth</PackageProjectUrl>
         <PackageLicenseUrl>https://github.com/MangelMaxime/Thoth/blob/master/LICENSE.md</PackageLicenseUrl>
         <RepositoryUrl>https://github.com/MangelMaxime/Thoth</RepositoryUrl>
@@ -14,13 +14,15 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="../../src/Thoth.Elmish/Thoth.Elmish.fsproj" />
+        <ProjectReference Include="../../src/Thoth.Elmish.FormBuilder/Thoth.Elmish.FormBuilder.fsproj" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="Helpers.fs" />
-        <Compile Include="Types.fs" />
-        <Compile Include="Cmd.fs" />
-        <Compile Include="Form.fs" />
+        <Compile Include="Checkbox.fs" />
+        <Compile Include="Input.fs" />
+        <Compile Include="Radio.fs" />
+        <Compile Include="Select.fs" />
+        <Compile Include="Textarea.fs" />
+        <Content Include="*.fsproj; **/*.fs; **/*.js; **/*.css" />
     </ItemGroup>
     <ItemGroup>
         <Content Include="*.fsproj; **\*.fs; **\*.js; **\*.css" PackagePath="fable" />

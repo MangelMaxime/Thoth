@@ -6,7 +6,7 @@
   <ItemGroup>
     <ProjectReference Include="../../src/Thoth.Elmish.Toast/Thoth.Elmish.Toast.fsproj" />
     <ProjectReference Include="../../src/Thoth.Elmish/Thoth.Elmish.fsproj" />
-    <ProjectReference Include="../../src/Thoth.Elmish.FormBuilder/Thoth.Elmish.FormBuilder.fsproj" />
+    <ProjectReference Include="../../src/Thoth.Elmish.FormBuilder.BasicFields/Thoth.Elmish.FormBuilder.BasicFields.fsproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="src/Debouncer.fs" />

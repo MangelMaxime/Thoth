@@ -102,6 +102,10 @@ module Components.Navbar
                               Navbar.Item.Props [ Href Route.Elmish.Debouncer ] ]
                 [ str "Debouncer" ]
               Navbar.divider [ ] [ ]
+              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Elmish.FormBuilder)
+                              Navbar.Item.Props [ Href Route.Elmish.FormBuilder ] ]
+                [ str "FormBuilder" ]
+              Navbar.divider [ ] [ ]
               Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Elmish.Toast.Docs)
                               Navbar.Item.Props [ Href Route.Elmish.Toast.Docs ] ]
                 [ str "Toast - Docs" ]

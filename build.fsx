@@ -33,6 +33,8 @@ let srcFiles =
     ++ "./src/Thoth.Json.Giraffe/Thoth.Json.Giraffe.fsproj"
     ++ "./src/Thoth.Elmish/Thoth.Elmish.fsproj"
     ++ "./src/Thoth.Elmish.Toast/Thoth.Elmish.Toast.fsproj"
+    ++ "./src/Thoth.Elmish.FormBuilder/Thoth.Elmish.FormBuilder.fsproj"
+    ++ "./src/Thoth.Elmish.FormBuilder.BasicFields/Thoth.Elmish.FormBuilder.BasicFields.fsproj"
 
 let testsGlob = "tests/**/*.fsproj"
 let docFile = "./docs/Docs.fsproj"
@@ -70,31 +72,29 @@ module Logger =
     let errorfn str = Printf.kprintf (fun s -> use c = consoleColor ConsoleColor.Red in printfn "%s" s) str
 
 let run (cmd:string) dir args  =
-    if Process.execSimple (fun info ->
-        { info with
-            FileName = cmd
-            WorkingDirectory =
-                if not (String.IsNullOrWhiteSpace dir) then dir else info.WorkingDirectory
-            Arguments = args
-        }
-    ) TimeSpan.MaxValue <> 0 then
-        failwithf "Error while running '%s' with args: %s " cmd args
+    Command.RawCommand(cmd, Arguments.OfArgs args)
+    |> CreateProcess.fromCommand
+    |> CreateProcess.withWorkingDirectory dir
+    |> Proc.run
+    |> ignore
+
+
+    // if Process.execSimple (fun info ->
+    //     { info with
+    //         FileName = cmd
+    //         WorkingDirectory =
+    //             if not (String.IsNullOrWhiteSpace dir) then dir else info.WorkingDirectory
+    //         Arguments = args
+    //     }
+    // ) TimeSpan.MaxValue <> 0 then
+    //     failwithf "Error while running '%s' with args: %s " cmd args
 
 let mono workingDir args =
-    let code =
-        Process.execSimple
-            (fun info ->
-                { info with
-                    FileName = "mono"
-                    WorkingDirectory = workingDir
-                    Arguments = args
-                }
-            )
-            (TimeSpan.FromMinutes 10.)
-    if code <> 0 then
-        failwithf "Mono exited with code: %i" code
-    else
-        ()
+    Command.RawCommand("mono", Arguments.OfArgs args)
+    |> CreateProcess.fromCommand
+    |> CreateProcess.withWorkingDirectory workingDir
+    |> Proc.run
+    |> ignore
 
 Target.create "Clean" (fun _ ->
     !! "src/**/bin"
@@ -163,9 +163,9 @@ Target.create "ExpectoTest" (fun _ ->
     build "tests/Thoth.Tests.fsproj" "net461"
 
     if Environment.isUnix then
-        mono testNetFrameworkDir "Thoth.Tests.exe"
+        mono testNetFrameworkDir [ "Thoth.Tests.exe" ]
     else
-        run (testNetFrameworkDir </> "Thoth.Tests.exe") "" ""
+        run (testNetFrameworkDir </> "Thoth.Tests.exe") root []
 
     let result = DotNet.exec (dtntWorkDir testNetCoreDir) "" "Thoth.Tests.dll"
 
@@ -188,13 +188,10 @@ Target.create "Docs.Watch" (fun _ ->
     watcher.EnableRaisingEvents <- true
 
     watcher.Changed.Add(fun _ ->
-        Process.execSimple
-            (fun info ->
-                { info with
-                    FileName = "node"
-                    Arguments = buildMain }
-            )
-            (TimeSpan.FromSeconds 30.) |> ignore
+        Command.RawCommand("node", Arguments.OfArgs [ buildMain ])
+        |> CreateProcess.fromCommand
+        |> Proc.run
+        |> ignore
     )
 
     // Make sure the style is generated

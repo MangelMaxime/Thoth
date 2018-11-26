@@ -1,4 +1,5 @@
 group Demos
+    FSharp.Core
     Fable.Core
     Fable.Elmish
     Fable.Elmish.React

@@ -1,18 +1,23 @@
-namespace Thoth.Elmish.FormBuilder.Fields
+namespace Fulma.FormBuilder
 
 open Fulma
 open Fable.Helpers.React
+open Fable.Helpers.React.Props
 open Thoth.Elmish.FormBuilder
 open Thoth.Elmish.FormBuilder.Types
 open System
 open Thoth.Json
 
 [<RequireQualifiedAccess>]
-module Input =
+module RadioButton =
+
+    type Key = string
 
     type State =
         { Label : string
-          Value : string
+          SelectedKey : Key option
+          Values : (Key * string) list
+          Group : string
           Validators : Validator list
           ValidationState : ValidationState
           JsonLabel : string option }
@@ -31,20 +36,29 @@ module Input =
         let state = state :?> State
 
         match msg with
-        | ChangeValue newValue ->
-            box { state with Value = newValue }, FormCmd.none
+        | ChangeValue key ->
+            box { state with SelectedKey = Some key }, FormCmd.none
 
-    let private render (state : FieldState) (onChange : IFieldMsg -> unit) =
+    let private renderRadio (group : string) (selectedKey : Key option) (onChange : IFieldMsg -> unit) (key, value) =
+        Radio.radio [ Props [ Prop.Key key ] ]
+            [ Radio.input [ Radio.Input.Props [ OnChange (fun _ -> ChangeValue key |> onChange)
+                                                selectedKey
+                                                |> Option.map (fun cKey -> cKey = key)
+                                                |> Option.defaultValue false
+                                                |> Checked ]
+                            Radio.Input.Name group ]
+              str value ]
+
+    let private view (state : FieldState) (dispatch : IFieldMsg -> unit) =
         let state : State = state :?> State
+
         Field.div [ ]
             [ Label.label [ ]
                 [ str state.Label ]
               Control.div [ ]
-                [ Input.input [ Input.Value state.Value
-                                // Input.Placeholder (state.Placeholder |> Option.defaultValue "")
-                                Input.OnChange (fun ev ->
-                                    ev.Value |> ChangeValue |> onChange
-                                ) ] ]
+                [ state.Values
+                  |> List.map (renderRadio state.Group state.SelectedKey onChange)
+                  |> ofList ]
               Help.help [ Help.Color IsDanger ]
                 [ str state.ValidationState.ToText ] ]
 
@@ -68,10 +82,12 @@ module Input =
     let private toJson (state : FieldState) =
         let state : State = state :?> State
         state.JsonLabel
-        |> Option.defaultValue state.Label, Encode.string state.Value
+        |> Option.defaultValue state.Label, state.SelectedKey
+                                            |> Option.map Encode.string
+                                            |> Option.defaultValue Encode.nil
 
     let config : FieldConfig =
-        { Render = render
+        { View = view
           Update = update
           Init = init
           Validate = validate
@@ -80,15 +96,20 @@ module Input =
 
     let create (label : string) : State =
         { Label = label
-          Value = ""
+          SelectedKey = None
+          Values = []
+          Group = (Guid.NewGuid()).ToString()
           Validators = [ ]
           ValidationState = Valid
           JsonLabel = None }
 
-    let withValue (value : string) (state : State) =
-        { state with Value = value }
+    let withValues (values : (Key * string) list) (state : State) =
+        { state with Values = values }
+
+    let withSelectedKey (key : Key ) (state : State) =
+        { state with SelectedKey = Some key }
 
     let withDefaultRenderer (state : State) : Field =
-        { Type = "default-input"
+        { Type = "fulma-radio-button"
           State = state
           Guid = Guid.NewGuid() }
