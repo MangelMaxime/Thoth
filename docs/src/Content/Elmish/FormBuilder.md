@@ -43,9 +43,9 @@ This library is trying to solve this problem.
 
 Add the `Thoth.Elmish.FormBuilder` dependency in your [Paket](https://fsprojects.github.io/Paket/) files: `paket add Thoth.Elmish.FormBuilder --project <your project>`.
 
-If you are trying this library for the first time you probably wants to add `Thoth.Elmish.FormBuilder.BasicFields` too. It provides some ready to use fields.
+If you are trying this library for the first time you probably want to add `Thoth.Elmish.FormBuilder.BasicFields` too. It provides some ready to use fields.
 
-For using, the default view of `Thoth.Elmish.FormBuilder.BasicFields`, you need to include [Bulma](http://bulma.io/) in your project.
+For using the default view of `Thoth.Elmish.FormBuilder.BasicFields`, you need to include [Bulma](http://bulma.io/) in your project.
 
 ### BasicFields - Basic usage
 
