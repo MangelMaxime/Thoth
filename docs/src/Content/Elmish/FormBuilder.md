@@ -244,11 +244,11 @@ Example:
 
 In this section, you will learn:
 
-- how to create a custom fields
-- the convention I use when designing a field, I encourage you to follow them 😊
+- how to create a custom field
+- the conventions I use when designing a field. I encourage you to follow them 😊
 - general comments on why I structure my code in a specific way
 
-You will see usage of boxing `box` and casting `:?>`. If you wants to learn more about that after reading this section you can take a look at the [F.A.Q](#can-we-avoid-boxing-casting)
+You will see usage of boxing `box` and casting `:?>`. If you want to learn more about that after reading this section, you can take a look at the [F.A.Q.](#can-we-avoid-boxing-casting)
 
 #### File structure
 
@@ -269,7 +269,7 @@ type MyField private (state : MyField.State) =
         // ...
 ```
 
-By using this architecture, you can then use your API like that:
+By using this architecture, you can use your API like this:
 
 ```fsharp
 module MyApp.PageA
@@ -289,7 +289,7 @@ let formState, formConfig =
 
 The benefits are:
 - Each field consist of a **single file**
-- By using **1 open statement** you get access to all yours fields API
+- By using **1 open statement** you get access to all your fields API
 
 *This is the structure used in [Thoth.Elmish.FormBuilder.BasicFields](https://github.com/MangelMaxime/Thoth/tree/master/src/Thoth.Elmish.FormBuilder.BasicFields)*
 
@@ -297,7 +297,7 @@ The benefits are:
 
 Designing a custom field is similar to designing an Elmish components.
 
-Here is the contract that all field needs to implements. Don't worry, we are going to go step by step.
+Here is the contract that all fields need to implement. Don't worry, we are going to go step by step.
 
 ```fsharp
 /// Contract for registering fields in the `Config`
@@ -311,7 +311,7 @@ type FieldConfig =
       SetError : FieldState -> string -> FieldState }
 ```
 
-As an example of a custom field, we will re-implement a basic `Input`.
+As an example of a custom field, we will reimplement a basic `Input`.
 
 ---------------
 
@@ -319,7 +319,7 @@ As an example of a custom field, we will re-implement a basic `Input`.
 
 *`State` is similar to `Model` in Elmish terms*
 
-**Every** fields **needs to have** a `Name` property. This will be used later to identify each field uniquely and to generate the JSON representation of the field.
+**Every** field **needs to have** a `Name` property. This will be used later to identify each field uniquely and to generate the JSON representation of the field.
 
 ```fsharp
 type State =
@@ -350,7 +350,7 @@ type Msg =
 
 3. `init` function
 
-This function will be called when initializing yours forms.
+This function will be called when initializing your forms.
 
 For example, if your field needs to fetch data from the server you can trigger the request here. [See the select field for an example](https://github.com/MangelMaxime/Thoth/blob/master/src/Thoth.Elmish.FormBuilder.BasicFields/Select.fs)
 
@@ -363,9 +363,9 @@ let private init (state : FieldState) =
 
 4. `validate` and `setError` function
 
-If you used the same names for `ValidationState` and `Validators` properties, you can copy/paste these functions in all your fields definition.
+If you used the same names for `ValidationState` and `Validators` properties, you can copy/paste these functions in all your field definitions.
 
-*I didn't find a way to make it generic for any fields*
+*I didn't find a way to make it generic for all fields*
 
 ```fsharp
 let private validate (state : FieldState) =
@@ -390,7 +390,7 @@ let private setError (state : FieldState) (message : string)=
 
 5. `isValid` function
 
-This function will be called to check if your fields is in a valid state or no.
+This function will be called to check if your field is in a valid state or not.
 
 ```fsharp
 let private isValid (state : FieldState) =
@@ -418,9 +418,9 @@ Similar as in Elmish, this is called for updating your `State` when receiving a 
 
 ```fsharp
 let private update (msg : FieldMsg) (state : FieldState) =
-    // Cast the received message into it's real type
+    // Cast the received message into its real type
     let msg = msg :?> Msg
-    // Cast the received into it's real type
+    // Cast the received into its real type
     let state = state :?> State
 
     match msg with
@@ -433,8 +433,8 @@ let private update (msg : FieldMsg) (state : FieldState) =
 
 **Notes**
 
-- You needs to call `validate` youself after updating your model. This is required because not every message of field needs to trigger a validation.
-- Instead of using `Cmd` module from Elmish, you needs to use `FormCmd`. This modules implements the same API as `Cmd` module.
+- You need to call `validate` yourself after updating your model. This is required because not every message of field needs to trigger a validation.
+- Instead of using `Cmd` module from Elmish, you need to use `FormCmd`. This module implements the same API as `Cmd` module.
 
 ---------------
 
@@ -482,7 +482,7 @@ let config : FieldConfig =
 
 #### Expose a fluent API
 
-See the [F.A.Q](#why-use-a-fluent-api) for why I choose to expose a fluent API.
+See the [F.A.Q.](#why-use-a-fluent-api) to know why I choose to expose a fluent API.
 
 1. In order to design an immutable fluent API, you need to mark your `constructor` as `private`.
 
@@ -524,7 +524,7 @@ member __.WithDefaultView () : FieldBuilder =
 
 **Notes**
 
-- The `Type` value needs to a unique name to identify your fields type. For example, `basic-input`, `fulma-input`, `my-lib-special-dropdown`, etc.
+- The `Type` value needs a unique name to identify your field type. For example, `basic-input`, `fulma-input`, `my-lib-special-dropdown`, etc.
 - The `Config` properties refer to the exposed config you wrote earlier.
 
 ---------------
