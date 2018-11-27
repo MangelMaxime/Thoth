@@ -5,7 +5,7 @@
 
 This library is marked in **Alpha** stage but is **already used in production**.
 
-I released it in **Alpha** so we can work as a community on improving it and still able to introduce changes if needed.
+I released it in **Alpha** so we can work as a community on improving it and still be able to introduce changes if needed.
 
   </div>
 </article>
@@ -16,7 +16,7 @@ When working with forms in an Elmish application, we end up writing a lot of lin
 
 The conclusion was: that to [manage a basic form](https://slides.com/mangelmaxime/fableconf_2018_keynote/live#/2/1) we need to write at least **23 lines of code per field** and have a lot of **duplication**.
 
-This library is trying to solve this problem.
+This library is trying to solve that problem.
 
 ## Demo
 
