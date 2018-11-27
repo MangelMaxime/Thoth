@@ -573,8 +573,8 @@ You now have a **working field** with a **flexible API** exposed
 
 | Types | Description |
 |---|---|
-| `ErrorDef` | Error reprensation to support server side validation |
-| `ValidationState` | Used to describe is a field is `Valid` or `Invalid` with the message to display |
+| `ErrorDef` | Error representation to support server side validation |
+| `ValidationState` | Used to describe if a field is `Valid` or `Invalid` with the message to display |
 | `IFieldMsg` | Interface to be implemented by any field `Msg` |
 | `FieldState` | Type alias for the field `State`, should be casted |
 | `FieldMsg` | Type alias for the field `Msg`, should be casted |
@@ -605,7 +605,7 @@ You now have a **working field** with a **flexible API** exposed
 | `FormCmd.ofMsg` | Command to issue a specific message |
 | `FormCmd.map` | When emitting the message, map to another type |
 | `FormCmd.batch` | Aggregate multiple commands |
-| `FormCmd.ofAsync` | ommand that will evaluate an async block and map the result into success or error (of exception) |
+| `FormCmd.ofAsync` | Command that will evaluate an async block and map the result into success or error (of exception) |
 | `FormCmd.ofFunc` | Command to evaluate a simple function and map the result into success or error (of exception) |
 | `FormCmd.performFunc` | Command to evaluate a simple function and map the success to a message discarding any possible error |
 | `FormCmd.attemptFunc` | Command to evaluate a simple function and map the error (in case of exception) |
