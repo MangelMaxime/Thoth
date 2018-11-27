@@ -248,7 +248,7 @@ In this section, you will learn:
 - the convention I use when designing a field, I encourage you to follow them 😊
 - general comments on why I structure my code in a specific way
 
-You will see usage of boxing `box` and casting `:?>`. If you want to learn more about that after reading this section you can take a look at the [F.A.Q](#can-we-avoid-boxing-casting)
+You will see usage of boxing `box` and casting `:?>`. If you want to learn more about that after reading this section you can take a look at the [F.A.Q.](#can-we-avoid-boxing-casting)
 
 #### File structure
 
@@ -482,7 +482,7 @@ let config : FieldConfig =
 
 #### Expose a fluent API
 
-See the [F.A.Q](#why-use-a-fluent-api) for why I chose to expose a fluent API.
+See the [F.A.Q.](#why-use-a-fluent-api) for why I chose to expose a fluent API.
 
 1. In order to design an immutable fluent API, you need to mark your `constructor` as `private`.
 
@@ -611,7 +611,7 @@ You now have a **working field** with a **flexible API** exposed
 | `FormCmd.attemptFunc` | Command to evaluate a simple function and map the error (in case of exception) |
 | `FormCmd.ofPromise` | Command to call `promise` block and map the results |
 
-## F.A.Q
+## F.A.Q.
 
 ### Can we avoid boxing / casting ?
 
