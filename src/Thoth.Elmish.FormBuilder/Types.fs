@@ -7,7 +7,7 @@ open System
 
 module Types =
 
-    /// Error reprensation to support server side validation
+    /// Error representation to support server side validation
     type ErrorDef =
         { Text : string
           Key : string }
@@ -24,7 +24,7 @@ module Types =
                 "key", Encode.string error.Key
             ]
 
-    /// Used to describe is a field is `Valid` or `Invalid` with the message to display
+    /// Used to describe if a field is `Valid` or `Invalid` with the message to display
     type ValidationState =
         | Valid
         | Invalid of string
