@@ -611,7 +611,7 @@ You now have a **working field** with a **flexible API** exposed
 | `FormCmd.attemptFunc` | Command to evaluate a simple function and map the error (in case of exception) |
 | `FormCmd.ofPromise` | Command to call `promise` block and map the results |
 
-## F.A.Q
+## F.A.Q.
 
 ### Can we avoid boxing / casting ?
 
@@ -628,7 +628,7 @@ type FieldConfig<'State, 'Msg> =
     abstract member SetError : 'State * string -> 'State
 ```
 
-But then I didn't found a way to store all the fields `FieldConfig<'State, 'Msg>` in a list inside `Config<'AppMsg>`.
+But then I didn't find a way to store all the fields `FieldConfig<'State, 'Msg>` in a list inside `Config<'AppMsg>`.
 
 If you find a way to either hide the boxing / casting things from the user view or to make everything strongly typed please open an issue to discuss it.
 
@@ -777,7 +777,7 @@ BasicInput
 
 ### Will there be a Fulma based library ?
 
-Yes, I am already working on it but it's not ready yet for a public release. Because, I want to support all/most of Bulma features and it takes times to designs
+Yes, I am already working on it but it's not ready yet for a public release. Because I want to support all/most of Bulma features and it takes time to design
 
 ### Is there any CSS included ?
 
