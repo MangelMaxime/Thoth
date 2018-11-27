@@ -280,7 +280,7 @@ module Decode =
         fun path value ->
             if Helpers.isString value then
                 match System.DateTime.TryParse (Helpers.asString value) with
-                | true, x -> Ok x
+                | true, x -> x.ToUniversalTime() |> Ok
                 | _ -> (path, BadPrimitive("a datetime", value)) |> Error
             else
                 (path, BadPrimitive("a datetime", value)) |> Error

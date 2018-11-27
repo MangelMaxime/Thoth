@@ -256,7 +256,7 @@ module Decode =
         fun path token ->
             if token.Type = JTokenType.Date || token.Type = JTokenType.String then
                 match System.DateTime.TryParse (Helpers.asString token, CultureInfo.InvariantCulture, DateTimeStyles.None) with
-                | true, x -> Ok x
+                | true, x -> x.ToUniversalTime() |> Ok
                 | _ -> (path, BadPrimitive("a datetime", token)) |> Error
             else
                 (path, BadPrimitive("a datetime", token)) |> Error
