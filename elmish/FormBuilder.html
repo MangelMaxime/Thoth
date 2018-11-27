@@ -19,13 +19,13 @@
 <article class="message is-warning">
   <div class="message-body">
 <p>This library is marked in <strong>Alpha</strong> stage but is <strong>already used in production</strong>.</p>
-<p>I released it in <strong>Alpha</strong> so we can work as a community on improving it and still able to introduce changes if needed.</p>
+<p>I released it in <strong>Alpha</strong> so we can work as a community on improving it and still be able to introduce changes if needed.</p>
   </div>
 </article>
 <h2><a href="#introduction" aria-hidden="true"><span class="anchor" id="introduction"></span>#</a> Introduction</h2>
 <p>When working with forms in an Elmish application, we end up writing a lot of lines. I explained the situation in <a href="https://www.youtube.com/watch?v=Ry4qQxU0380">my keynote at FableConf 2018</a>.</p>
 <p>The conclusion was: that to <a href="https://slides.com/mangelmaxime/fableconf_2018_keynote/live#/2/1">manage a basic form</a> we need to write at least <strong>23 lines of code per field</strong> and have a lot of <strong>duplication</strong>.</p>
-<p>This library is trying to solve this problem.</p>
+<p>This library is trying to solve that problem.</p>
 <h2><a href="#demo" aria-hidden="true"><span class="anchor" id="demo"></span>#</a> Demo</h2>
 <div class="columns">
     <div class="column is-8 is-offset-2">
@@ -194,7 +194,7 @@ Information
 <li>the convention I use when designing a field, I encourage you to follow them 😊</li>
 <li>general comments on why I structure my code in a specific way</li>
 </ul>
-<p>You will see usage of boxing <code>box</code> and casting <code>:?&gt;</code>. If you want to learn more about that after reading this section you can take a look at the <a href="#can-we-avoid-boxing-casting">F.A.Q</a></p>
+<p>You will see usage of boxing <code>box</code> and casting <code>:?&gt;</code>. If you want to learn more about that after reading this section you can take a look at the <a href="#can-we-avoid-boxing-casting">F.A.Q.</a></p>
 <h4><a href="#file-structure" aria-hidden="true"><span class="anchor" id="file-structure"></span>#</a> File structure</h4>
 <p>When designing a field I encourage you to follow this structure:</p>
 <pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">namespace</span><span style="color: #4078F2"> MyCustomFieldLibrary</span>
@@ -373,7 +373,7 @@ Information
 <span>      ToJson </span><span style="color: #A626A4">=</span><span> toJson</span>
 <span>      SetError </span><span style="color: #A626A4">=</span><span> setError </span><span style="color: #A626A4">}</span></code></pre>
 <h4><a href="#expose-a-fluent-api" aria-hidden="true"><span class="anchor" id="expose-a-fluent-api"></span>#</a> Expose a fluent API</h4>
-<p>See the <a href="#why-use-a-fluent-api">F.A.Q</a> for why I chose to expose a fluent API.</p>
+<p>See the <a href="#why-use-a-fluent-api">F.A.Q.</a> for why I chose to expose a fluent API.</p>
 <ol>
 <li>In order to design an immutable fluent API, you need to mark your <code>constructor</code> as <code>private</code>.</li>
 </ol>
@@ -582,7 +582,7 @@ Information
 </tr>
 </tbody>
 </table>
-<h2><a href="#faq" aria-hidden="true"><span class="anchor" id="faq"></span>#</a> F.A.Q</h2>
+<h2><a href="#faq" aria-hidden="true"><span class="anchor" id="faq"></span>#</a> F.A.Q.</h2>
 <h3><a href="#can-we-avoid-boxing-casting" aria-hidden="true"><span class="anchor" id="can-we-avoid-boxing-casting"></span>#</a> Can we avoid boxing / casting ?</h3>
 <p>This library is using boxing / casting a lot in order to allow us to store different types in a common list. I tried to use interface for <code>FieldConfig</code> in order to have something like:</p>
 <pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">type</span><span> </span><span style="color: #C18401">FieldConfig</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">&#039;State</span><span style="color: #A626A4">,</span><span style="color: #C18401"> &#039;Msg</span><span style="color: #A626A4">&gt;</span><span> </span><span style="color: #A626A4">=</span>
@@ -740,7 +740,7 @@ Information
                     </div>
                 </div>
                 <div class="column is-3 is-hidden-touch">
-                        <nav class="toc"><ul class="toc-headings"><li><a href="#introduction"> Introduction</a></li></ul><ul class="toc-headings"><li><a href="#demo"> Demo</a></li></ul><ul class="toc-headings"><li><a href="#how-to-use"> How to use ?</a><ul class="toc-sub-headings"><li><a href="#installation"> Installation</a></li><li><a href="#basicfields-basic-usage"> BasicFields - Basic usage</a></li><li><a href="#basicfields-custom-views"> BasicFields - Custom views</a></li><li><a href="#server-side-validation"> Server side validation</a></li><li><a href="#create-a-custom-field"> Create a custom field</a></li></ul></li></ul><ul class="toc-headings"><li><a href="#api"> API</a><ul class="toc-sub-headings"><li><a href="#formbuildertypes"> FormBuilder.Types</a></li><li><a href="#formbuilderform"> FormBuilder.Form</a></li><li><a href="#formbuilderformcmd"> FormBuilder.FormCmd</a></li></ul></li></ul><ul class="toc-headings"><li><a href="#faq"> F.A.Q</a><ul class="toc-sub-headings"><li><a href="#can-we-avoid-boxing-casting"> Can we avoid boxing / casting ?</a></li><li><a href="#why-use-a-fluent-api"> Why use a fluent API ?</a></li><li><a href="#am-i-forced-to-use-bulmafulma"> Am I forced to use Bulma/Fulma ?</a></li><li><a href="#will-there-be-a-fulma-based-library"> Will there be a Fulma based library ?</a></li><li><a href="#is-there-any-css-included"> Is there any CSS included ?</a></li></ul></li></ul></nav>
+                        <nav class="toc"><ul class="toc-headings"><li><a href="#introduction"> Introduction</a></li></ul><ul class="toc-headings"><li><a href="#demo"> Demo</a></li></ul><ul class="toc-headings"><li><a href="#how-to-use"> How to use ?</a><ul class="toc-sub-headings"><li><a href="#installation"> Installation</a></li><li><a href="#basicfields-basic-usage"> BasicFields - Basic usage</a></li><li><a href="#basicfields-custom-views"> BasicFields - Custom views</a></li><li><a href="#server-side-validation"> Server side validation</a></li><li><a href="#create-a-custom-field"> Create a custom field</a></li></ul></li></ul><ul class="toc-headings"><li><a href="#api"> API</a><ul class="toc-sub-headings"><li><a href="#formbuildertypes"> FormBuilder.Types</a></li><li><a href="#formbuilderform"> FormBuilder.Form</a></li><li><a href="#formbuilderformcmd"> FormBuilder.FormCmd</a></li></ul></li></ul><ul class="toc-headings"><li><a href="#faq"> F.A.Q.</a><ul class="toc-sub-headings"><li><a href="#can-we-avoid-boxing-casting"> Can we avoid boxing / casting ?</a></li><li><a href="#why-use-a-fluent-api"> Why use a fluent API ?</a></li><li><a href="#am-i-forced-to-use-bulmafulma"> Am I forced to use Bulma/Fulma ?</a></li><li><a href="#will-there-be-a-fulma-based-library"> Will there be a Fulma based library ?</a></li><li><a href="#is-there-any-css-included"> Is there any CSS included ?</a></li></ul></li></ul></nav>
                 </div>
             </div>
         </section>
