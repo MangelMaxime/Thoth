@@ -43,7 +43,7 @@ module Checkbox =
         let state : State = state :?> State
         state.ValidationState = Valid
 
-    let private setError (state : FieldState) (message : string)=
+    let private setError (state : FieldState) (message : string) =
         let state : State = state :?> State
         { state with ValidationState = Invalid message } |> box
 

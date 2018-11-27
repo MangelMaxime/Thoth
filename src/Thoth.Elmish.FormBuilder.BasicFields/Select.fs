@@ -63,7 +63,7 @@ module Select =
 
         applyValidators state.Validators { state with ValidationState = Valid } |> box
 
-    let private setError (state : FieldState) (message : string)=
+    let private setError (state : FieldState) (message : string) =
         let state : State = state :?> State
         { state with ValidationState = Invalid message } |> box
 
