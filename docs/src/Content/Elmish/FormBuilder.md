@@ -14,7 +14,7 @@ I released it in **Alpha** so we can work as a community on improving it and sti
 
 When working with forms in an Elmish application, we end up writing a lot of lines. I explained the situation in [my keynote at FableConf 2018](https://www.youtube.com/watch?v=Ry4qQxU0380).
 
-The conclusion was for [a basic form management](https://slides.com/mangelmaxime/fableconf_2018_keynote/live#/2/1) we need to write at least **23 lines of code per field** and have a lot of **duplication**.
+The conclusion was: that to [manage a basic form](https://slides.com/mangelmaxime/fableconf_2018_keynote/live#/2/1) we need to write at least **23 lines of code per field** and have a lot of **duplication**.
 
 This library is trying to solve this problem.
 
@@ -43,9 +43,9 @@ This library is trying to solve this problem.
 
 Add the `Thoth.Elmish.FormBuilder` dependency in your [Paket](https://fsprojects.github.io/Paket/) files: `paket add Thoth.Elmish.FormBuilder --project <your project>`.
 
-If you are trying this library for the first time you probably wants to add `Thoth.Elmish.FormBuilder.BasicFields` too. It provides some ready to use fields.
+If you are trying this library for the first time you probably want to add `Thoth.Elmish.FormBuilder.BasicFields` too. It provides some ready to use fields.
 
-For using, the default view of `Thoth.Elmish.FormBuilder.BasicFields`, you need to include [Bulma](http://bulma.io/) in your project.
+In order to use the default view of `Thoth.Elmish.FormBuilder.BasicFields`, you need to include [Bulma](http://bulma.io/) in your project.
 
 ### BasicFields - Basic usage
 
@@ -73,7 +73,7 @@ type Msg =
 
 ---------------
 
-2. Store the `FormBuilder` instance your model
+2. Store the `FormBuilder` instance in your model
 
 ```fsharp
 type Model =
@@ -113,12 +113,12 @@ let (formState, formConfig) =
 <div class="message is-warning">
 <div class="message-body">
 
-Each field needs to have a unique `name`. The name is used to linked the `label` with its form elements. And it will also be used as the key for the JSON.
+Each field needs to have a unique `name`. The name is used to link the `label` with its form elements. And it will also be used as the key for the JSON.
 
 If you don't set a unique `name` per field, you will see this message in the console:
 
 ```fsharp
-Each field needs to have a unique name. I found the following duplicates name:
+Each field needs to have a unique name. I found the following duplicate name:
 
 - name
 - description
@@ -182,7 +182,7 @@ let private view model dispatch =
 
 ### BasicFields - Custom views
 
-If you are not using [Bulma](http://bulma.io/) in your project, `Thoth.Elmish.FormBuilder.BasicFields` provide a `WithCustomView` API allowing you to customize the field view.
+If you are not using [Bulma](http://bulma.io/) in your project, `Thoth.Elmish.FormBuilder.BasicFields` provides a `WithCustomView` API allowing you to customize the field view.
 
 Example:
 
@@ -204,7 +204,7 @@ Example:
 
 ### Server side validation
 
-In order to support server side validation, the library define the type `ErrorDef`.
+In order to support server side validation, the library defines the type `ErrorDef`.
 
 ```fsharp
 type ErrorDef =
@@ -218,7 +218,7 @@ type ErrorDef =
 <article class="message is-info">
   <div class="message-body">
 
-I included the `Decoder` and `Encoder` definition for usage in your Fable client.
+I included the `Decoder` and `Encoder` definitions for use in your Fable client.
 
 If you need it on the server, you will need to copy the type definition for now.
 
@@ -248,7 +248,7 @@ In this section, you will learn:
 - the convention I use when designing a field, I encourage you to follow them 😊
 - general comments on why I structure my code in a specific way
 
-You will see usage of boxing `box` and casting `:?>`. If you wants to learn more about that after reading this section you can take a look at the [F.A.Q](#can-we-avoid-boxing-casting)
+You will see usage of boxing `box` and casting `:?>`. If you want to learn more about that after reading this section you can take a look at the [F.A.Q](#can-we-avoid-boxing-casting)
 
 #### File structure
 
@@ -269,7 +269,7 @@ type MyField private (state : MyField.State) =
         // ...
 ```
 
-By using this architecture, you can then use your API like that:
+By using this architecture, you can then use your API like this:
 
 ```fsharp
 module MyApp.PageA
@@ -288,16 +288,16 @@ let formState, formConfig =
 ```
 
 The benefits are:
-- Each field consist of a **single file**
-- By using **1 open statement** you get access to all yours fields API
+- Each field consists of a **single file**
+- By using **1 open statement** you get access to all your fields API
 
 *This is the structure used in [Thoth.Elmish.FormBuilder.BasicFields](https://github.com/MangelMaxime/Thoth/tree/master/src/Thoth.Elmish.FormBuilder.BasicFields)*
 
 #### Implement your field logic and config contract
 
-Designing a custom field is similar to designing an Elmish components.
+Designing a custom field is similar to designing an Elmish component.
 
-Here is the contract that all field needs to implements. Don't worry, we are going to go step by step.
+Here is the contract that all fields need to implement. Don't worry, we are going to go step by step.
 
 ```fsharp
 /// Contract for registering fields in the `Config`
@@ -319,7 +319,7 @@ As an example of a custom field, we will re-implement a basic `Input`.
 
 *`State` is similar to `Model` in Elmish terms*
 
-**Every** fields **needs to have** a `Name` property. This will be used later to identify each field uniquely and to generate the JSON representation of the field.
+**Every** field **needs to have** a `Name` property. This will be used later to identify each field uniquely and to generate the JSON representation of the field.
 
 ```fsharp
 type State =
@@ -350,7 +350,7 @@ type Msg =
 
 3. `init` function
 
-This function will be called when initializing yours forms.
+This function will be called when initializing your forms.
 
 For example, if your field needs to fetch data from the server you can trigger the request here. [See the select field for an example](https://github.com/MangelMaxime/Thoth/blob/master/src/Thoth.Elmish.FormBuilder.BasicFields/Select.fs)
 
@@ -363,9 +363,9 @@ let private init (state : FieldState) =
 
 4. `validate` and `setError` function
 
-If you used the same names for `ValidationState` and `Validators` properties, you can copy/paste these functions in all your fields definition.
+If you used the same names for `ValidationState` and `Validators` properties, you can copy/paste these functions in all your field definitions.
 
-*I didn't find a way to make it generic for any fields*
+*I didn't find a way to make it generic for any field*
 
 ```fsharp
 let private validate (state : FieldState) =
@@ -390,7 +390,7 @@ let private setError (state : FieldState) (message : string)=
 
 5. `isValid` function
 
-This function will be called to check if your fields is in a valid state or no.
+This function will be called to check if your field is in a valid state or not.
 
 ```fsharp
 let private isValid (state : FieldState) =
@@ -414,13 +414,13 @@ let private toJson (state : FieldState) =
 
 7. `update` function
 
-Similar as in Elmish, this is called for updating your `State` when receiving a `Msg` for this field.
+Similar to Elmish, this is called for updating your `State` when receiving a `Msg` for this field.
 
 ```fsharp
 let private update (msg : FieldMsg) (state : FieldState) =
     // Cast the received message into it's real type
     let msg = msg :?> Msg
-    // Cast the received into it's real type
+    // Cast the received state into it's real type
     let state = state :?> State
 
     match msg with
@@ -433,8 +433,8 @@ let private update (msg : FieldMsg) (state : FieldState) =
 
 **Notes**
 
-- You needs to call `validate` youself after updating your model. This is required because not every message of field needs to trigger a validation.
-- Instead of using `Cmd` module from Elmish, you needs to use `FormCmd`. This modules implements the same API as `Cmd` module.
+- You need to call `validate` youself after updating your model. This is required because not every field message needs to trigger a validation.
+- Instead of using the `Cmd` module from Elmish, you needs to use `FormCmd`. This module implements the same API as the `Cmd` module.
 
 ---------------
 
@@ -482,7 +482,7 @@ let config : FieldConfig =
 
 #### Expose a fluent API
 
-See the [F.A.Q](#why-use-a-fluent-api) for why I choose to expose a fluent API.
+See the [F.A.Q](#why-use-a-fluent-api) for why I chose to expose a fluent API.
 
 1. In order to design an immutable fluent API, you need to mark your `constructor` as `private`.
 
@@ -495,7 +495,7 @@ type BasicInput private (state : Input.State) =
 2. Expose a `static member Create(name : string)`
 
 <span>
-<span class="icon has-text-info"><i class="fa fa-lg fa-info"></i></span>Each field should have a <code>name</code> property as recommanded in HTML5. This name will be used to identify the field for dispatching the messages in your form.
+<span class="icon has-text-info"><i class="fa fa-lg fa-info"></i></span>Each field should have a <code>name</code> property as recommended in HTML5. This name will be used to identify the field for dispatching the messages in your form.
 <span>
 
 ```fsharp
@@ -524,7 +524,7 @@ member __.WithDefaultView () : FieldBuilder =
 
 **Notes**
 
-- The `Type` value needs to a unique name to identify your fields type. For example, `basic-input`, `fulma-input`, `my-lib-special-dropdown`, etc.
+- The `Type` value needs to be a unique name to identify your field type. For example, `basic-input`, `fulma-input`, `my-lib-special-dropdown`, etc.
 - The `Config` properties refer to the exposed config you wrote earlier.
 
 ---------------
@@ -573,8 +573,8 @@ You now have a **working field** with a **flexible API** exposed
 
 | Types | Description |
 |---|---|
-| `ErrorDef` | Error reprensation to support server side validation |
-| `ValidationState` | Used to describe is a field is `Valid` or `Invalid` with the message to display |
+| `ErrorDef` | Error representation to support server side validation |
+| `ValidationState` | Used to describe if a field is `Valid` or `Invalid` with the message to display |
 | `IFieldMsg` | Interface to be implemented by any field `Msg` |
 | `FieldState` | Type alias for the field `State`, should be casted |
 | `FieldMsg` | Type alias for the field `Msg`, should be casted |
@@ -605,7 +605,7 @@ You now have a **working field** with a **flexible API** exposed
 | `FormCmd.ofMsg` | Command to issue a specific message |
 | `FormCmd.map` | When emitting the message, map to another type |
 | `FormCmd.batch` | Aggregate multiple commands |
-| `FormCmd.ofAsync` | ommand that will evaluate an async block and map the result into success or error (of exception) |
+| `FormCmd.ofAsync` | Command that will evaluate an async block and map the result into success or error (of exception) |
 | `FormCmd.ofFunc` | Command to evaluate a simple function and map the result into success or error (of exception) |
 | `FormCmd.performFunc` | Command to evaluate a simple function and map the success to a message discarding any possible error |
 | `FormCmd.attemptFunc` | Command to evaluate a simple function and map the error (in case of exception) |
@@ -628,7 +628,7 @@ type FieldConfig<'State, 'Msg> =
     abstract member SetError : 'State * string -> 'State
 ```
 
-But then I didn't found a way to store all the fields `FieldConfig<'State, 'Msg>` in a list inside `Config<'AppMsg>`.
+But then I didn't find a way to store all the fields `FieldConfig<'State, 'Msg>` in a list inside `Config<'AppMsg>`.
 
 If you find a way to either hide the boxing / casting things from the user view or to make everything strongly typed please open an issue to discuss it.
 
@@ -777,7 +777,7 @@ BasicInput
 
 ### Will there be a Fulma based library ?
 
-Yes, I am already working on it but it's not ready yet for a public release. Because, I want to support all/most of Bulma features and it takes times to designs
+Yes, I am already working on it but it's not ready yet for a public release, because I want to support all/most of Bulma features and it takes time to design.
 
 ### Is there any CSS included ?
 
