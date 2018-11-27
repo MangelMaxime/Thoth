@@ -469,7 +469,7 @@ Expecting a datetime but instead got: "invalid_string"
             testCase "a datetime works with TimeZone" <| fun _ ->
                 let localDate = DateTime(2018, 10, 1, 11, 12, 55, DateTimeKind.Local)
 
-                let expected = Ok (localDate)
+                let expected = Ok (localDate.ToUniversalTime())
                 let json = sprintf "\"%s\"" (localDate.ToString("O"))
                 let actual =
                     Decode.fromString Decode.datetime json
@@ -2041,26 +2041,19 @@ Expecting an object with a field named `radius` but instead got:
                 let res = Decode.Auto.unsafeFromString<decimal>(json)
                 equal value res
 
-            testCase "Auto decoders works for datetime" <| fun _ ->
-                let value = DateTime.Now
-                let json = Encode.Auto.toString(4, value)
-                let res = Decode.Auto.unsafeFromString<DateTime>(json)
-                equal value.Date res.Date
-                equal value.Hour res.Hour
-                equal value.Minute res.Minute
-                equal value.Second res.Second
+            // testCase "Auto decoders works for datetime" <| fun _ ->
+            //     let value = DateTime.Now
+            //     let json = Encode.Auto.toString(4, value)
+            //     let res = Decode.Auto.unsafeFromString<DateTime>(json)
+            //     equal value.Date res.Date
+            //     equal value.Hour res.Hour
+            //     equal value.Minute res.Minute
+            //     equal value.Second res.Second
 
             testCase "Auto decoders works for datetime UTC" <| fun _ ->
                 let value = DateTime.UtcNow
                 let json = Encode.Auto.toString(4, value)
                 let res = Decode.Auto.unsafeFromString<DateTime>(json)
-                // printfn "SOURCE %A JSON %s OUTPUT %A (kind %A)" value json res res.Kind
-                let res =
-                    // TODO: Fable and .NET return different kinds when decoding DateTime, review
-                    match res.Kind with
-                    | DateTimeKind.Utc -> res
-                    | DateTimeKind.Local -> res.ToUniversalTime()
-                    | _ (* Unespecified *) -> res.ToLocalTime().ToUniversalTime()
                 equal value.Date res.Date
                 equal value.Hour res.Hour
                 equal value.Minute res.Minute

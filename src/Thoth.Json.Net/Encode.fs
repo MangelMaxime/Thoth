@@ -4,6 +4,7 @@ namespace Thoth.Json.Net
 module Encode =
 
     open System.Globalization
+    open System.Collections.Generic
     open Newtonsoft.Json
     open Newtonsoft.Json.Linq
     open System.IO
@@ -137,7 +138,7 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let array (values : array<JToken>) : JToken =
+    let array (values : IList<JToken>) : JToken =
         JArray(values) :> JToken
 
     ///**Description**

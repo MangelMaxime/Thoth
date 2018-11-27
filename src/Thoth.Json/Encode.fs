@@ -3,8 +3,10 @@ namespace Thoth.Json
 [<RequireQualifiedAccess>]
 module Encode =
 
+    open System.Collections.Generic
     open System.Globalization
     open Fable.Import
+    open Fable.Core
     open Fable.Core.JsInterop
 
     /// **Description**
@@ -53,6 +55,9 @@ module Encode =
     ///**Exceptions**
     ///
     let inline int (value : int) : Value =
+        box value
+
+    let inline uint32 (value : uint32) : Value =
         box value
 
     ///**Description**
@@ -139,7 +144,7 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let inline array (values : array<Value>) : Value =
+    let inline array (values : IList<Value>) : Value =
         box values
 
     ///**Description**
@@ -314,7 +319,64 @@ module Encode =
     let option (encoder : 'a -> Value) =
         Option.map encoder >> Option.defaultWith (fun _ -> nil)
 
+    type private BoxedEncoder = Encoder<obj>
+
+    // As generics are erased by Fable, let's just do an unsafe cast for performance
+    let inline private boxEncoder (d: Encoder<'T>): BoxedEncoder =
+        !!d
+
+    let inline private unboxEncoder (d: BoxedEncoder): Encoder<'T> =
+        !!d
+
+    let rec private autoEncoder isCamelCase (t: System.Type) : BoxedEncoder =
+        if t.IsArray then
+            let encoder = t.GetElementType() |> autoEncoder isCamelCase
+            fun (value: obj) ->
+                // Fable doesn't support System.Array
+                let xs = value :?> System.Collections.Generic.IList<obj>
+                let target = Array.zeroCreate<obj> xs.Count
+                for i=1 to xs.Count do
+                    target.[i-1] <- encoder xs.[i-1]
+                array target
+        elif t.IsGenericType then
+            failwith "TODO"
+        else
+            let fullname = t.FullName
+            if fullname = typeof<bool>.FullName then
+                boxEncoder bool
+            elif fullname = typeof<string>.FullName then
+                boxEncoder string
+            elif fullname = typeof<int>.FullName then
+                boxEncoder int
+            elif fullname = typeof<float>.FullName then
+                boxEncoder float
+            elif fullname = typeof<decimal>.FullName then
+                boxEncoder decimal
+            elif fullname = typeof<int64>.FullName then
+                boxEncoder int64
+            elif fullname = typeof<uint32>.FullName then
+                boxEncoder uint32
+            elif fullname = typeof<uint64>.FullName then
+                boxEncoder uint64
+            elif fullname = typeof<bigint>.FullName then
+                boxEncoder bigint
+            elif fullname = typeof<System.DateTime>.FullName then
+                boxEncoder datetime
+            elif fullname = typeof<System.DateTimeOffset>.FullName then
+                boxEncoder datetimeOffset
+            elif fullname = typeof<System.Guid>.FullName then
+                boxEncoder guid
+            elif fullname = typeof<obj>.FullName then
+                id
+            else
+                // autoDecodeRecordsAndUnions t isCamelCase isOptional
+                failwith "TODO"
+
     type Auto =
+        static member generateEncoder<'T>(?isCamelCase : bool, [<Inject>] ?resolver: ITypeResolver<'T>): Encoder<'T> =
+            let isCamelCase = defaultArg isCamelCase false
+            resolver.Value.ResolveType() |> (autoEncoder isCamelCase) |> unboxEncoder
+
         static member toString(space : int, value : obj, ?forceCamelCase : bool) : string =
             JS.JSON.stringify(value, (fun _ value ->
                 match value with

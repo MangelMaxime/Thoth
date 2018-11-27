@@ -970,7 +970,7 @@ module Decode =
                     (path, sprintf "Class types cannot be automatically deserialized: %s" t.FullName
                     |> FailMessage) |> Error
 
-    and private autoDecoder isCamelCase (isOptional : bool) (t: System.Type)  : BoxedDecoder =
+    and private autoDecoder isCamelCase (isOptional : bool) (t: System.Type) : BoxedDecoder =
         if t.IsArray then
             let decoder = t.GetElementType() |> autoDecoder isCamelCase false
             array decoder |> boxDecoder

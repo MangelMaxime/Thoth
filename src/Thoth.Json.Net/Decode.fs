@@ -1040,7 +1040,6 @@ module Decode =
                     |> FailMessage) |> Error
             )
 
-
     and private autoDecoder isCamelCase (isOptional : bool) (t: System.Type) : BoxedDecoder =
         if t.IsArray then
             let elemType = t.GetElementType()

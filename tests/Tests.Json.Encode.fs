@@ -353,6 +353,10 @@ let tests : Test =
                 let actual = Encode.Auto.toString(0, value, true)
                 equal expected actual
 
+            testCase "Encode.Auto.generateEncoder works with arrays" <| fun _ ->
+                let encoder = Encode.Auto.generateEncoder<int array>()
+                let actual = encoder [|1;2;3|] |> Encode.toString 0
+                equal "[1,2,3]" actual
         ]
 
     ]
