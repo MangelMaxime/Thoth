@@ -118,6 +118,7 @@ type Record9 =
       d: (MyUnion option) []
       e: Map<string, Record2>
       f: System.DateTime
+      g: Set<Record2>
     }
 
 type User =
@@ -1000,9 +1001,9 @@ Expecting an array but instead got: 1
                         """
 I run into the following problems:
 
-Error at: `$`
+Error at: `$[0]`
 Expecting a string but instead got: 1
-Error at: `$.test`
+Error at: `$[0].test`
 Expecting an object but instead got:
 1
                         """.Trim())
@@ -1947,6 +1948,7 @@ Expecting an object with a field named `radius` but instead got:
                       d = [|Some(Foo 14); None|]
                       e = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
                       f = System.DateTime.Now
+                      g = set [{ a = 2.; b = 2. }; { a = -1.5; b = 0. }]
                     }
                 let json = Encode.Auto.toString(4, value)
                 // printfn "AUTO ENCODED %s" json
@@ -1958,6 +1960,8 @@ Expecting an object with a field named `radius` but instead got:
                 equal None r2.d.[1]
                 equal -1.5 (Map.find "ah" r2.e).a
                 equal 2.   (Map.find "oh" r2.e).b
+                equal true (Set.contains { a = -1.5; b = 0. } r2.g)
+                equal false (Set.contains { a = 1.5; b = 0. } r2.g)
 
             testCase "Auto serialization works with recursive types" <| fun _ ->
                 let len xs =

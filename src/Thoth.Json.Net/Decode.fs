@@ -366,13 +366,32 @@ module Decode =
     // Data structure ///
     ////////////////////
 
+    let private listPrivate (decoder : Decoder<'value>) path token =
+        let tokens = Helpers.asArray token
+        let mutable i = tokens.Length
+        (tokens, Ok []) ||> Array.foldBack (fun value acc ->
+            i <- i - 1
+            match acc with
+            | Error _ -> acc
+            | Ok acc ->
+                match decoder (path + "[" + (i.ToString()) + "]") value with
+                | Error er -> Error er
+                | Ok value -> Ok (value::acc))
+
     let list (decoder : Decoder<'value>) : Decoder<'value list> =
         fun path token ->
             if token.Type = JTokenType.Array then
-                Helpers.asArray token
-                |> Seq.map (unwrap path decoder)
-                |> Seq.toList
-                |> Ok
+                let mutable i = -1
+                let tokens = Helpers.asArray token
+                (Ok [], tokens) ||> Array.fold (fun acc value ->
+                    i <- i + 1
+                    match acc with
+                    | Error _ -> acc
+                    | Ok acc ->
+                        match decoder (path + "[" + (i.ToString()) + "]") value with
+                        | Error er -> Error er
+                        | Ok value -> Ok (value::acc))
+                |> Result.map List.rev
             else
                 (path, BadPrimitive ("a list", token))
                 |> Error
@@ -380,9 +399,17 @@ module Decode =
     let array (decoder : Decoder<'value>) : Decoder<'value array> =
         fun path token ->
             if token.Type = JTokenType.Array then
-                Helpers.asArray token
-                |> Array.map (unwrap path decoder)
-                |> Ok
+                let mutable i = -1
+                let tokens = Helpers.asArray token
+                let arr = Array.zeroCreate tokens.Length
+                (Ok arr, tokens) ||> Array.fold (fun acc value ->
+                    i <- i + 1
+                    match acc with
+                    | Error _ -> acc
+                    | Ok acc ->
+                        match decoder (path + "[" + (i.ToString()) + "]") value with
+                        | Error er -> Error er
+                        | Ok value -> acc.[i] <- value; Ok acc)
             else
                 (path, BadPrimitive ("an array", token))
                 |> Error
@@ -1042,6 +1069,18 @@ module Decode =
                     autoDecoder isCamelCase false t.GenericTypeArguments.[0] |> genericList t |> boxDecoder
                 elif fullname = typedefof< Map<string, obj> >.FullName then
                     genericMap isCamelCase t |> boxDecoder
+                elif fullname = typedefof< Set<string> >.FullName then
+                    let t = t.GenericTypeArguments.[0]
+                    let decoder = autoDecoder isCamelCase false t
+                    boxDecoder(fun path value ->
+                        match array decoder.BoxedDecoder path value with
+                        | Ok items ->
+                            let ar = System.Array.CreateInstance(t, items.Length)
+                            for i = 0 to ar.Length - 1 do
+                                ar.SetValue(items.[i], i)
+                            let setType = typedefof< Set<string> >.MakeGenericType([|t|])
+                            System.Activator.CreateInstance(setType, ar) |> Ok
+                        | Error er -> Error er)
                 else
                     autoDecodeRecordsAndUnions t isCamelCase isOptional
         else

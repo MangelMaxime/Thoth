@@ -394,10 +394,17 @@ module Decode =
     let list (decoder : Decoder<'value>) : Decoder<'value list> =
         fun path value ->
             if Helpers.isArray value then
-                Helpers.asArray value
-                |> Array.map (unwrap path decoder)
-                |> Array.toList
-                |> Ok
+                let mutable i = -1
+                let tokens = Helpers.asArray value
+                (Ok [], tokens) ||> Array.fold (fun acc value ->
+                    i <- i + 1
+                    match acc with
+                    | Error _ -> acc
+                    | Ok acc ->
+                        match decoder (path + "[" + (i.ToString()) + "]") value with
+                        | Error er -> Error er
+                        | Ok value -> Ok (value::acc))
+                |> Result.map List.rev
             else
                 (path, BadPrimitive ("a list", value))
                 |> Error
@@ -405,9 +412,17 @@ module Decode =
     let array (decoder : Decoder<'value>) : Decoder<'value array> =
         fun path value ->
             if Helpers.isArray value then
-                Helpers.asArray value
-                |> Array.map (unwrap path decoder)
-                |> Ok
+                let mutable i = -1
+                let tokens = Helpers.asArray value
+                let arr = Array.zeroCreate tokens.Length
+                (Ok arr, tokens) ||> Array.fold (fun acc value ->
+                    i <- i + 1
+                    match acc with
+                    | Error _ -> acc
+                    | Ok acc ->
+                        match decoder (path + "[" + (i.ToString()) + "]") value with
+                        | Error er -> Error er
+                        | Ok value -> acc.[i] <- value; Ok acc)
             else
                 (path, BadPrimitive ("an array", value))
                 |> Error
@@ -870,7 +885,7 @@ module Decode =
 
     // This is used to force Fable use a generic comparer for map keys
     let private toMap<'key, 'value when 'key: comparison> (xs: ('key*'value) seq) = Map.ofSeq xs
-
+    let private toSet<'key when 'key: comparison> (xs: 'key seq) = Set.ofSeq xs
     let private autoObject (decoderInfos: (FieldType * string * BoxedDecoder)[]) (path : string) (value: obj) =
         if not (Helpers.isObject value) then
             (path, BadPrimitive ("an object", value)) |> Error
@@ -980,6 +995,12 @@ module Decode =
                         match array (tuple2 decoder1 decoder2) path value with
                         | Error er -> Error er
                         | Ok ar -> toMap (unbox ar) |> box |> Ok
+                elif fullname = typedefof< Set<string> >.FullName then
+                    let decoder = t.GenericTypeArguments.[0] |> autoDecoder isCamelCase false
+                    fun path value ->
+                        match array decoder path value with
+                        | Error er -> Error er
+                        | Ok ar -> toSet (unbox ar) |> box |> Ok
                 else
                     autoDecodeRecordsAndUnions t isCamelCase isOptional
         else
