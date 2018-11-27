@@ -81,6 +81,7 @@ module Input =
                           Placeholder (state.Placeholder |> Option.defaultValue "")
                           Id state.Name
                           Class className
+                          HTMLAttr.Type state.Type
                           OnChange (fun ev ->
                             ChangeValue ev.Value |> dispatch
                           ) ] ]
