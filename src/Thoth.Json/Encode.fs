@@ -144,7 +144,7 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let inline array (values : IList<Value>) : Value =
+    let inline array (values : Value array) : Value =
         box values
 
     ///**Description**
@@ -160,6 +160,9 @@ module Encode =
     let inline list (values : Value list) : Value =
         // Don't use List.toArray as it may create a typed array
         box (JS.Array.from(box values :?> JS.Iterable<Value>))
+
+    let inline seq (values : Value seq) : Value =
+        box (JS.Array.from(values :?> JS.Iterable<Value>))
 
     ///**Description**
     /// Encode a dictionary
@@ -319,6 +322,13 @@ module Encode =
     let option (encoder : 'a -> Value) =
         Option.map encoder >> Option.defaultWith (fun _ -> nil)
 
+    //////////////////
+    // Reflection ///
+    ////////////////
+
+    open FSharp.Reflection
+    open Fable.Core.DynamicExtensions
+
     type private BoxedEncoder = Encoder<obj>
 
     // As generics are erased by Fable, let's just do an unsafe cast for performance
@@ -328,18 +338,75 @@ module Encode =
     let inline private unboxEncoder (d: BoxedEncoder): Encoder<'T> =
         !!d
 
-    let rec private autoEncoder isCamelCase (t: System.Type) : BoxedEncoder =
+    let rec private autoEncodeRecordsAndUnions (t: System.Type) (isCamelCase : bool) : BoxedEncoder =
+        if FSharpType.IsRecord(t) then
+            let setters =
+                FSharpType.GetRecordFields(t)
+                |> Array.map (fun fi ->
+                    let targetKey =
+                        if isCamelCase then fi.Name.[..0].ToLowerInvariant() + fi.Name.[1..]
+                        else fi.Name
+                    let encode = autoEncoder isCamelCase fi.PropertyType
+                    fun (source: obj) (target: Value) ->
+                        let value = encode(FSharpValue.GetRecordField(source, fi))
+                        if not(isNull value) then // Discard null fields
+                            target.[targetKey] <- value
+                        target
+                )
+            fun (source: obj) ->
+                (Value(), setters) ||> Seq.fold (fun target set -> set source target)
+        elif FSharpType.IsUnion(t) then
+            fun (value: obj) ->
+                let info, fields = FSharpValue.GetUnionFields(value, t)
+                match fields.Length with
+                | 0 -> string info.Name
+                | len ->
+                    let fieldTypes = info.GetFields()
+                    let target = Array.zeroCreate<Value> (len + 1)
+                    target.[0] <- string info.Name
+                    for i = 1 to len do
+                        let encode = autoEncoder isCamelCase fieldTypes.[i-1].PropertyType
+                        target.[i] <- fields.[i-1]
+                    array target
+        else
+            failwithf "Cannot generate auto encoder for %s. Please pass a manual encoder for it." t.FullName
+
+    and private autoEncoder isCamelCase (t: System.Type) : BoxedEncoder =
         if t.IsArray then
             let encoder = t.GetElementType() |> autoEncoder isCamelCase
             fun (value: obj) ->
-                // Fable doesn't support System.Array
-                let xs = value :?> System.Collections.Generic.IList<obj>
-                let target = Array.zeroCreate<obj> xs.Count
-                for i=1 to xs.Count do
-                    target.[i-1] <- encoder xs.[i-1]
-                array target
+                value :?> obj seq |> Seq.map encoder |> seq
         elif t.IsGenericType then
-            failwith "TODO"
+            if FSharpType.IsTuple(t) then
+                let encoders = FSharpType.GetTupleElements(t) |> Array.map (autoEncoder isCamelCase)
+                fun (value: obj) ->
+                    FSharpValue.GetTupleFields(value) |> Seq.mapi (fun i x -> encoders.[i] x) |> seq
+            else
+                let fullname = t.GetGenericTypeDefinition().FullName
+                if fullname = typedefof<obj option>.FullName then
+                    t.GenericTypeArguments.[0] |> (autoEncoder isCamelCase) |> option |> boxEncoder
+                elif fullname = typedefof<obj list>.FullName
+                    || fullname = typedefof<Set<string>>.FullName then
+                    let encoder = t.GenericTypeArguments.[0] |> (autoEncoder isCamelCase)
+                    fun (value: obj) ->
+                        value :?> obj seq |> Seq.map encoder |> seq
+                elif fullname = typedefof< Map<string, obj> >.FullName then
+                    let keyType = t.GenericTypeArguments.[0]
+                    let valueEncoder = t.GenericTypeArguments.[1] |> autoEncoder isCamelCase
+                    if keyType.FullName = typeof<string>.FullName
+                        || keyType.FullName = typeof<System.Guid>.FullName then
+                        fun value ->
+                            (Value(), value :?> Map<string, obj>)
+                            ||> Seq.fold (fun target (KeyValue(k,v)) ->
+                                target.[k] <- valueEncoder v
+                                target)
+                    else
+                        let keyEncoder = t.GenericTypeArguments.[0] |> autoEncoder isCamelCase
+                        fun value ->
+                            value :?> Map<string, obj> |> Seq.map (fun (KeyValue(k,v)) ->
+                                array [|keyEncoder k; valueEncoder v|]) |> seq
+                else
+                    autoEncodeRecordsAndUnions t isCamelCase
         else
             let fullname = t.FullName
             if fullname = typeof<bool>.FullName then
@@ -369,8 +436,7 @@ module Encode =
             elif fullname = typeof<obj>.FullName then
                 id
             else
-                // autoDecodeRecordsAndUnions t isCamelCase isOptional
-                failwith "TODO"
+                autoEncodeRecordsAndUnions t isCamelCase
 
     type Auto =
         static member generateEncoder<'T>(?isCamelCase : bool, [<Inject>] ?resolver: ITypeResolver<'T>): Encoder<'T> =

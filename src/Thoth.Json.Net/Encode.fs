@@ -138,7 +138,7 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let array (values : IList<JToken>) : JToken =
+    let array (values : JToken array) : JToken =
         JArray(values) :> JToken
 
     ///**Description**
@@ -152,6 +152,9 @@ module Encode =
     ///**Exceptions**
     ///
     let list (values : JToken list) : JToken =
+        JArray(values) :> JToken
+
+    let seq (values : JToken seq) : JToken =
         JArray(values) :> JToken
 
     ///**Description**

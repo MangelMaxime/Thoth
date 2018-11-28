@@ -7,6 +7,7 @@ open Thoth.Json.Net
 #endif
 open Util.Testing
 open System
+open Tests.Decode
 
 type User =
     { Id : int
@@ -353,10 +354,22 @@ let tests : Test =
                 let actual = Encode.Auto.toString(0, value, true)
                 equal expected actual
 
+#if FABLE_COMPILER
             testCase "Encode.Auto.generateEncoder works with arrays" <| fun _ ->
-                let encoder = Encode.Auto.generateEncoder<int array>()
-                let actual = encoder [|1;2;3|] |> Encode.toString 0
-                equal "[1,2,3]" actual
+                let value =
+                    { a = 5
+                      b = "bar"
+                      c = [false, 3; true, 5; false, 10]
+                      d = [|Some(Foo 14); None|]
+                      e = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
+                      f = DateTime(2018, 11, 28, 11, 10, 29, DateTimeKind.Utc)
+                      g = set [{ a = 2.; b = 2. }; { a = -1.5; b = 0. }]
+                    }
+                let encoder = Encode.Auto.generateEncoder<Record9>()
+                let actual = encoder value |> Encode.toString 0
+                let expected = """{"a":5,"b":"bar","c":[[false,3],[true,5],[false,10]],"d":[["Foo",14],null],"e":{"ah":{"a":-1.5,"b":0},"oh":{"a":2,"b":2}},"f":"2018-11-28T11:10:29.000Z","g":[{"a":-1.5,"b":0},{"a":2,"b":2}]}"""
+                equal expected actual
+#endif
         ]
 
     ]

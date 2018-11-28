@@ -926,27 +926,27 @@ module Decode =
 
     and private autoDecodeRecordsAndUnions (t: System.Type) (isCamelCase : bool) (isOptional : bool) : BoxedDecoder =
         if FSharpType.IsRecord(t) then
-            fun path value ->
-                let decoders =
-                    FSharpType.GetRecordFields(t)
-                    |> Array.map (fun fi ->
-                        let name =
-                            if isCamelCase then
-                                fi.Name.[..0].ToLowerInvariant() + fi.Name.[1..]
-                            else
-                                fi.Name
+            let decoders =
+                FSharpType.GetRecordFields(t)
+                |> Array.map (fun fi ->
+                    let name =
+                        if isCamelCase then
+                            fi.Name.[..0].ToLowerInvariant() + fi.Name.[1..]
+                        else
+                            fi.Name
 
-                        let fieldType, propertyType =
-                            if fi.PropertyType.IsGenericType then
-                                let fullname = fi.PropertyType.GetGenericTypeDefinition().FullName
-                                if fullname = typedefof<obj option>.FullName then
-                                    FieldType.Optional, fi.PropertyType.GenericTypeArguments.[0]
-                                else
-                                    FieldType.Required, fi.PropertyType
+                    let fieldType, propertyType =
+                        if fi.PropertyType.IsGenericType then
+                            let fullname = fi.PropertyType.GetGenericTypeDefinition().FullName
+                            if fullname = typedefof<obj option>.FullName then
+                                FieldType.Optional, fi.PropertyType.GenericTypeArguments.[0]
                             else
                                 FieldType.Required, fi.PropertyType
+                        else
+                            FieldType.Required, fi.PropertyType
 
-                        fieldType, name, autoDecoder isCamelCase fieldType.ToBool propertyType)
+                    fieldType, name, autoDecoder isCamelCase fieldType.ToBool propertyType)
+            fun path value ->
                 autoObject decoders path value
                 |> Result.map (fun xs -> FSharpValue.MakeRecord(t, List.toArray xs))
 
