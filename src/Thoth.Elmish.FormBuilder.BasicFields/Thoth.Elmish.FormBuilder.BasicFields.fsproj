@@ -7,7 +7,7 @@
         <RepositoryUrl>https://github.com/MangelMaxime/Thoth</RepositoryUrl>
         <PackageTags>fable;fsharp</PackageTags>
         <Authors>Maxime Mangel</Authors>
-        <Version>0.1.1</Version>
+        <Version>0.1.2</Version>
     </PropertyGroup>
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
@@ -22,7 +22,6 @@
         <Compile Include="Radio.fs" />
         <Compile Include="Select.fs" />
         <Compile Include="Textarea.fs" />
-        <Content Include="*.fsproj; **/*.fs; **/*.js; **/*.css" />
     </ItemGroup>
     <ItemGroup>
         <Content Include="*.fsproj; **\*.fs; **\*.js; **\*.css" PackagePath="fable" />
