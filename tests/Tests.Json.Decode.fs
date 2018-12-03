@@ -2209,5 +2209,16 @@ I run into a `fail` decoder: Class types cannot be automatically deserialized: T
                           Must = "must value" } : TestMaybeRecord)
                 equal expected actual
 
+            testCase "Auto.fromString works with maps encoded as objects" <| fun _ ->
+                let expected = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
+                let json = """{"ah":{"a":-1.5,"b":0},"oh":{"a":2,"b":2}}"""
+                let actual = Decode.Auto.fromString json
+                equal (Ok expected) actual
+
+            testCase "Auto.fromString works with maps encoded as arrays" <| fun _ ->
+                let expected = Map [({ a = 2.; b = 2. }, "oh"); ({ a = -1.5; b = 0. }, "ah")]
+                let json = """[[{"a":-1.5,"b":0},"ah"],[{"a":2,"b":2},"oh"]]"""
+                let actual = Decode.Auto.fromString json
+                equal (Ok expected) actual
         ]
     ]

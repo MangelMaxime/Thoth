@@ -886,6 +886,7 @@ module Decode =
     // This is used to force Fable use a generic comparer for map keys
     let private toMap<'key, 'value when 'key: comparison> (xs: ('key*'value) seq) = Map.ofSeq xs
     let private toSet<'key when 'key: comparison> (xs: 'key seq) = Set.ofSeq xs
+
     let private autoObject (decoderInfos: (FieldType * string * BoxedDecoder)[]) (path : string) (value: obj) =
         if not (Helpers.isObject value) then
             (path, BadPrimitive ("an object", value)) |> Error
@@ -901,6 +902,21 @@ module Decode =
                     | FieldType.Required ->
                         field name decoder path value
                         |> Result.map (fun v -> v::result))
+
+    let private autoObject2 (keyDecoder: BoxedDecoder) (valueDecoder: BoxedDecoder) (path : string) (value: obj) =
+        if not (Helpers.isObject value) then
+            (path, BadPrimitive ("an object", value)) |> Error
+        else
+            (Ok [], Helpers.objectKeys(value)) ||> Seq.fold (fun acc name ->
+                match acc with
+                | Error _ -> acc
+                | Ok acc ->
+                    match keyDecoder path name with
+                    | Error er -> Error er
+                    | Ok k ->
+                        match field name valueDecoder path value with
+                        | Error er -> Error er
+                        | Ok v -> (k,v)::acc |> Ok)
 
     let private mixedArray msg (decoders: BoxedDecoder[]) (path: string) (values: obj[]): Result<obj list, DecoderError> =
         if decoders.Length <> values.Length then
@@ -989,12 +1005,12 @@ module Decode =
                 elif fullname = typedefof<obj list>.FullName then
                     t.GenericTypeArguments.[0] |> (autoDecoder isCamelCase false) |> list |> boxDecoder
                 elif fullname = typedefof< Map<string, obj> >.FullName then
-                    let decoder1 = t.GenericTypeArguments.[0] |> autoDecoder isCamelCase false
-                    let decoder2 = t.GenericTypeArguments.[1] |> autoDecoder isCamelCase false
-                    fun path value ->
-                        match array (tuple2 decoder1 decoder2) path value with
-                        | Error er -> Error er
-                        | Ok ar -> toMap (unbox ar) |> box |> Ok
+                    let keyDecoder = t.GenericTypeArguments.[0] |> autoDecoder isCamelCase false
+                    let valueDecoder = t.GenericTypeArguments.[1] |> autoDecoder isCamelCase false
+                    oneOf [
+                        autoObject2 keyDecoder valueDecoder
+                        list (tuple2 keyDecoder valueDecoder)
+                    ] |> map (fun ar -> toMap (unbox ar) |> box)
                 elif fullname = typedefof< Set<string> >.FullName then
                     let decoder = t.GenericTypeArguments.[0] |> autoDecoder isCamelCase false
                     fun path value ->

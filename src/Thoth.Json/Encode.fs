@@ -393,6 +393,7 @@ module Encode =
                 elif fullname = typedefof< Map<string, obj> >.FullName then
                     let keyType = t.GenericTypeArguments.[0]
                     let valueEncoder = t.GenericTypeArguments.[1] |> autoEncoder isCamelCase
+                    printfn "KEY %s" keyType.FullName
                     if keyType.FullName = typeof<string>.FullName
                         || keyType.FullName = typeof<System.Guid>.FullName then
                         fun value ->
