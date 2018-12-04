@@ -28,6 +28,17 @@ type SmallRecord =
             "fieldA", Encode.string x.fieldA
         ]
 
+type BigIntRecord =
+    { bigintField: bigint }
+
+type ChildType =
+    { ChildField: string }
+    static member Encode(x: ChildType) =
+        Encode.string x.ChildField
+
+type ParentRecord =
+    { ParentField: ChildType }
+
 let tests : Test =
     testList "Thoth.Json.Encode" [
 
@@ -354,8 +365,7 @@ let tests : Test =
                 let actual = Encode.Auto.toString(0, value, true)
                 equal expected actual
 
-#if FABLE_COMPILER
-            testCase "Encode.Auto.generateEncoder works with arrays" <| fun _ ->
+            testCase "Encode.Auto.generateEncoder works" <| fun _ ->
                 let value =
                     { a = 5
                       b = "bar"
@@ -369,7 +379,24 @@ let tests : Test =
                 let actual = encoder value |> Encode.toString 0
                 let expected = """{"a":5,"b":"bar","c":[[false,3],[true,5],[false,10]],"d":[["Foo",14],null],"e":{"ah":{"a":-1.5,"b":0},"oh":{"a":2,"b":2}},"f":"2018-11-28T11:10:29.000Z","g":[{"a":-1.5,"b":0},{"a":2,"b":2}]}"""
                 equal expected actual
-#endif
+
+            testCase "Encode.Auto.toString works with bigint extra" <| fun _ ->
+                let extra =
+                    Encode.makeExtra()
+                    |> Encode.withBigInt
+                let expected = """{"bigintField":"9999999999999999999999"}"""
+                let value = { bigintField = 9999999999999999999999I }
+                let actual = Encode.Auto.toString(0, value, extra=extra)
+                equal expected actual
+
+            testCase "Encode.Auto.toString works with custom extra" <| fun _ ->
+                let extra =
+                    Encode.makeExtra()
+                    |> Encode.withCustom ChildType.Encode
+                let expected = """{"ParentField":"bumbabon"}"""
+                let value = { ParentField = { ChildField = "bumbabon" } }
+                let actual = Encode.Auto.toString(0, value, extra=extra)
+                equal expected actual
         ]
 
     ]

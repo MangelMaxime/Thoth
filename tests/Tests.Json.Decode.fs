@@ -1998,10 +1998,10 @@ Expecting an object with a field named `radius` but instead got:
                 let res = Decode.Auto.unsafeFromString<int>(json)
                 equal value res
 
-            // TODO: Use an int64 value that exceeds int32 capacity (also for uint64)
             testCase "Auto decoders works for int64" <| fun _ ->
-                let value = 12L
-                let json = Encode.Auto.toString(4, value)
+                let extra = Encode.makeExtra() |> Encode.withInt64
+                let value = 9999999999L
+                let json = Encode.Auto.toString(4, value, extra=extra)
                 let res = Decode.Auto.unsafeFromString<int64>(json)
                 equal value res
 
@@ -2012,14 +2012,16 @@ Expecting an object with a field named `radius` but instead got:
                 equal value res
 
             testCase "Auto decoders works for uint64" <| fun _ ->
-                let value = 12UL
-                let json = Encode.Auto.toString(4, value)
+                let extra = Encode.makeExtra() |> Encode.withUInt64
+                let value = 9999999999999999999UL
+                let json = Encode.Auto.toString(4, value, extra=extra)
                 let res = Decode.Auto.unsafeFromString<uint64>(json)
                 equal value res
 
             testCase "Auto decoders works for bigint" <| fun _ ->
-                let value = 12I
-                let json = Encode.Auto.toString(4, value)
+                let extra = Encode.makeExtra() |> Encode.withBigInt
+                let value = 99999999999999999999999I
+                let json = Encode.Auto.toString(4, value, extra=extra)
                 let res = Decode.Auto.unsafeFromString<bigint>(json)
                 equal value res
 
@@ -2036,8 +2038,9 @@ Expecting an object with a field named `radius` but instead got:
                 equal value res
 
             testCase "Auto decoders works for decimal" <| fun _ ->
-                let value = 0.7833M
-                let json = Encode.Auto.toString(4, value)
+                let extra = Encode.makeExtra() |> Encode.withDecimal
+                let value = 0.7833263478179128134089M
+                let json = Encode.Auto.toString(4, value, extra=extra)
                 let res = Decode.Auto.unsafeFromString<decimal>(json)
                 equal value res
 
