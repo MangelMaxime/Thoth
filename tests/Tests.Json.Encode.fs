@@ -28,17 +28,6 @@ type SmallRecord =
             "fieldA", Encode.string x.fieldA
         ]
 
-type BigIntRecord =
-    { bigintField: bigint }
-
-type ChildType =
-    { ChildField: string }
-    static member Encode(x: ChildType) =
-        Encode.string x.ChildField
-
-type ParentRecord =
-    { ParentField: ChildType }
-
 let tests : Test =
     testList "Thoth.Json.Encode" [
 

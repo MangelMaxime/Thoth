@@ -333,10 +333,10 @@ module Encode =
     type ExtraEncoders = Map<string, BoxedEncoder>
 
     // As generics are erased by Fable, let's just do an unsafe cast for performance
-    let inline private boxEncoder (d: Encoder<'T>): BoxedEncoder =
+    let inline boxEncoder (d: Encoder<'T>): BoxedEncoder =
         !!d
 
-    let inline private unboxEncoder (d: BoxedEncoder): Encoder<'T> =
+    let inline unboxEncoder (d: BoxedEncoder): Encoder<'T> =
         !!d
 
     let inline makeExtra(): ExtraEncoders = Map.empty
