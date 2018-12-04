@@ -444,24 +444,9 @@ module Encode =
             let isCamelCase = defaultArg isCamelCase false
             resolver.Value.ResolveType() |> (autoEncoder isCamelCase) |> unboxEncoder
 
-        static member toString(space : int, value : obj, ?forceCamelCase : bool) : string =
-            JS.JSON.stringify(value, (fun _ value ->
-                match value with
-                // Match string before so it's not considered an IEnumerable
-                | :? string -> value
-                | :? System.Collections.IEnumerable ->
-                    if JS.Array.isArray(value)
-                    then value
-                    else JS.Array.from(value :?> JS.Iterable<obj>) |> box
-                | _ ->
-                    if defaultArg forceCamelCase false && Decode.Helpers.isObject value then
-                        let replacement = createObj []
-                        for key in Decode.Helpers.objectKeys value do
-                            replacement?(key.[..0].ToLowerInvariant() + key.[1..]) <- value?(key)
-                        replacement
-                    else
-                        value
-            ), space)
+        static member toString(space : int, value : 'T, ?isCamelCase : bool, [<Inject>] ?resolver: ITypeResolver<'T>) : string =
+            let encoder = Auto.generateEncoder(?isCamelCase=isCamelCase, ?resolver=resolver)
+            encoder value |> toString space
 
     ///**Description**
     /// Convert a `Value` into a prettified string.
