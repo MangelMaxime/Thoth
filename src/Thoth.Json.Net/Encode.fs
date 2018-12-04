@@ -94,7 +94,7 @@ module Encode =
     ///**Exceptions**
     ///
     let nil : JToken =
-        JValue(box null) :> JToken
+        JValue(null: obj) :> JToken
 
     ///**Description**
     /// Encode a bool
@@ -303,16 +303,188 @@ module Encode =
         token.WriteTo(jsonWriter)
         stream.ToString()
 
+    //////////////////
+    // Reflection ///
+    ////////////////
+
+    open FSharp.Reflection
+
+    // type BoxedEncoder = Encoder<obj>
+    // type ExtraEncoders = Map<string, BoxedEncoder>
+
+    [<AbstractClass>]
+    type BoxedEncoder() =
+        abstract Encode: value:obj -> JToken
+        member this.BoxedEncoder: Encoder<obj> =
+            fun value -> this.Encode value
+
+    type private EncoderCrate<'T>(enc: Encoder<'T>) =
+        inherit BoxedEncoder()
+        override __.Encode(value: obj): JToken =
+            enc (unbox value)
+        member __.UnboxedEncoder = enc
+
+    let boxEncoder (d: Encoder<'T>): BoxedEncoder =
+        EncoderCrate(d) :> BoxedEncoder
+
+    let unboxEncoder<'T> (d: BoxedEncoder): Encoder<'T> =
+        (d :?> EncoderCrate<'T>).UnboxedEncoder
+
+    type ExtraEncoders = Map<string, BoxedEncoder>
+
+    let inline makeExtra(): ExtraEncoders = Map.empty
+    let inline withInt64 (extra: ExtraEncoders): ExtraEncoders =
+        Map.add typedefof<int64>.FullName (boxEncoder int64) extra
+    let inline withUInt64 (extra: ExtraEncoders): ExtraEncoders =
+        Map.add typedefof<uint64>.FullName (boxEncoder uint64) extra
+    let inline withDecimal (extra: ExtraEncoders): ExtraEncoders =
+        Map.add typedefof<decimal>.FullName (boxEncoder decimal) extra
+    let inline withBigInt (extra: ExtraEncoders): ExtraEncoders =
+        Map.add typedefof<bigint>.FullName (boxEncoder bigint) extra
+    let inline withCustom (encoder: 'Value->JToken) (extra: ExtraEncoders): ExtraEncoders =
+        Map.add typedefof<'Value>.FullName (boxEncoder encoder) extra
+
+    let (|StringifiableType|_|) (t: System.Type): (obj->string) option =
+        let fullName = t.FullName
+        if fullName = typeof<string>.FullName then
+            Some unbox
+        elif fullName = typeof<System.Guid>.FullName then
+            let toString = t.GetMethod("ToString")
+            Some(fun (v: obj) -> toString.Invoke(v, [||]) :?> string)
+        else None
+
+    let rec private autoEncodeRecordsAndUnions extra (isCamelCase : bool) (t: System.Type) : BoxedEncoder =
+        if FSharpType.IsRecord(t) then
+            let setters =
+                FSharpType.GetRecordFields(t)
+                |> Array.map (fun fi ->
+                    let targetKey =
+                        if isCamelCase then fi.Name.[..0].ToLowerInvariant() + fi.Name.[1..]
+                        else fi.Name
+                    let encoder = autoEncoder extra isCamelCase fi.PropertyType
+                    fun (source: obj) (target: JObject) ->
+                        let value = FSharpValue.GetRecordField(source, fi)
+                        if not(isNull value) then // Discard null fields
+                            target.[targetKey] <- encoder.Encode value
+                        target)
+            boxEncoder(fun (source: obj) ->
+                (JObject(), setters) ||> Seq.fold (fun target set -> set source target) :> JToken)
+        elif FSharpType.IsUnion(t) then
+            boxEncoder(fun (value: obj) ->
+                let info, fields = FSharpValue.GetUnionFields(value, t)
+                match fields.Length with
+                | 0 -> string info.Name
+                | len ->
+                    let fieldTypes = info.GetFields()
+                    let target = Array.zeroCreate<JToken> (len + 1)
+                    target.[0] <- string info.Name
+                    for i = 1 to len do
+                        let encoder = autoEncoder extra isCamelCase fieldTypes.[i-1].PropertyType
+                        target.[i] <- encoder.Encode(fields.[i-1])
+                    array target)
+        else
+            failwithf "Cannot generate auto encoder for %s. Please pass an extra encoder." t.FullName
+
+    and private genericSeq (encoder: BoxedEncoder) =
+        boxEncoder(fun (xs: obj) ->
+            let ar = JArray()
+            for x in xs :?> System.Collections.IEnumerable do
+                ar.Add(encoder.Encode(x))
+            ar :> JToken)
+
+    and private autoEncoder (extra: ExtraEncoders) isCamelCase (t: System.Type) : BoxedEncoder =
+      let isGeneric = t.IsGenericType
+      let fullname = if isGeneric then t.GetGenericTypeDefinition().FullName else t.FullName
+      match Map.tryFind fullname extra with
+      | Some encoder -> encoder
+      | None ->
+        if t.IsArray then
+            t.GetElementType() |> autoEncoder extra isCamelCase |> genericSeq
+        elif isGeneric then
+            if FSharpType.IsTuple(t) then
+                let encoders =
+                    FSharpType.GetTupleElements(t)
+                    |> Array.map (autoEncoder extra isCamelCase)
+                boxEncoder(fun (value: obj) ->
+                    FSharpValue.GetTupleFields(value)
+                    |> Seq.mapi (fun i x -> encoders.[i].Encode x) |> seq)
+            else
+                if fullname = typedefof<obj option>.FullName then
+                    let encoder = t.GenericTypeArguments.[0] |> autoEncoder extra isCamelCase
+                    boxEncoder(fun (value: obj) ->
+                        if isNull value then nil
+                        else
+                            let _, fields = FSharpValue.GetUnionFields(value, t)
+                            encoder.Encode fields.[0])
+                elif fullname = typedefof<obj list>.FullName
+                    || fullname = typedefof<Set<string>>.FullName then
+                    t.GenericTypeArguments.[0] |> autoEncoder extra isCamelCase |> genericSeq
+                elif fullname = typedefof< Map<string, obj> >.FullName then
+                    let keyType = t.GenericTypeArguments.[0]
+                    let valueType = t.GenericTypeArguments.[1]
+                    let valueEncoder = valueType |> autoEncoder extra isCamelCase
+                    let kvProps = typedefof<KeyValuePair<obj,obj>>.MakeGenericType(keyType, valueType).GetProperties()
+                    match keyType with
+                    | StringifiableType toString ->
+                        boxEncoder(fun (value: obj) ->
+                            let target = JObject()
+                            for kv in value :?> System.Collections.IEnumerable do
+                                let k = kvProps.[0].GetValue(kv)
+                                let v = kvProps.[1].GetValue(kv)
+                                target.[toString k] <- valueEncoder.Encode v
+                            target :> JToken)
+                    | _ ->
+                        let keyEncoder = keyType |> autoEncoder extra isCamelCase
+                        boxEncoder(fun (value: obj) ->
+                            let target = JArray()
+                            for kv in value :?> System.Collections.IEnumerable do
+                                let k = kvProps.[0].GetValue(kv)
+                                let v = kvProps.[1].GetValue(kv)
+                                target.Add(JArray [|keyEncoder.Encode k; valueEncoder.Encode v|])
+                            target :> JToken)
+                else
+                    autoEncodeRecordsAndUnions extra isCamelCase t
+        else
+            if fullname = typeof<bool>.FullName then
+                boxEncoder bool
+            elif fullname = typeof<string>.FullName then
+                boxEncoder string
+            elif fullname = typeof<int>.FullName then
+                boxEncoder int
+            elif fullname = typeof<uint32>.FullName then
+                boxEncoder uint32
+            elif fullname = typeof<float>.FullName then
+                boxEncoder float
+            // elif fullname = typeof<int64>.FullName then
+            //     boxEncoder int64
+            // elif fullname = typeof<uint64>.FullName then
+            //     boxEncoder uint64
+            // elif fullname = typeof<bigint>.FullName then
+            //     boxEncoder bigint
+            // elif fullname = typeof<decimal>.FullName then
+            //     boxEncoder decimal
+            elif fullname = typeof<System.DateTime>.FullName then
+                boxEncoder datetime
+            elif fullname = typeof<System.DateTimeOffset>.FullName then
+                boxEncoder datetimeOffset
+            elif fullname = typeof<System.Guid>.FullName then
+                boxEncoder guid
+            elif fullname = typeof<obj>.FullName then
+                boxEncoder id
+            else
+                autoEncodeRecordsAndUnions extra isCamelCase t
+
     type Auto =
-        static member toString(space : int, value : obj, ?forceCamelCase : bool) : string =
-            let format = if space = 0 then Formatting.None else Formatting.Indented
-            let settings = JsonSerializerSettings(Converters = [|Converters.CacheConverter.Singleton|],
-                                                  Formatting = format)
+        static member generateEncoder<'T>(?isCamelCase : bool, ?extra: ExtraEncoders): Encoder<'T> =
+            let isCamelCase = defaultArg isCamelCase false
+            let extra = match extra with Some e -> e | None -> makeExtra()
+            let encoderCreate = typeof<'T> |> autoEncoder extra isCamelCase
+            fun (value: 'T) ->
+                encoderCreate.Encode value
 
-            if defaultArg forceCamelCase false then
-                settings.ContractResolver <- Serialization.CamelCasePropertyNamesContractResolver()
-
-            JsonConvert.SerializeObject(value, settings)
+        static member toString(space : int, value : 'T, ?isCamelCase : bool, ?extra: ExtraEncoders) : string =
+            let encoder = Auto.generateEncoder(?isCamelCase=isCamelCase, ?extra=extra)
+            encoder value |> toString space
 
     ///**Description**
     /// Convert a `Value` into a prettified string.

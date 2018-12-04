@@ -999,14 +999,15 @@ module Decode =
                 failwithf "Cannot generate auto decoder for %s. Please pass an extra decoder." t.FullName
 
     and private autoDecoder (extra: ExtraDecoders) isCamelCase (isOptional : bool) (t: System.Type) : BoxedDecoder =
-      let fullname = t.GetGenericTypeDefinition().FullName
+      let isGeneric = t.IsGenericType
+      let fullname = if isGeneric then t.GetGenericTypeDefinition().FullName else t.FullName
       match Map.tryFind fullname extra with
       | Some decoder -> decoder
       | None ->
         if t.IsArray then
             let decoder = t.GetElementType() |> autoDecoder extra isCamelCase false
             array decoder |> boxDecoder
-        elif t.IsGenericType then
+        elif isGeneric then
             if FSharpType.IsTuple(t) then
                 let decoders = FSharpType.GetTupleElements(t) |> Array.map (autoDecoder extra isCamelCase false)
                 fun path value ->

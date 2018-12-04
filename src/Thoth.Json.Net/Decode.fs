@@ -918,9 +918,8 @@ module Decode =
                 | Ok result -> decoder.Decode(path, value) |> Result.map (fun v -> v::result))
 
     let private genericOption t (decoder: BoxedDecoder) =
-        fun (path : string)  (value: JToken) ->
-            // TODO: Is GetUnionCases a costly operation? Should we cache this?
-            let ucis = FSharpType.GetUnionCases(t)
+        let ucis = FSharpType.GetUnionCases(t)
+        fun (path : string) (value: JToken) ->
             if Helpers.isNull value then
                 box None |> Ok
             else

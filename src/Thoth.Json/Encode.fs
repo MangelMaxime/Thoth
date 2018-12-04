@@ -361,11 +361,10 @@ module Encode =
                         else fi.Name
                     let encode = autoEncoder extra isCamelCase fi.PropertyType
                     fun (source: obj) (target: Value) ->
-                        let value = encode(FSharpValue.GetRecordField(source, fi))
+                        let value = FSharpValue.GetRecordField(source, fi)
                         if not(isNull value) then // Discard null fields
-                            target.[targetKey] <- value
-                        target
-                )
+                            target.[targetKey] <- encode value
+                        target)
             fun (source: obj) ->
                 (Value(), setters) ||> Seq.fold (fun target set -> set source target)
         elif FSharpType.IsUnion(t) then
@@ -379,13 +378,14 @@ module Encode =
                     target.[0] <- string info.Name
                     for i = 1 to len do
                         let encode = autoEncoder extra isCamelCase fieldTypes.[i-1].PropertyType
-                        target.[i] <- fields.[i-1]
+                        target.[i] <- encode fields.[i-1]
                     array target
         else
             failwithf "Cannot generate auto encoder for %s. Please pass an extra encoder." t.FullName
 
     and private autoEncoder (extra: ExtraEncoders) isCamelCase (t: System.Type) : BoxedEncoder =
-      let fullname = t.GetGenericTypeDefinition().FullName
+      let isGeneric = t.IsGenericType
+      let fullname = if isGeneric then t.GetGenericTypeDefinition().FullName else t.FullName
       match Map.tryFind fullname extra with
       | Some encoder -> encoder
       | None ->
@@ -393,11 +393,14 @@ module Encode =
             let encoder = t.GetElementType() |> autoEncoder extra isCamelCase
             fun (value: obj) ->
                 value :?> obj seq |> Seq.map encoder |> seq
-        elif t.IsGenericType then
+        elif isGeneric then
             if FSharpType.IsTuple(t) then
-                let encoders = FSharpType.GetTupleElements(t) |> Array.map (autoEncoder extra isCamelCase)
+                let encoders =
+                    FSharpType.GetTupleElements(t)
+                    |> Array.map (autoEncoder extra isCamelCase)
                 fun (value: obj) ->
-                    FSharpValue.GetTupleFields(value) |> Seq.mapi (fun i x -> encoders.[i] x) |> seq
+                    FSharpValue.GetTupleFields(value)
+                    |> Seq.mapi (fun i x -> encoders.[i] x) |> seq
             else
                 if fullname = typedefof<obj option>.FullName then
                     t.GenericTypeArguments.[0] |> autoEncoder extra isCamelCase |> option |> boxEncoder
@@ -417,7 +420,7 @@ module Encode =
                                 target.[k] <- valueEncoder v
                                 target)
                     else
-                        let keyEncoder = t.GenericTypeArguments.[0] |> autoEncoder extra isCamelCase
+                        let keyEncoder = keyType |> autoEncoder extra isCamelCase
                         fun value ->
                             value :?> Map<string, obj> |> Seq.map (fun (KeyValue(k,v)) ->
                                 array [|keyEncoder k; valueEncoder v|]) |> seq
@@ -449,7 +452,7 @@ module Encode =
             elif fullname = typeof<System.Guid>.FullName then
                 boxEncoder guid
             elif fullname = typeof<obj>.FullName then
-                id
+                boxEncoder id
             else
                 autoEncodeRecordsAndUnions extra isCamelCase t
 

@@ -366,7 +366,9 @@ let tests : Test =
                     }
                 let encoder = Encode.Auto.generateEncoder<Record9>()
                 let actual = encoder value |> Encode.toString 0
-                let expected = """{"a":5,"b":"bar","c":[[false,3],[true,5],[false,10]],"d":[["Foo",14],null],"e":{"ah":{"a":-1.5,"b":0},"oh":{"a":2,"b":2}},"f":"2018-11-28T11:10:29.000Z","g":[{"a":-1.5,"b":0},{"a":2,"b":2}]}"""
+                let expected = """{"a":5,"b":"bar","c":[[false,3],[true,5],[false,10]],"d":[["Foo",14],null],"e":{"ah":{"a":-1.5,"b":0},"oh":{"a":2,"b":2}},"f":"2018-11-28T11:10:29Z","g":[{"a":-1.5,"b":0},{"a":2,"b":2}]}"""
+                // Don't fail because of non-meaningful decimal digits ("2" vs "2.0")
+                let actual = System.Text.RegularExpressions.Regex.Replace(actual, @"\.0+(?!\d)", "")
                 equal expected actual
 
             testCase "Encode.Auto.toString works with bigint extra" <| fun _ ->
