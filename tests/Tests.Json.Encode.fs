@@ -146,7 +146,7 @@ let tests : Test =
                 equal expected actual
 
             testCase "a decimal works" <| fun _ ->
-                let expected = "0.7833"
+                let expected = "\"0.7833\""
                 let actual =
                     0.7833M
                     |> Encode.decimal

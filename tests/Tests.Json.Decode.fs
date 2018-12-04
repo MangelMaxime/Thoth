@@ -462,9 +462,7 @@ Expecting a bigint but instead got: "maxime"
                 let actual =
                     Decode.fromString Decode.datetime "\"2018-10-01T11:12:55.00Z\""
 
-                match actual with
-                | Ok date -> equal (expected = date) true
-                | Error error -> failwith error
+                equal (Ok expected) actual
 
             testCase "a datetime output an error if invalid string" <| fun _ ->
                 let expected =

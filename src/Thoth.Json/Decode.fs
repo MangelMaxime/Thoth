@@ -1046,6 +1046,9 @@ module Decode =
                 boxDecoder uint32
             elif fullname = typeof<float>.FullName then
                 boxDecoder float
+            // These number types require extra libraries in Fable. To prevent penalizing
+            // all users, extra decoders (withInt64, etc) must be passed when they're needed.
+
             // elif fullname = typeof<int64>.FullName then
             //     boxDecoder int64
             // elif fullname = typeof<uint64>.FullName then

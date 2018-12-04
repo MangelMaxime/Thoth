@@ -79,9 +79,7 @@ module Encode =
     ///**Exceptions**
     ///
     let decimal (value : decimal) : JToken =
-        // TODO: This is OK for now because Fable just use JS number for decimals
-        // but in the future we should use another format to keep precision
-        JValue(value) :> JToken
+        JValue(value.ToString()) :> JToken
 
     ///**Description**
     /// Encode null
@@ -94,7 +92,7 @@ module Encode =
     ///**Exceptions**
     ///
     let nil : JToken =
-        JValue(null: obj) :> JToken
+        JValue.CreateNull() :> JToken
 
     ///**Description**
     /// Encode a bool
@@ -344,7 +342,7 @@ module Encode =
     let inline withCustom (encoder: 'Value->JToken) (extra: ExtraEncoders): ExtraEncoders =
         Map.add typedefof<'Value>.FullName (boxEncoder encoder) extra
 
-    let (|StringifiableType|_|) (t: System.Type): (obj->string) option =
+    let private (|StringifiableType|_|) (t: System.Type): (obj->string) option =
         let fullName = t.FullName
         if fullName = typeof<string>.FullName then
             Some unbox
@@ -455,6 +453,9 @@ module Encode =
                 boxEncoder uint32
             elif fullname = typeof<float>.FullName then
                 boxEncoder float
+            // These number types require extra libraries in Fable. To prevent penalizing
+            // all users, extra encoders (withInt64, etc) must be passed when they're needed.
+
             // elif fullname = typeof<int64>.FullName then
             //     boxEncoder int64
             // elif fullname = typeof<uint64>.FullName then
@@ -470,7 +471,7 @@ module Encode =
             elif fullname = typeof<System.Guid>.FullName then
                 boxEncoder guid
             elif fullname = typeof<obj>.FullName then
-                boxEncoder id
+                boxEncoder(fun (v: obj) -> JValue(v) :> JToken)
             else
                 autoEncodeRecordsAndUnions extra isCamelCase t
 

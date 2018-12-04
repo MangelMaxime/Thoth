@@ -86,9 +86,7 @@ module Encode =
     ///**Exceptions**
     ///
     let decimal (value : decimal) : Value =
-        // TODO: This is OK for now because Fable just use JS number for decimals
-        // but in the future we should use another format to keep precision
-        FSharp.Core.Operators.float value |> float
+        value.ToString() |> string
 
     ///**Description**
     /// Encode null
@@ -437,6 +435,9 @@ module Encode =
                 boxEncoder uint32
             elif fullname = typeof<float>.FullName then
                 boxEncoder float
+            // These number types require extra libraries in Fable. To prevent penalizing
+            // all users, extra encoders (withInt64, etc) must be passed when they're needed.
+
             // elif fullname = typeof<int64>.FullName then
             //     boxEncoder int64
             // elif fullname = typeof<uint64>.FullName then
