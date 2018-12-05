@@ -886,15 +886,15 @@ module Decode =
 
     let inline makeExtra(): ExtraDecoders = Map.empty
     let inline withInt64 (extra: ExtraDecoders): ExtraDecoders =
-        Map.add typedefof<int64>.FullName (boxDecoder int64) extra
+        Map.add typeof<int64>.FullName (boxDecoder int64) extra
     let inline withUInt64 (extra: ExtraDecoders): ExtraDecoders =
-        Map.add typedefof<uint64>.FullName (boxDecoder uint64) extra
+        Map.add typeof<uint64>.FullName (boxDecoder uint64) extra
     let inline withDecimal (extra: ExtraDecoders): ExtraDecoders =
-        Map.add typedefof<decimal>.FullName (boxDecoder decimal) extra
+        Map.add typeof<decimal>.FullName (boxDecoder decimal) extra
     let inline withBigInt (extra: ExtraDecoders): ExtraDecoders =
-        Map.add typedefof<bigint>.FullName (boxDecoder bigint) extra
+        Map.add typeof<bigint>.FullName (boxDecoder bigint) extra
     let inline withCustom (decoder: Decoder<'Value>) (extra: ExtraDecoders): ExtraDecoders =
-        Map.add typedefof<'Value>.FullName (boxDecoder decoder) extra
+        Map.add typeof<'Value>.FullName (boxDecoder decoder) extra
 
     // This is used to force Fable use a generic comparer for map keys
     let private toMap<'key, 'value when 'key: comparison> (xs: ('key*'value) seq) = Map.ofSeq xs
@@ -999,15 +999,14 @@ module Decode =
                 failwithf "Cannot generate auto decoder for %s. Please pass an extra decoder." t.FullName
 
     and private autoDecoder (extra: ExtraDecoders) isCamelCase (isOptional : bool) (t: System.Type) : BoxedDecoder =
-      let isGeneric = t.IsGenericType
-      let fullname = if isGeneric then t.GetGenericTypeDefinition().FullName else t.FullName
+      let fullname = t.FullName
       match Map.tryFind fullname extra with
       | Some decoder -> decoder
       | None ->
         if t.IsArray then
             let decoder = t.GetElementType() |> autoDecoder extra isCamelCase false
             array decoder |> boxDecoder
-        elif isGeneric then
+        elif t.IsGenericType then
             if FSharpType.IsTuple(t) then
                 let decoders = FSharpType.GetTupleElements(t) |> Array.map (autoDecoder extra isCamelCase false)
                 fun path value ->
@@ -1016,6 +1015,7 @@ module Decode =
                         |> Result.map (fun xs -> FSharpValue.MakeTuple(List.toArray xs, t))
                     else (path, BadPrimitive ("an array", value)) |> Error
             else
+                let fullname = t.GetGenericTypeDefinition().FullName
                 if fullname = typedefof<obj option>.FullName then
                     t.GenericTypeArguments.[0] |> (autoDecoder extra isCamelCase true) |> option |> boxDecoder
                 elif fullname = typedefof<obj list>.FullName then

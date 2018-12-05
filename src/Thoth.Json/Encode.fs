@@ -339,15 +339,15 @@ module Encode =
 
     let inline makeExtra(): ExtraEncoders = Map.empty
     let inline withInt64 (extra: ExtraEncoders): ExtraEncoders =
-        Map.add typedefof<int64>.FullName (boxEncoder int64) extra
+        Map.add typeof<int64>.FullName (boxEncoder int64) extra
     let inline withUInt64 (extra: ExtraEncoders): ExtraEncoders =
-        Map.add typedefof<uint64>.FullName (boxEncoder uint64) extra
+        Map.add typeof<uint64>.FullName (boxEncoder uint64) extra
     let inline withDecimal (extra: ExtraEncoders): ExtraEncoders =
-        Map.add typedefof<decimal>.FullName (boxEncoder decimal) extra
+        Map.add typeof<decimal>.FullName (boxEncoder decimal) extra
     let inline withBigInt (extra: ExtraEncoders): ExtraEncoders =
-        Map.add typedefof<bigint>.FullName (boxEncoder bigint) extra
+        Map.add typeof<bigint>.FullName (boxEncoder bigint) extra
     let inline withCustom (encoder: 'Value->Value) (extra: ExtraEncoders): ExtraEncoders =
-        Map.add typedefof<'Value>.FullName (boxEncoder encoder) extra
+        Map.add typeof<'Value>.FullName (boxEncoder encoder) extra
 
     let rec private autoEncodeRecordsAndUnions extra (isCamelCase : bool) (t: System.Type) : BoxedEncoder =
         if FSharpType.IsRecord(t) then
@@ -382,8 +382,7 @@ module Encode =
             failwithf "Cannot generate auto encoder for %s. Please pass an extra encoder." t.FullName
 
     and private autoEncoder (extra: ExtraEncoders) isCamelCase (t: System.Type) : BoxedEncoder =
-      let isGeneric = t.IsGenericType
-      let fullname = if isGeneric then t.GetGenericTypeDefinition().FullName else t.FullName
+      let fullname = t.FullName
       match Map.tryFind fullname extra with
       | Some encoder -> encoder
       | None ->
@@ -391,7 +390,7 @@ module Encode =
             let encoder = t.GetElementType() |> autoEncoder extra isCamelCase
             fun (value: obj) ->
                 value :?> obj seq |> Seq.map encoder |> seq
-        elif isGeneric then
+        elif t.IsGenericType then
             if FSharpType.IsTuple(t) then
                 let encoders =
                     FSharpType.GetTupleElements(t)
@@ -400,6 +399,7 @@ module Encode =
                     FSharpValue.GetTupleFields(value)
                     |> Seq.mapi (fun i x -> encoders.[i] x) |> seq
             else
+                let fullname = t.GetGenericTypeDefinition().FullName
                 if fullname = typedefof<obj option>.FullName then
                     t.GenericTypeArguments.[0] |> autoEncoder extra isCamelCase |> option |> boxEncoder
                 elif fullname = typedefof<obj list>.FullName
