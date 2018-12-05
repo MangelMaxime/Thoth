@@ -388,6 +388,11 @@ let tests : Test =
                 let value = { ParentField = { ChildField = "bumbabon" } }
                 let actual = Encode.Auto.toString(0, value, extra=extra)
                 equal expected actual
+
+            testCase "Encode.Auto.toString serializes maps with Guid keys as JSON objects" <| fun _ ->
+                let m = Map [Guid.NewGuid(), 1; Guid.NewGuid(), 2]
+                let json = Encode.Auto.toString(0, m)
+                json.[0] = '{' |> equal true
         ]
 
     ]

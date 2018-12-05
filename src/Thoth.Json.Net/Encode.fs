@@ -347,8 +347,7 @@ module Encode =
         if fullName = typeof<string>.FullName then
             Some unbox
         elif fullName = typeof<System.Guid>.FullName then
-            let toString = t.GetMethod("ToString")
-            Some(fun (v: obj) -> toString.Invoke(v, [||]) :?> string)
+            Some(fun (v: obj) -> (v :?> System.Guid).ToString())
         else None
 
     let rec private autoEncodeRecordsAndUnions extra (isCamelCase : bool) (t: System.Type) : BoxedEncoder =

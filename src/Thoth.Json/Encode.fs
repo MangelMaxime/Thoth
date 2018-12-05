@@ -413,6 +413,8 @@ module Encode =
                     if keyType.FullName = typeof<string>.FullName
                         || keyType.FullName = typeof<System.Guid>.FullName then
                         fun value ->
+                            // Fable compiles Guids as strings so this works, but maybe we should make the conversion explicit
+                            // (see dotnet version) in case Fable implementation of Guids change
                             (Value(), value :?> Map<string, obj>)
                             ||> Seq.fold (fun target (KeyValue(k,v)) ->
                                 target.[k] <- valueEncoder v
