@@ -9,12 +9,6 @@ module Encode =
     open Fable.Core
     open Fable.Core.JsInterop
 
-    /// **Description**
-    /// Represents a JavaScript value
-    type Value = obj
-
-    type Encoder<'T> = 'T -> Value
-
     ///**Description**
     /// Encode a string
     ///
@@ -327,27 +321,12 @@ module Encode =
     open FSharp.Reflection
     open Fable.Core.DynamicExtensions
 
-    type BoxedEncoder = Encoder<obj>
-    type ExtraEncoders = Map<string, BoxedEncoder>
-
     // As generics are erased by Fable, let's just do an unsafe cast for performance
     let inline boxEncoder (d: Encoder<'T>): BoxedEncoder =
         !!d
 
     let inline unboxEncoder (d: BoxedEncoder): Encoder<'T> =
         !!d
-
-    let inline makeExtra(): ExtraEncoders = Map.empty
-    let inline withInt64 (extra: ExtraEncoders): ExtraEncoders =
-        Map.add typeof<int64>.FullName (boxEncoder int64) extra
-    let inline withUInt64 (extra: ExtraEncoders): ExtraEncoders =
-        Map.add typeof<uint64>.FullName (boxEncoder uint64) extra
-    let inline withDecimal (extra: ExtraEncoders): ExtraEncoders =
-        Map.add typeof<decimal>.FullName (boxEncoder decimal) extra
-    let inline withBigInt (extra: ExtraEncoders): ExtraEncoders =
-        Map.add typeof<bigint>.FullName (boxEncoder bigint) extra
-    let inline withCustom (encoder: 'Value->Value) (extra: ExtraEncoders): ExtraEncoders =
-        Map.add typeof<'Value>.FullName (boxEncoder encoder) extra
 
     let rec private autoEncodeRecordsAndUnions extra (isCamelCase : bool) (t: System.Type) : BoxedEncoder =
         if FSharpType.IsRecord(t) then
@@ -381,10 +360,10 @@ module Encode =
         else
             failwithf "Cannot generate auto encoder for %s. Please pass an extra encoder." t.FullName
 
-    and private autoEncoder (extra: ExtraEncoders) isCamelCase (t: System.Type) : BoxedEncoder =
+    and private autoEncoder (extra: ExtraCoders) isCamelCase (t: System.Type) : BoxedEncoder =
       let fullname = t.FullName
       match Map.tryFind fullname extra with
-      | Some encoder -> encoder
+      | Some(encoder,_) -> encoder
       | None ->
         if t.IsArray then
             let encoder = t.GetElementType() |> autoEncoder extra isCamelCase
@@ -460,12 +439,12 @@ module Encode =
                 autoEncodeRecordsAndUnions extra isCamelCase t
 
     type Auto =
-        static member generateEncoder<'T>(?isCamelCase : bool, ?extra: ExtraEncoders, [<Inject>] ?resolver: ITypeResolver<'T>): Encoder<'T> =
+        static member generateEncoder<'T>(?isCamelCase : bool, ?extra: ExtraCoders, [<Inject>] ?resolver: ITypeResolver<'T>): Encoder<'T> =
             let isCamelCase = defaultArg isCamelCase false
-            let extra = match extra with Some e -> e | None -> makeExtra()
+            let extra = match extra with Some e -> e | None -> Map.empty
             resolver.Value.ResolveType() |> autoEncoder extra isCamelCase |> unboxEncoder
 
-        static member toString(space : int, value : 'T, ?isCamelCase : bool, ?extra: ExtraEncoders, [<Inject>] ?resolver: ITypeResolver<'T>) : string =
+        static member toString(space : int, value : 'T, ?isCamelCase : bool, ?extra: ExtraCoders, [<Inject>] ?resolver: ITypeResolver<'T>) : string =
             let encoder = Auto.generateEncoder(?isCamelCase=isCamelCase, ?extra=extra, ?resolver=resolver)
             encoder value |> toString space
 

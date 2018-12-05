@@ -373,8 +373,8 @@ let tests : Test =
 
             testCase "Encode.Auto.toString works with bigint extra" <| fun _ ->
                 let extra =
-                    Encode.makeExtra()
-                    |> Encode.withBigInt
+                    Extra.empty
+                    |> Extra.withBigInt
                 let expected = """{"bigintField":"9999999999999999999999"}"""
                 let value = { bigintField = 9999999999999999999999I }
                 let actual = Encode.Auto.toString(0, value, extra=extra)
@@ -382,8 +382,8 @@ let tests : Test =
 
             testCase "Encode.Auto.toString works with custom extra" <| fun _ ->
                 let extra =
-                    Encode.makeExtra()
-                    |> Encode.withCustom ChildType.Encode
+                    Extra.empty
+                    |> Extra.withCustom ChildType.Encode ChildType.Decoder
                 let expected = """{"ParentField":"bumbabon"}"""
                 let value = { ParentField = { ChildField = "bumbabon" } }
                 let actual = Encode.Auto.toString(0, value, extra=extra)

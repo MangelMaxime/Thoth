@@ -9,8 +9,6 @@ module Encode =
     open Newtonsoft.Json.Linq
     open System.IO
 
-    type Encoder<'T> = 'T -> JToken
-
     ///**Description**
     /// Encode a string
     ///
@@ -22,8 +20,8 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let string (value : string) : JToken =
-        JValue(value) :> JToken
+    let string (value : string) : Value =
+        JValue(value) :> Value
 
     ///**Description**
     /// Encode a GUID
@@ -36,7 +34,7 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let guid (value : System.Guid) : JToken =
+    let guid (value : System.Guid) : Value =
         value.ToString() |> string
 
     ///**Description**
@@ -50,8 +48,8 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let int (value : int) : JToken =
-        JValue(value) :> JToken
+    let int (value : int) : Value =
+        JValue(value) :> Value
 
     ///**Description**
     /// Encode a Float. `Infinity` and `NaN` are encoded as `null`.
@@ -64,8 +62,8 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let float (value : float) : JToken =
-        JValue(value) :> JToken
+    let float (value : float) : Value =
+        JValue(value) :> Value
 
     ///**Description**
     /// Encode a Decimal. (Currently decimal gets converted to float.)
@@ -78,8 +76,8 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let decimal (value : decimal) : JToken =
-        JValue(value.ToString()) :> JToken
+    let decimal (value : decimal) : Value =
+        JValue(value.ToString()) :> Value
 
     ///**Description**
     /// Encode null
@@ -91,8 +89,8 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let nil : JToken =
-        JValue.CreateNull() :> JToken
+    let nil : Value =
+        JValue.CreateNull() :> Value
 
     ///**Description**
     /// Encode a bool
@@ -104,8 +102,8 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let bool (value : bool) : JToken =
-        JValue(value) :> JToken
+    let bool (value : bool) : Value =
+        JValue(value) :> Value
 
     ///**Description**
     /// Encode an object
@@ -118,12 +116,12 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let object (values : (string * JToken) list) : JToken =
+    let object (values : (string * Value) list) : Value =
         values
         |> List.map (fun (key, value) ->
             JProperty(key, value)
         )
-        |> JObject :> JToken
+        |> JObject :> Value
 
     ///**Description**
     /// Encode an array
@@ -136,8 +134,8 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let array (values : JToken array) : JToken =
-        JArray(values) :> JToken
+    let array (values : Value array) : Value =
+        JArray(values) :> Value
 
     ///**Description**
     /// Encode a list
@@ -149,11 +147,11 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let list (values : JToken list) : JToken =
-        JArray(values) :> JToken
+    let list (values : Value list) : Value =
+        JArray(values) :> Value
 
-    let seq (values : JToken seq) : JToken =
-        JArray(values) :> JToken
+    let seq (values : Value seq) : Value =
+        JArray(values) :> Value
 
     ///**Description**
     /// Encode a dictionary
@@ -165,33 +163,33 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let dict (values : Map<string, JToken>) =
+    let dict (values : Map<string, Value>) =
         values
         |> Map.toList
         |> object
 
-    let bigint (value : bigint) : JToken =
-        JValue(value.ToString(CultureInfo.InvariantCulture)) :> JToken
+    let bigint (value : bigint) : Value =
+        JValue(value.ToString(CultureInfo.InvariantCulture)) :> Value
 
-    let int64 (value : int64) : JToken =
-        JValue(value.ToString(CultureInfo.InvariantCulture)) :> JToken
+    let int64 (value : int64) : Value =
+        JValue(value.ToString(CultureInfo.InvariantCulture)) :> Value
 
-    let uint32 (value : uint32) : JToken =
-        JValue(value) :> JToken
+    let uint32 (value : uint32) : Value =
+        JValue(value) :> Value
 
-    let uint64 (value : uint64) : JToken =
-        JValue(value.ToString(CultureInfo.InvariantCulture)) :> JToken
+    let uint64 (value : uint64) : Value =
+        JValue(value.ToString(CultureInfo.InvariantCulture)) :> Value
 
-    let datetime (value : System.DateTime) : JToken =
-        JValue(value.ToString("O", CultureInfo.InvariantCulture)) :> JToken
+    let datetime (value : System.DateTime) : Value =
+        JValue(value.ToString("O", CultureInfo.InvariantCulture)) :> Value
 
-    let datetimeOffset (value : System.DateTimeOffset) : JToken =
-        JValue(value.ToString("O", CultureInfo.InvariantCulture)) :> JToken
+    let datetimeOffset (value : System.DateTimeOffset) : Value =
+        JValue(value.ToString("O", CultureInfo.InvariantCulture)) :> Value
 
     let tuple2
             (enc1 : Encoder<'T1>)
             (enc2 : Encoder<'T2>)
-            (v1, v2) : JToken =
+            (v1, v2) : Value =
         [| enc1 v1
            enc2 v2 |] |> array
 
@@ -199,7 +197,7 @@ module Encode =
             (enc1 : Encoder<'T1>)
             (enc2 : Encoder<'T2>)
             (enc3 : Encoder<'T3>)
-            (v1, v2, v3) : JToken =
+            (v1, v2, v3) : Value =
         [| enc1 v1
            enc2 v2
            enc3 v3 |] |> array
@@ -209,7 +207,7 @@ module Encode =
             (enc2 : Encoder<'T2>)
             (enc3 : Encoder<'T3>)
             (enc4 : Encoder<'T4>)
-            (v1, v2, v3, v4) : JToken =
+            (v1, v2, v3, v4) : Value =
         [| enc1 v1
            enc2 v2
            enc3 v3
@@ -221,7 +219,7 @@ module Encode =
             (enc3 : Encoder<'T3>)
             (enc4 : Encoder<'T4>)
             (enc5 : Encoder<'T5>)
-            (v1, v2, v3, v4, v5) : JToken =
+            (v1, v2, v3, v4, v5) : Value =
         [| enc1 v1
            enc2 v2
            enc3 v3
@@ -235,7 +233,7 @@ module Encode =
             (enc4 : Encoder<'T4>)
             (enc5 : Encoder<'T5>)
             (enc6 : Encoder<'T6>)
-            (v1, v2, v3, v4, v5, v6) : JToken =
+            (v1, v2, v3, v4, v5, v6) : Value =
         [| enc1 v1
            enc2 v2
            enc3 v3
@@ -251,7 +249,7 @@ module Encode =
             (enc5 : Encoder<'T5>)
             (enc6 : Encoder<'T6>)
             (enc7 : Encoder<'T7>)
-            (v1, v2, v3, v4, v5, v6, v7) : JToken =
+            (v1, v2, v3, v4, v5, v6, v7) : Value =
         [| enc1 v1
            enc2 v2
            enc3 v3
@@ -269,7 +267,7 @@ module Encode =
             (enc6 : Encoder<'T6>)
             (enc7 : Encoder<'T7>)
             (enc8 : Encoder<'T8>)
-            (v1, v2, v3, v4, v5, v6, v7, v8) : JToken =
+            (v1, v2, v3, v4, v5, v6, v7, v8) : Value =
         [| enc1 v1
            enc2 v2
            enc3 v3
@@ -290,7 +288,7 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let toString (space: int) (token: JToken) : string =
+    let toString (space: int) (token: Value) : string =
         let format = if space = 0 then Formatting.None else Formatting.Indented
         use stream = new StringWriter(NewLine = "\n")
         use jsonWriter = new JsonTextWriter(
@@ -307,18 +305,9 @@ module Encode =
 
     open FSharp.Reflection
 
-    // type BoxedEncoder = Encoder<obj>
-    // type ExtraEncoders = Map<string, BoxedEncoder>
-
-    [<AbstractClass>]
-    type BoxedEncoder() =
-        abstract Encode: value:obj -> JToken
-        member this.BoxedEncoder: Encoder<obj> =
-            fun value -> this.Encode value
-
     type private EncoderCrate<'T>(enc: Encoder<'T>) =
         inherit BoxedEncoder()
-        override __.Encode(value: obj): JToken =
+        override __.Encode(value: obj): Value =
             enc (unbox value)
         member __.UnboxedEncoder = enc
 
@@ -327,20 +316,6 @@ module Encode =
 
     let unboxEncoder<'T> (d: BoxedEncoder): Encoder<'T> =
         (d :?> EncoderCrate<'T>).UnboxedEncoder
-
-    type ExtraEncoders = Map<string, BoxedEncoder>
-
-    let inline makeExtra(): ExtraEncoders = Map.empty
-    let inline withInt64 (extra: ExtraEncoders): ExtraEncoders =
-        Map.add typeof<int64>.FullName (boxEncoder int64) extra
-    let inline withUInt64 (extra: ExtraEncoders): ExtraEncoders =
-        Map.add typeof<uint64>.FullName (boxEncoder uint64) extra
-    let inline withDecimal (extra: ExtraEncoders): ExtraEncoders =
-        Map.add typeof<decimal>.FullName (boxEncoder decimal) extra
-    let inline withBigInt (extra: ExtraEncoders): ExtraEncoders =
-        Map.add typeof<bigint>.FullName (boxEncoder bigint) extra
-    let inline withCustom (encoder: 'Value->JToken) (extra: ExtraEncoders): ExtraEncoders =
-        Map.add typeof<'Value>.FullName (boxEncoder encoder) extra
 
     let private (|StringifiableType|_|) (t: System.Type): (obj->string) option =
         let fullName = t.FullName
@@ -365,7 +340,7 @@ module Encode =
                             target.[targetKey] <- encoder.Encode value
                         target)
             boxEncoder(fun (source: obj) ->
-                (JObject(), setters) ||> Seq.fold (fun target set -> set source target) :> JToken)
+                (JObject(), setters) ||> Seq.fold (fun target set -> set source target) :> Value)
         elif FSharpType.IsUnion(t) then
             boxEncoder(fun (value: obj) ->
                 let info, fields = FSharpValue.GetUnionFields(value, t)
@@ -373,7 +348,7 @@ module Encode =
                 | 0 -> string info.Name
                 | len ->
                     let fieldTypes = info.GetFields()
-                    let target = Array.zeroCreate<JToken> (len + 1)
+                    let target = Array.zeroCreate<Value> (len + 1)
                     target.[0] <- string info.Name
                     for i = 1 to len do
                         let encoder = autoEncoder extra isCamelCase fieldTypes.[i-1].PropertyType
@@ -387,12 +362,12 @@ module Encode =
             let ar = JArray()
             for x in xs :?> System.Collections.IEnumerable do
                 ar.Add(encoder.Encode(x))
-            ar :> JToken)
+            ar :> Value)
 
-    and private autoEncoder (extra: ExtraEncoders) isCamelCase (t: System.Type) : BoxedEncoder =
+    and private autoEncoder (extra: ExtraCoders) isCamelCase (t: System.Type) : BoxedEncoder =
       let fullname = t.FullName
       match Map.tryFind fullname extra with
-      | Some encoder -> encoder
+      | Some(encoder,_) -> encoder
       | None ->
         if t.IsArray then
             t.GetElementType() |> autoEncoder extra isCamelCase |> genericSeq
@@ -429,7 +404,7 @@ module Encode =
                                 let k = kvProps.[0].GetValue(kv)
                                 let v = kvProps.[1].GetValue(kv)
                                 target.[toString k] <- valueEncoder.Encode v
-                            target :> JToken)
+                            target :> Value)
                     | _ ->
                         let keyEncoder = keyType |> autoEncoder extra isCamelCase
                         boxEncoder(fun (value: obj) ->
@@ -438,7 +413,7 @@ module Encode =
                                 let k = kvProps.[0].GetValue(kv)
                                 let v = kvProps.[1].GetValue(kv)
                                 target.Add(JArray [|keyEncoder.Encode k; valueEncoder.Encode v|])
-                            target :> JToken)
+                            target :> Value)
                 else
                     autoEncodeRecordsAndUnions extra isCamelCase t
         else
@@ -470,19 +445,19 @@ module Encode =
             elif fullname = typeof<System.Guid>.FullName then
                 boxEncoder guid
             elif fullname = typeof<obj>.FullName then
-                boxEncoder(fun (v: obj) -> JValue(v) :> JToken)
+                boxEncoder(fun (v: obj) -> JValue(v) :> Value)
             else
                 autoEncodeRecordsAndUnions extra isCamelCase t
 
     type Auto =
-        static member generateEncoder<'T>(?isCamelCase : bool, ?extra: ExtraEncoders): Encoder<'T> =
+        static member generateEncoder<'T>(?isCamelCase : bool, ?extra: ExtraCoders): Encoder<'T> =
             let isCamelCase = defaultArg isCamelCase false
-            let extra = match extra with Some e -> e | None -> makeExtra()
+            let extra = match extra with Some e -> e | None -> Map.empty
             let encoderCreate = typeof<'T> |> autoEncoder extra isCamelCase
             fun (value: 'T) ->
                 encoderCreate.Encode value
 
-        static member toString(space : int, value : 'T, ?isCamelCase : bool, ?extra: ExtraEncoders) : string =
+        static member toString(space : int, value : 'T, ?isCamelCase : bool, ?extra: ExtraCoders) : string =
             let encoder = Auto.generateEncoder(?isCamelCase=isCamelCase, ?extra=extra)
             encoder value |> toString space
 
@@ -498,7 +473,7 @@ module Encode =
     ///**Exceptions**
     ///
     [<System.Obsolete("Please use toString instead")>]
-    let encode (space: int) (token: JToken) : string = toString space token
+    let encode (space: int) (token: Value) : string = toString space token
 
     ///**Description**
     /// Encode an option
@@ -510,5 +485,5 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let option (encoder : 'a -> JToken) =
+    let option (encoder : 'a -> Value) =
         Option.map encoder >> Option.defaultWith (fun _ -> nil)

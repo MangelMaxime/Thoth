@@ -1157,7 +1157,7 @@ Expecting an object but instead got:
                     | _ ->
                         Decode.fail <| "Trying to decode info, but version " + (version.ToString()) + "is not supported"
 
-                let info : Decode.Decoder<int> =
+                let info : Decoder<int> =
                     Decode.field "version" Decode.int
                     |> Decode.andThen infoHelp
 
@@ -1178,7 +1178,7 @@ Expecting an object with a field named `version` but instead got:
     "data": 2
 }
                         """.Trim())
-                let infoHelp version : Decode.Decoder<int> =
+                let infoHelp version : Decoder<int> =
                     match version with
                     | 4 ->
                         Decode.succeed 1
@@ -2010,11 +2010,10 @@ Expecting an object with a field named `radius` but instead got:
                 equal value res
 
             testCase "Auto decoders works for int64" <| fun _ ->
-                let extraEnc = Encode.makeExtra() |> Encode.withInt64
-                let extraDec = Decode.makeExtra() |> Decode.withInt64
+                let extra = Extra.empty |> Extra.withInt64
                 let value = 9999999999L
-                let json = Encode.Auto.toString(4, value, extra=extraEnc)
-                let res = Decode.Auto.unsafeFromString<int64>(json, extra=extraDec)
+                let json = Encode.Auto.toString(4, value, extra=extra)
+                let res = Decode.Auto.unsafeFromString<int64>(json, extra=extra)
                 equal value res
 
             testCase "Auto decoders works for uint32" <| fun _ ->
@@ -2024,19 +2023,17 @@ Expecting an object with a field named `radius` but instead got:
                 equal value res
 
             testCase "Auto decoders works for uint64" <| fun _ ->
-                let extraEnc = Encode.makeExtra() |> Encode.withUInt64
-                let extraDec = Decode.makeExtra() |> Decode.withUInt64
+                let extra = Extra.empty |> Extra.withUInt64
                 let value = 9999999999999999999UL
-                let json = Encode.Auto.toString(4, value, extra=extraEnc)
-                let res = Decode.Auto.unsafeFromString<uint64>(json, extra=extraDec)
+                let json = Encode.Auto.toString(4, value, extra=extra)
+                let res = Decode.Auto.unsafeFromString<uint64>(json, extra=extra)
                 equal value res
 
             testCase "Auto decoders works for bigint" <| fun _ ->
-                let extraEnc = Encode.makeExtra() |> Encode.withBigInt
-                let extraDec = Decode.makeExtra() |> Decode.withBigInt
+                let extra = Extra.empty |> Extra.withBigInt
                 let value = 99999999999999999999999I
-                let json = Encode.Auto.toString(4, value, extra=extraEnc)
-                let res = Decode.Auto.unsafeFromString<bigint>(json, extra=extraDec)
+                let json = Encode.Auto.toString(4, value, extra=extra)
+                let res = Decode.Auto.unsafeFromString<bigint>(json, extra=extra)
                 equal value res
 
             testCase "Auto decoders works for bool" <| fun _ ->
@@ -2052,11 +2049,10 @@ Expecting an object with a field named `radius` but instead got:
                 equal value res
 
             testCase "Auto decoders works for decimal" <| fun _ ->
-                let extraEnc = Encode.makeExtra() |> Encode.withDecimal
-                let extraDec = Decode.makeExtra() |> Decode.withDecimal
+                let extra = Extra.empty |> Extra.withDecimal
                 let value = 0.7833263478179128134089M
-                let json = Encode.Auto.toString(4, value, extra=extraEnc)
-                let res = Decode.Auto.unsafeFromString<decimal>(json, extra=extraDec)
+                let json = Encode.Auto.toString(4, value, extra=extra)
+                let res = Decode.Auto.unsafeFromString<decimal>(json, extra=extra)
                 equal value res
 
             // testCase "Auto decoders works for datetime" <| fun _ ->
@@ -2240,17 +2236,13 @@ Expecting an object with a field named `radius` but instead got:
                 equal (Ok expected) actual
 
             testCase "Decoder.Auto.toString works with bigint extra" <| fun _ ->
-                let extra =
-                    Decode.makeExtra()
-                    |> Decode.withBigInt
+                let extra = Extra.empty |> Extra.withBigInt
                 let expected = { bigintField = 9999999999999999999999I }
                 let actual = Decode.Auto.fromString("""{"bigintField":"9999999999999999999999"}""", extra=extra)
                 equal (Ok expected) actual
 
             testCase "Decoder.Auto.toString works with custom extra" <| fun _ ->
-                let extra =
-                    Decode.makeExtra()
-                    |> Decode.withCustom ChildType.Decoder
+                let extra = Extra.empty |> Extra.withCustom ChildType.Encode ChildType.Decoder
                 let expected = { ParentField = { ChildField = "bumbabon" } }
                 let actual = Decode.Auto.fromString("""{"ParentField":"bumbabon"}""", extra=extra)
                 equal (Ok expected) actual

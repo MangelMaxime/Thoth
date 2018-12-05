@@ -14,8 +14,10 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
     <ItemGroup>
+        <Compile Include="Types.fs" />
         <Compile Include="Decode.fs" />
         <Compile Include="Encode.fs" />
+        <Compile Include="Extra.fs" />
     </ItemGroup>
     <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

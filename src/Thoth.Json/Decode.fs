@@ -9,21 +9,6 @@ module Decode =
     open Fable.Core.JsInterop
     open Fable.Import
 
-    type ErrorReason =
-        | BadPrimitive of string * obj
-        | BadType of string * obj
-        | BadTypeAt of string * obj
-        | BadPrimitiveExtra of string * obj * string
-        | BadField of string * obj
-        | BadPath of string * obj * string
-        | TooSmallArray of string * obj
-        | FailMessage of string
-        | BadOneOf of string list
-
-    type DecoderError = string * ErrorReason
-
-    type Decoder<'T> = string -> obj -> Result<'T, DecoderError>
-
     module internal Helpers =
         [<Emit("typeof $0")>]
         let jsTypeof (_ : obj) : string = jsNative
@@ -873,28 +858,12 @@ module Decode =
                 | Optional -> true
                 | Required -> false
 
-    // TODO: Same API as for Thot.Json.Net.Decoder.BoxedDecoder
-    type BoxedDecoder = Decoder<obj>
-    type ExtraDecoders = Map<string, BoxedDecoder>
-
     // As generics are erased by Fable, let's just do an unsafe cast for performance
     let inline boxDecoder (d: Decoder<'T>): BoxedDecoder =
         !!d // d >> Result.map box
 
     let inline unboxDecoder (d: BoxedDecoder): Decoder<'T> =
         !!d // d >> Result.map unbox
-
-    let inline makeExtra(): ExtraDecoders = Map.empty
-    let inline withInt64 (extra: ExtraDecoders): ExtraDecoders =
-        Map.add typeof<int64>.FullName (boxDecoder int64) extra
-    let inline withUInt64 (extra: ExtraDecoders): ExtraDecoders =
-        Map.add typeof<uint64>.FullName (boxDecoder uint64) extra
-    let inline withDecimal (extra: ExtraDecoders): ExtraDecoders =
-        Map.add typeof<decimal>.FullName (boxDecoder decimal) extra
-    let inline withBigInt (extra: ExtraDecoders): ExtraDecoders =
-        Map.add typeof<bigint>.FullName (boxDecoder bigint) extra
-    let inline withCustom (decoder: Decoder<'Value>) (extra: ExtraDecoders): ExtraDecoders =
-        Map.add typeof<'Value>.FullName (boxDecoder decoder) extra
 
     // This is used to force Fable use a generic comparer for map keys
     let private toMap<'key, 'value when 'key: comparison> (xs: ('key*'value) seq) = Map.ofSeq xs
@@ -998,10 +967,10 @@ module Decode =
             else
                 failwithf "Cannot generate auto decoder for %s. Please pass an extra decoder." t.FullName
 
-    and private autoDecoder (extra: ExtraDecoders) isCamelCase (isOptional : bool) (t: System.Type) : BoxedDecoder =
+    and private autoDecoder (extra: ExtraCoders) isCamelCase (isOptional : bool) (t: System.Type) : BoxedDecoder =
       let fullname = t.FullName
       match Map.tryFind fullname extra with
-      | Some decoder -> decoder
+      | Some(_,decoder) -> decoder
       | None ->
         if t.IsArray then
             let decoder = t.GetElementType() |> autoDecoder extra isCamelCase false
@@ -1068,16 +1037,16 @@ module Decode =
             else autoDecodeRecordsAndUnions extra isCamelCase isOptional t
 
     type Auto =
-        static member generateDecoder<'T>(?isCamelCase : bool, ?extra: ExtraDecoders, [<Inject>] ?resolver: ITypeResolver<'T>): Decoder<'T> =
+        static member generateDecoder<'T>(?isCamelCase : bool, ?extra: ExtraCoders, [<Inject>] ?resolver: ITypeResolver<'T>): Decoder<'T> =
             let isCamelCase = defaultArg isCamelCase false
-            let extra = match extra with Some e -> e | None -> makeExtra()
+            let extra = match extra with Some e -> e | None -> Map.empty
             resolver.Value.ResolveType() |> autoDecoder extra isCamelCase false |> unboxDecoder
 
-        static member fromString<'T>(json: string, ?isCamelCase : bool, ?extra: ExtraDecoders, [<Inject>] ?resolver: ITypeResolver<'T>): Result<'T, string> =
+        static member fromString<'T>(json: string, ?isCamelCase : bool, ?extra: ExtraCoders, [<Inject>] ?resolver: ITypeResolver<'T>): Result<'T, string> =
             let decoder = Auto.generateDecoder(?isCamelCase=isCamelCase, ?extra=extra, ?resolver=resolver)
             fromString decoder json
 
-        static member unsafeFromString<'T>(json: string, ?isCamelCase : bool, ?extra: ExtraDecoders, [<Inject>] ?resolver: ITypeResolver<'T>): 'T =
+        static member unsafeFromString<'T>(json: string, ?isCamelCase : bool, ?extra: ExtraCoders, [<Inject>] ?resolver: ITypeResolver<'T>): 'T =
             let decoder = Auto.generateDecoder(?isCamelCase=isCamelCase, ?extra=extra, ?resolver=resolver)
             match fromString decoder json with
             | Ok x -> x

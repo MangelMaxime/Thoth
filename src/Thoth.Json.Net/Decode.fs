@@ -8,23 +8,8 @@ module Decode =
     open Newtonsoft.Json.Linq
     open System.IO
 
-    type ErrorReason =
-        | BadPrimitive of string * JToken
-        | BadPrimitiveExtra of string * JToken * string
-        | BadField of string * JToken
-        | BadType of string * JToken
-        | BadTypeAt of string * JToken
-        | BadPath of string * JToken * string
-        | TooSmallArray of string * JToken
-        | FailMessage of string
-        | BadOneOf of string list
-
-    type DecoderError = string * ErrorReason
-
-    type Decoder<'T> = string -> JToken -> Result<'T, DecoderError>
-
     module private Helpers =
-        let anyToString (token: JToken) : string =
+        let anyToString (token: Value) : string =
             use stream = new StringWriter(NewLine = "\n")
             use jsonWriter = new JsonTextWriter(
                                     stream,
@@ -34,18 +19,18 @@ module Decode =
             token.WriteTo(jsonWriter)
             stream.ToString()
 
-        let inline isBool (token: JToken) = token.Type = JTokenType.Boolean
-        let inline isNumber (token: JToken) = token.Type = JTokenType.Float || token.Type = JTokenType.Integer
-        let inline isString (token: JToken) = token.Type = JTokenType.String
-        let inline isArray (token: JToken) = token.Type = JTokenType.Array
-        let inline isObject (token: JToken) = token.Type = JTokenType.Object
-        let inline isNull (token: JToken) = token.Type = JTokenType.Null
-        let inline asBool (token: JToken): bool = token.Value<bool>()
-        let inline asInt (token: JToken): int = token.Value<int>()
-        let inline asFloat (token: JToken): float = token.Value<float>()
-        let inline asDecimal (token: JToken): System.Decimal = token.Value<System.Decimal>()
-        let inline asString (token: JToken): string = token.Value<string>()
-        let inline asArray (token: JToken): JToken[] = token.Value<JArray>().Values() |> Seq.toArray
+        let inline isBool (token: Value) = token.Type = JTokenType.Boolean
+        let inline isNumber (token: Value) = token.Type = JTokenType.Float || token.Type = JTokenType.Integer
+        let inline isString (token: Value) = token.Type = JTokenType.String
+        let inline isArray (token: Value) = token.Type = JTokenType.Array
+        let inline isObject (token: Value) = token.Type = JTokenType.Object
+        let inline isNull (token: Value) = token.Type = JTokenType.Null
+        let inline asBool (token: Value): bool = token.Value<bool>()
+        let inline asInt (token: Value): int = token.Value<int>()
+        let inline asFloat (token: Value): float = token.Value<float>()
+        let inline asDecimal (token: Value): System.Decimal = token.Value<System.Decimal>()
+        let inline asString (token: Value): string = token.Value<string>()
+        let inline asArray (token: Value): Value[] = token.Value<JArray>().Values() |> Seq.toArray
 
     let private genericMsg msg value newLine =
         try
@@ -92,7 +77,7 @@ module Decode =
 
     exception DecoderException of DecoderError
 
-    let unwrap (path : string) (decoder : Decoder<'T>) (value : JToken) : 'T =
+    let unwrap (path : string) (decoder : Decoder<'T>) (value : Value) : 'T =
         match decoder path value with
         | Ok success ->
             success
@@ -868,11 +853,6 @@ module Decode =
                 | Optional _ -> true
                 | Required -> false
 
-    [<AbstractClass>]
-    type BoxedDecoder() =
-        abstract Decode: path : string * token: JToken -> Result<obj, DecoderError>
-        member this.BoxedDecoder: Decoder<obj> =
-            fun path token -> this.Decode(path, token)
 
     type private DecoderCrate<'T>(dec: Decoder<'T>) =
         inherit BoxedDecoder()
@@ -888,21 +868,7 @@ module Decode =
     let unboxDecoder<'T> (d: BoxedDecoder): Decoder<'T> =
         (d :?> DecoderCrate<'T>).UnboxedDecoder
 
-    type ExtraDecoders = Map<string, BoxedDecoder>
-
-    let inline makeExtra(): ExtraDecoders = Map.empty
-    let inline withInt64 (extra: ExtraDecoders): ExtraDecoders =
-        Map.add typeof<int64>.FullName (boxDecoder int64) extra
-    let inline withUInt64 (extra: ExtraDecoders): ExtraDecoders =
-        Map.add typeof<uint64>.FullName (boxDecoder uint64) extra
-    let inline withDecimal (extra: ExtraDecoders): ExtraDecoders =
-        Map.add typeof<decimal>.FullName (boxDecoder decimal) extra
-    let inline withBigInt (extra: ExtraDecoders): ExtraDecoders =
-        Map.add typeof<bigint>.FullName (boxDecoder bigint) extra
-    let inline withCustom (decoder: Decoder<'Value>) (extra: ExtraDecoders): ExtraDecoders =
-        Map.add typeof<'Value>.FullName (boxDecoder decoder) extra
-
-    let private autoObject (decoderInfos: (FieldType * string * BoxedDecoder)[]) (path : string) (value: JToken) =
+    let private autoObject (decoderInfos: (FieldType * string * BoxedDecoder)[]) (path : string) (value: Value) =
         if not (Helpers.isObject value) then
             (path, BadPrimitive ("an object", value)) |> Error
         else
@@ -924,7 +890,7 @@ module Decode =
                         field name decoder.BoxedDecoder path value
                         |> Result.map (fun v -> v::result))
 
-    let private mixedArray msg (decoders: BoxedDecoder[]) (path: string) (values: JToken[]): Result<obj list, DecoderError> =
+    let private mixedArray msg (decoders: BoxedDecoder[]) (path: string) (values: Value[]): Result<obj list, DecoderError> =
         if decoders.Length <> values.Length then
             (path, sprintf "Expected %i %s but got %i" decoders.Length msg values.Length
             |> FailMessage) |> Error
@@ -937,7 +903,7 @@ module Decode =
 
     let private genericOption t (decoder: BoxedDecoder) =
         let ucis = FSharpType.GetUnionCases(t)
-        fun (path : string) (value: JToken) ->
+        fun (path : string) (value: Value) ->
             if Helpers.isNull value then
                 box None |> Ok
             else
@@ -951,7 +917,7 @@ module Decode =
                 | Error error -> Error error
 
     let private genericList t (decoder: BoxedDecoder) =
-        fun (path : string)  (value: JToken) ->
+        fun (path : string)  (value: Value) ->
             if not (Helpers.isArray value) then
                 (path, BadPrimitive ("a list", value)) |> Error
             else
@@ -983,7 +949,7 @@ module Decode =
         let tupleType = typedefof<obj * obj>.MakeGenericType([|keyType; valueType|])
         let listType = typedefof< ResizeArray<obj> >.MakeGenericType([|tupleType|])
         let addMethod = listType.GetMethod("Add")
-        fun (path: string)  (value: JToken) ->
+        fun (path: string)  (value: Value) ->
             let empty = System.Activator.CreateInstance(listType)
             let kvs =
                 if Helpers.isArray value then
@@ -1019,7 +985,7 @@ module Decode =
             kvs |> Result.map (fun kvs -> System.Activator.CreateInstance(t, kvs))
 
 
-    and private makeUnion extra isCamelCase t name (path : string) (values: JToken[]) =
+    and private makeUnion extra isCamelCase t name (path : string) (values: Value[]) =
         match FSharpType.GetUnionCases(t) |> Array.tryFind (fun x -> x.Name = name) with
         | None -> (path, FailMessage("Cannot find case " + name + " in " + t.FullName)) |> Error
         | Some uci ->
@@ -1057,7 +1023,7 @@ module Decode =
                 |> Result.map (fun xs -> FSharpValue.MakeRecord(t, List.toArray xs)))
 
         elif FSharpType.IsUnion(t) then
-            boxDecoder(fun path (value: JToken) ->
+            boxDecoder(fun path (value: Value) ->
                 if Helpers.isString(value) then
                     let name = Helpers.asString value
                     makeUnion extra isCamelCase t name path [||]
@@ -1074,10 +1040,10 @@ module Decode =
             else
                 failwithf "Cannot generate auto decoder for %s. Please pass an extra decoder." t.FullName
 
-    and private autoDecoder (extra: ExtraDecoders) isCamelCase (isOptional : bool) (t: System.Type) : BoxedDecoder =
+    and private autoDecoder (extra: ExtraCoders) isCamelCase (isOptional : bool) (t: System.Type) : BoxedDecoder =
       let fullname = t.FullName
       match Map.tryFind fullname extra with
-      | Some decoder -> decoder
+      | Some(_,decoder) -> decoder
       | None ->
         if t.IsArray then
             let elemType = t.GetElementType()
@@ -1155,20 +1121,20 @@ module Decode =
             else autoDecodeRecordsAndUnions extra isCamelCase isOptional t
 
     type Auto =
-        static member generateDecoder<'T> (?isCamelCase : bool, ?extra: ExtraDecoders): Decoder<'T> =
+        static member generateDecoder<'T> (?isCamelCase : bool, ?extra: ExtraCoders): Decoder<'T> =
             let isCamelCase = defaultArg isCamelCase false
-            let extra = match extra with Some e -> e | None -> makeExtra()
+            let extra = match extra with Some e -> e | None -> Map.empty
             let decoderCrate = autoDecoder extra isCamelCase false typeof<'T>
             fun path token ->
                 match decoderCrate.Decode(path, token) with
                 | Ok x -> Ok(x :?> 'T)
                 | Error er -> Error er
 
-        static member fromString<'T>(json: string, ?isCamelCase : bool, ?extra: ExtraDecoders): Result<'T, string> =
+        static member fromString<'T>(json: string, ?isCamelCase : bool, ?extra: ExtraCoders): Result<'T, string> =
             let decoder = Auto.generateDecoder(?isCamelCase=isCamelCase, ?extra=extra)
             fromString decoder json
 
-        static member unsafeFromString<'T>(json: string, ?isCamelCase : bool, ?extra: ExtraDecoders): 'T =
+        static member unsafeFromString<'T>(json: string, ?isCamelCase : bool, ?extra: ExtraCoders): 'T =
             let decoder = Auto.generateDecoder(?isCamelCase=isCamelCase, ?extra=extra)
             match fromString decoder json with
             | Ok x -> x
