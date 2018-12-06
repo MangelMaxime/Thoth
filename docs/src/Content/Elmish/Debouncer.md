@@ -10,7 +10,7 @@
 
 ## Demo
 
-The following demo works like that:
+The demo works as follows:
 
 1. Ask the user to type something
 2. User **is typing**
