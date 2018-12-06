@@ -329,9 +329,9 @@ module Encode =
         !!d
 
     let rec private autoEncodeRecordsAndUnions extra (isCamelCase : bool) (t: System.Type) : BoxedEncoder =
-        if FSharpType.IsRecord(t) then
+        if FSharpType.IsRecord(t, allowAccessToPrivateRepresentation=true) then
             let setters =
-                FSharpType.GetRecordFields(t)
+                FSharpType.GetRecordFields(t, allowAccessToPrivateRepresentation=true)
                 |> Array.map (fun fi ->
                     let targetKey =
                         if isCamelCase then fi.Name.[..0].ToLowerInvariant() + fi.Name.[1..]
@@ -344,9 +344,9 @@ module Encode =
                         target)
             fun (source: obj) ->
                 (Value(), setters) ||> Seq.fold (fun target set -> set source target)
-        elif FSharpType.IsUnion(t) then
+        elif FSharpType.IsUnion(t, allowAccessToPrivateRepresentation=true) then
             fun (value: obj) ->
-                let info, fields = FSharpValue.GetUnionFields(value, t)
+                let info, fields = FSharpValue.GetUnionFields(value, t, allowAccessToPrivateRepresentation=true)
                 match fields.Length with
                 | 0 -> string info.Name
                 | len ->

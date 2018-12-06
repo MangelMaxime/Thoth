@@ -326,9 +326,9 @@ module Encode =
         else None
 
     let rec private autoEncodeRecordsAndUnions extra (isCamelCase : bool) (t: System.Type) : BoxedEncoder =
-        if FSharpType.IsRecord(t) then
+        if FSharpType.IsRecord(t, allowAccessToPrivateRepresentation=true) then
             let setters =
-                FSharpType.GetRecordFields(t)
+                FSharpType.GetRecordFields(t, allowAccessToPrivateRepresentation=true)
                 |> Array.map (fun fi ->
                     let targetKey =
                         if isCamelCase then fi.Name.[..0].ToLowerInvariant() + fi.Name.[1..]
@@ -341,9 +341,9 @@ module Encode =
                         target)
             boxEncoder(fun (source: obj) ->
                 (JObject(), setters) ||> Seq.fold (fun target set -> set source target) :> Value)
-        elif FSharpType.IsUnion(t) then
+        elif FSharpType.IsUnion(t, allowAccessToPrivateRepresentation=true) then
             boxEncoder(fun (value: obj) ->
-                let info, fields = FSharpValue.GetUnionFields(value, t)
+                let info, fields = FSharpValue.GetUnionFields(value, t, allowAccessToPrivateRepresentation=true)
                 match fields.Length with
                 | 0 -> string info.Name
                 | len ->
@@ -386,7 +386,7 @@ module Encode =
                     boxEncoder(fun (value: obj) ->
                         if isNull value then nil
                         else
-                            let _, fields = FSharpValue.GetUnionFields(value, t)
+                            let _, fields = FSharpValue.GetUnionFields(value, t, allowAccessToPrivateRepresentation=true)
                             encoder.Encode fields.[0])
                 elif fullname = typedefof<obj list>.FullName
                     || fullname = typedefof<Set<string>>.FullName then

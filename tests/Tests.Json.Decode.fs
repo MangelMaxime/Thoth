@@ -224,6 +224,9 @@ type ChildType =
 type ParentRecord =
     { ParentField: ChildType }
 
+type RecordWithPrivateConstructor = private { Foo1: int; Foo2: float }
+type UnionWithPrivateConstructor = private Bar of string | Baz
+
 let tests : Test =
     testList "Thoth.Json.Decode" [
 
@@ -2246,5 +2249,15 @@ Expecting an object with a field named `radius` but instead got:
                 let expected = { ParentField = { ChildField = "bumbabon" } }
                 let actual = Decode.Auto.fromString("""{"ParentField":"bumbabon"}""", extra=extra)
                 equal (Ok expected) actual
+
+            testCase "Auto.fromString works with records with private constructors" <| fun _ ->
+                let json = """{ "foo1": 5, "foo2": 7.8 }"""
+                Decode.Auto.fromString(json, isCamelCase=true)
+                |> equal (Ok ({ Foo1 = 5; Foo2 = 7.8 }: RecordWithPrivateConstructor))
+
+            testCase "Auto.fromString works with unions with private constructors" <| fun _ ->
+                let json = """[ "Baz", ["Bar", "foo"]]"""
+                Decode.Auto.fromString<UnionWithPrivateConstructor list>(json, isCamelCase=true)
+                |> equal (Ok [Baz; Bar "foo"])
         ]
     ]

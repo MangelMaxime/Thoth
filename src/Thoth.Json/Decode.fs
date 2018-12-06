@@ -912,20 +912,23 @@ module Decode =
                 | Ok result -> decoder path value |> Result.map (fun v -> v::result))
 
     let rec private makeUnion extra isCamelCase t name (path : string) (values: obj[]) =
-        match FSharpType.GetUnionCases(t) |> Array.tryFind (fun x -> x.Name = name) with
+        let uci =
+            FSharpType.GetUnionCases(t, allowAccessToPrivateRepresentation=true)
+            |> Array.tryFind (fun x -> x.Name = name)
+        match uci with
         | None -> (path, FailMessage("Cannot find case " + name + " in " + t.FullName)) |> Error
         | Some uci ->
             if values.Length = 0 then
-                FSharpValue.MakeUnion(uci, [||]) |> Ok
+                FSharpValue.MakeUnion(uci, [||], allowAccessToPrivateRepresentation=true) |> Ok
             else
                 let decoders = uci.GetFields() |> Array.map (fun fi -> autoDecoder extra isCamelCase false fi.PropertyType)
                 mixedArray "union fields" decoders path values
-                |> Result.map (fun values -> FSharpValue.MakeUnion(uci, List.toArray values))
+                |> Result.map (fun values -> FSharpValue.MakeUnion(uci, List.toArray values, allowAccessToPrivateRepresentation=true))
 
     and private autoDecodeRecordsAndUnions extra (isCamelCase : bool) (isOptional : bool) (t: System.Type) : BoxedDecoder =
-        if FSharpType.IsRecord(t) then
+        if FSharpType.IsRecord(t, allowAccessToPrivateRepresentation=true) then
             let decoders =
-                FSharpType.GetRecordFields(t)
+                FSharpType.GetRecordFields(t, allowAccessToPrivateRepresentation=true)
                 |> Array.map (fun fi ->
                     let name =
                         if isCamelCase then
@@ -946,9 +949,9 @@ module Decode =
                     fieldType, name, autoDecoder extra isCamelCase fieldType.ToBool propertyType)
             fun path value ->
                 autoObject decoders path value
-                |> Result.map (fun xs -> FSharpValue.MakeRecord(t, List.toArray xs))
+                |> Result.map (fun xs -> FSharpValue.MakeRecord(t, List.toArray xs, allowAccessToPrivateRepresentation=true))
 
-        elif FSharpType.IsUnion(t) then
+        elif FSharpType.IsUnion(t, allowAccessToPrivateRepresentation=true) then
             fun path (value: obj) ->
                 if Helpers.isString(value) then
                     let name = Helpers.asString value

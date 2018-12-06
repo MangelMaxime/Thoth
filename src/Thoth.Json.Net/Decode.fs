@@ -882,8 +882,8 @@ module Decode =
                         |> Result.map (fun v ->
                             match v with
                             | Some v ->
-                                let ucis = FSharpType.GetUnionCases(typ)
-                                (FSharpValue.MakeUnion(ucis.[1], [|v|]))::result
+                                let ucis = FSharpType.GetUnionCases(typ, allowAccessToPrivateRepresentation=true)
+                                (FSharpValue.MakeUnion(ucis.[1], [|v|], allowAccessToPrivateRepresentation=true))::result
                             | None -> box None::result
                         )
                     | FieldType.Required ->
@@ -902,13 +902,13 @@ module Decode =
                 | Ok result -> decoder.Decode(path, value) |> Result.map (fun v -> v::result))
 
     let private genericOption t (decoder: BoxedDecoder) =
-        let ucis = FSharpType.GetUnionCases(t)
+        let ucis = FSharpType.GetUnionCases(t, allowAccessToPrivateRepresentation=true)
         fun (path : string) (value: Value) ->
             if Helpers.isNull value then
                 box None |> Ok
             else
                 match decoder.Decode(path, value) with
-                | Ok v -> Ok (FSharpValue.MakeUnion(ucis.[1], [|v|]))
+                | Ok v -> Ok (FSharpValue.MakeUnion(ucis.[1], [|v|], allowAccessToPrivateRepresentation=true))
                 | Error (_, BadField _ ) ->
                     box None |> Ok
                 | Error (_, BadType (_, jToken))
@@ -922,15 +922,15 @@ module Decode =
                 (path, BadPrimitive ("a list", value)) |> Error
             else
                 let values = value.Value<JArray>()
-                let ucis = FSharpType.GetUnionCases(t)
-                let empty = FSharpValue.MakeUnion(ucis.[0], [||])
+                let ucis = FSharpType.GetUnionCases(t, allowAccessToPrivateRepresentation=true)
+                let empty = FSharpValue.MakeUnion(ucis.[0], [||], allowAccessToPrivateRepresentation=true)
                 (values, Ok empty) ||> Seq.foldBack (fun value acc ->
                     match acc with
                     | Error _ -> acc
                     | Ok acc ->
                         match decoder.Decode(path, value) with
                         | Error er -> Error er
-                        | Ok result -> FSharpValue.MakeUnion(ucis.[1], [|result; acc|]) |> Ok)
+                        | Ok result -> FSharpValue.MakeUnion(ucis.[1], [|result; acc|], allowAccessToPrivateRepresentation=true) |> Ok)
 
     let private (|StringifiableType|_|) (t: System.Type): (string->obj) option =
         let fullName = t.FullName
@@ -986,21 +986,24 @@ module Decode =
 
 
     and private makeUnion extra isCamelCase t name (path : string) (values: Value[]) =
-        match FSharpType.GetUnionCases(t) |> Array.tryFind (fun x -> x.Name = name) with
+        let uci =
+            FSharpType.GetUnionCases(t, allowAccessToPrivateRepresentation=true)
+            |> Array.tryFind (fun x -> x.Name = name)
+        match uci with
         | None -> (path, FailMessage("Cannot find case " + name + " in " + t.FullName)) |> Error
         | Some uci ->
             if values.Length = 0 then
-                FSharpValue.MakeUnion(uci, [||]) |> Ok
+                FSharpValue.MakeUnion(uci, [||], allowAccessToPrivateRepresentation=true) |> Ok
             else
                 let decoders = uci.GetFields() |> Array.map (fun fi -> autoDecoder extra isCamelCase false fi.PropertyType)
                 mixedArray "union fields" decoders path values
-                |> Result.map (fun values -> FSharpValue.MakeUnion(uci, List.toArray values))
+                |> Result.map (fun values -> FSharpValue.MakeUnion(uci, List.toArray values, allowAccessToPrivateRepresentation=true))
 
     and private autoDecodeRecordsAndUnions extra (isCamelCase : bool) (isOptional : bool) (t: System.Type): BoxedDecoder =
-        if FSharpType.IsRecord(t) then
+        if FSharpType.IsRecord(t, allowAccessToPrivateRepresentation=true) then
             boxDecoder(fun path value ->
                 let decoders =
-                    FSharpType.GetRecordFields(t)
+                    FSharpType.GetRecordFields(t, allowAccessToPrivateRepresentation=true)
                     |> Array.map (fun fi ->
                         let name =
                             if isCamelCase then
@@ -1020,9 +1023,9 @@ module Decode =
 
                         fieldType, name, autoDecoder extra isCamelCase fieldType.ToBool propertyType)
                 autoObject decoders path value
-                |> Result.map (fun xs -> FSharpValue.MakeRecord(t, List.toArray xs)))
+                |> Result.map (fun xs -> FSharpValue.MakeRecord(t, List.toArray xs, allowAccessToPrivateRepresentation=true)))
 
-        elif FSharpType.IsUnion(t) then
+        elif FSharpType.IsUnion(t, allowAccessToPrivateRepresentation=true) then
             boxDecoder(fun path (value: Value) ->
                 if Helpers.isString(value) then
                     let name = Helpers.asString value
