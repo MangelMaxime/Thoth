@@ -13,8 +13,8 @@
 The demo works as follows:
 
 1. Ask the user to type something
-2. User **is typing**
-3. When user **stop typing**, **disable** the input and **inform** the user.
+2. The user **is typing**
+3. When the user **stops typing**, **disable** the input and **inform** the user.
 4. After a **short period** of time, **reset** the demo.
 
 <div class="columns">
