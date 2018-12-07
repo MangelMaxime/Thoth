@@ -207,9 +207,12 @@ module Decode =
             if Helpers.isNumber value then
                 Helpers.asInt value |> bigint |> Ok
             elif Helpers.isString value then
-                match bigint.TryParse (Helpers.asString value) with
-                | true, x -> Ok x
-                | _ -> (path, BadPrimitive("a bigint", value)) |> Error
+                // TODO: BigInt.TryParse has been added in Fable 2.1.4
+                // Don't use it for now to support lower Fable versions
+                try
+                    bigint.Parse (Helpers.asString value) |> Ok
+                with _ ->
+                    (path, BadPrimitive("a bigint", value)) |> Error
             else
                 (path, BadPrimitive("a bigint", value)) |> Error
 
@@ -939,6 +942,14 @@ module Decode =
             else autoDecodeRecordsAndUnions extra isCamelCase isOptional t
 
     type Auto =
+        /// ATTENTION: Use this only when other arguments (isCamelCase, extra) don't change
+        static member generateDecoderCached<'T>(?isCamelCase : bool, ?extra: ExtraCoders, [<Inject>] ?resolver: ITypeResolver<'T>): Decoder<'T> =
+            let t = resolver.Value.ResolveType()
+            Cache.Decoders.GetOrAdd(t.FullName, fun _ ->
+                let isCamelCase = defaultArg isCamelCase false
+                let extra = match extra with Some e -> e | None -> Map.empty
+                autoDecoder extra isCamelCase false t) |> unboxDecoder
+
         static member generateDecoder<'T>(?isCamelCase : bool, ?extra: ExtraCoders, [<Inject>] ?resolver: ITypeResolver<'T>): Decoder<'T> =
             let isCamelCase = defaultArg isCamelCase false
             let extra = match extra with Some e -> e | None -> Map.empty

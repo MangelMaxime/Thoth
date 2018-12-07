@@ -439,6 +439,14 @@ module Encode =
                 autoEncodeRecordsAndUnions extra isCamelCase t
 
     type Auto =
+        /// ATTENTION: Use this only when other arguments (isCamelCase, extra) don't change
+        static member generateEncoderCached<'T>(?isCamelCase : bool, ?extra: ExtraCoders, [<Inject>] ?resolver: ITypeResolver<'T>): Encoder<'T> =
+            let t = resolver.Value.ResolveType()
+            Cache.Encoders.GetOrAdd(t.FullName, fun _ ->
+                let isCamelCase = defaultArg isCamelCase false
+                let extra = match extra with Some e -> e | None -> Map.empty
+                autoEncoder extra isCamelCase t) |> unboxEncoder
+
         static member generateEncoder<'T>(?isCamelCase : bool, ?extra: ExtraCoders, [<Inject>] ?resolver: ITypeResolver<'T>): Encoder<'T> =
             let isCamelCase = defaultArg isCamelCase false
             let extra = match extra with Some e -> e | None -> Map.empty

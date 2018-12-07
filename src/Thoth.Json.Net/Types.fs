@@ -30,3 +30,15 @@ type BoxedEncoder() =
     member this.BoxedEncoder: Encoder<obj> = this.Encode
 
 type ExtraCoders = Map<string, BoxedEncoder * BoxedDecoder>
+
+module internal Cache =
+    open System
+    open System.Collections.Concurrent
+
+    type Cache<'Key, 'Value>() =
+        let cache = ConcurrentDictionary<'Key, 'Value>()
+        member __.GetOrAdd(key: 'Key, factory: 'Key->'Value) =
+            cache.GetOrAdd(key, factory)
+
+    let Encoders = lazy Cache<Type, BoxedEncoder>()
+    let Decoders = lazy Cache<Type, BoxedDecoder>()

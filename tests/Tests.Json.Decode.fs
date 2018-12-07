@@ -2226,5 +2226,16 @@ Expecting an object with a field named `radius` but instead got:
                 let json = """[ "Baz", ["Bar", "foo"]]"""
                 Decode.Auto.fromString<UnionWithPrivateConstructor list>(json, isCamelCase=true)
                 |> equal (Ok [Baz; Bar "foo"])
+
+            testCase "Auto.generateDecoderCached works" <| fun _ ->
+                let expected = Ok { Id = 0; Name = "maxime"; Email = "mail@domain.com"; Followers = 0 }
+                let json = """{ "id" : 0, "name": "maxime", "email": "mail@domain.com", "followers": 0 }"""
+                let decoder1 = Decode.Auto.generateDecoderCached<User>(isCamelCase=true)
+                let decoder2 = Decode.Auto.generateDecoderCached<User>(isCamelCase=true)
+                let actual1 = Decode.fromString decoder1 json
+                let actual2 = Decode.fromString decoder2 json
+                equal expected actual1
+                equal expected actual2
+                equal actual1 actual2
         ]
     ]

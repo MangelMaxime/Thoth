@@ -1013,6 +1013,19 @@ module Decode =
             else autoDecodeRecordsAndUnions extra isCamelCase isOptional t
 
     type Auto =
+        /// ATTENTION: Use this only when other arguments (isCamelCase, extra) don't change
+        static member generateDecoderCached<'T> (?isCamelCase : bool, ?extra: ExtraCoders): Decoder<'T> =
+            let t = typeof<'T>
+            let decoderCrate =
+                Cache.Decoders.Value.GetOrAdd(t, fun t ->
+                    let isCamelCase = defaultArg isCamelCase false
+                    let extra = match extra with Some e -> e | None -> Map.empty
+                    autoDecoder extra isCamelCase false t)
+            fun path token ->
+                match decoderCrate.Decode(path, token) with
+                | Ok x -> Ok(x :?> 'T)
+                | Error er -> Error er
+
         static member generateDecoder<'T> (?isCamelCase : bool, ?extra: ExtraCoders): Decoder<'T> =
             let isCamelCase = defaultArg isCamelCase false
             let extra = match extra with Some e -> e | None -> Map.empty

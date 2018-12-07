@@ -450,12 +450,23 @@ module Encode =
                 autoEncodeRecordsAndUnions extra isCamelCase t
 
     type Auto =
+        /// ATTENTION: Use this only when other arguments (isCamelCase, extra) don't change
+        static member generateEncoderCached<'T>(?isCamelCase : bool, ?extra: ExtraCoders): Encoder<'T> =
+            let t = typeof<'T>
+            let encoderCrate =
+                Cache.Encoders.Value.GetOrAdd(t, fun t ->
+                    let isCamelCase = defaultArg isCamelCase false
+                    let extra = match extra with Some e -> e | None -> Map.empty
+                    autoEncoder extra isCamelCase t)
+            fun (value: 'T) ->
+                encoderCrate.Encode value
+
         static member generateEncoder<'T>(?isCamelCase : bool, ?extra: ExtraCoders): Encoder<'T> =
             let isCamelCase = defaultArg isCamelCase false
             let extra = match extra with Some e -> e | None -> Map.empty
-            let encoderCreate = typeof<'T> |> autoEncoder extra isCamelCase
+            let encoderCrate = autoEncoder extra isCamelCase typeof<'T>
             fun (value: 'T) ->
-                encoderCreate.Encode value
+                encoderCrate.Encode value
 
         static member toString(space : int, value : 'T, ?isCamelCase : bool, ?extra: ExtraCoders) : string =
             let encoder = Auto.generateEncoder(?isCamelCase=isCamelCase, ?extra=extra)
