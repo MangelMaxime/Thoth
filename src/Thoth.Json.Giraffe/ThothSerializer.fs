@@ -15,7 +15,8 @@ type ThothSerializer (?isCamelCase : bool, ?extra: ExtraCoders) =
 
     interface IJsonSerializer with
         member __.SerializeToString (o : 'T) =
-            let encoder = Encode.Auto.generateEncoderCached<'T>(?isCamelCase=isCamelCase, ?extra=extra)
+            let t = o.GetType()
+            let encoder = Encode.Auto.generateEncoderCached(t, ?isCamelCase=isCamelCase, ?extra=extra)
             encoder o |> Encode.toString 0
 
         member __.Deserialize<'T> (json : string) =
@@ -24,12 +25,19 @@ type ThothSerializer (?isCamelCase : bool, ?extra: ExtraCoders) =
             | Ok x -> x
             | Error er -> failwith er
 
-        member this.Deserialize<'T> (bytes : byte[]) =
-            (this :> IJsonSerializer).Deserialize<'T>(Encoding.UTF8.GetString bytes)
+        member __.Deserialize<'T> (bytes : byte[]) =
+            let decoder = Decode.Auto.generateDecoderCached<'T>(?isCamelCase=isCamelCase, ?extra=extra)
+            use stream = new MemoryStream(bytes)
+            use streamReader = new StreamReader(stream)
+            use jsonReader = new JsonTextReader(streamReader)
+            let json = JValue.ReadFrom jsonReader
+            match Decode.fromValue "$" decoder json with
+            | Ok value -> value
+            | Error er -> failwith er
 
         member __.DeserializeAsync<'T> (stream : Stream) = task {
             let decoder = Decode.Auto.generateDecoderCached<'T>(?isCamelCase=isCamelCase, ?extra=extra)
-            use streamReader = new System.IO.StreamReader(stream)
+            use streamReader = new StreamReader(stream)
             use jsonReader = new JsonTextReader(streamReader)
             let! json = JValue.ReadFromAsync jsonReader
             return
@@ -38,9 +46,15 @@ type ThothSerializer (?isCamelCase : bool, ?extra: ExtraCoders) =
               | Error er -> failwith er
           }
 
-        member this.SerializeToBytes<'T>(o : 'T) : byte array =
-            (this :> IJsonSerializer).SerializeToString<'T>(o)
-            |> Encoding.UTF8.GetBytes
+        member __.SerializeToBytes<'T>(o : 'T) : byte array =
+            let t = o.GetType()
+            let encoder = Encode.Auto.generateEncoderCached(t, ?isCamelCase=isCamelCase, ?extra=extra)
+            use stream = new MemoryStream(DefaultBufferSize)
+            use writer = new StreamWriter(stream, Utf8EncodingWithoutBom)
+            use jsonWriter = new JsonTextWriter(writer)
+            (encoder o).WriteTo(jsonWriter)
+            jsonWriter.Flush()
+            stream.ToArray()
 
         // TODO: Giraffe only calls this when writing chunked JSON (and setting Response header "Transfer-Encoding" to "chunked")
         // https://github.com/giraffe-fsharp/Giraffe/blob/f623527e1c537e77a07a5e594ced80f4f74016df/src/Giraffe/ResponseWriters.fs#L162
