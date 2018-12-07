@@ -20,7 +20,7 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let inline string (value : string) : Value =
+    let inline string (value : string) : JsonValue =
         box value
 
     ///**Description**
@@ -34,7 +34,7 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let guid (value : System.Guid) : Value =
+    let guid (value : System.Guid) : JsonValue =
         box (value.ToString())
 
     ///**Description**
@@ -48,10 +48,10 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let inline int (value : int) : Value =
+    let inline int (value : int) : JsonValue =
         box value
 
-    let inline uint32 (value : uint32) : Value =
+    let inline uint32 (value : uint32) : JsonValue =
         box value
 
     ///**Description**
@@ -65,7 +65,7 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let inline float (value : float) : Value =
+    let inline float (value : float) : JsonValue =
         box value
 
     ///**Description**
@@ -79,7 +79,7 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let decimal (value : decimal) : Value =
+    let decimal (value : decimal) : JsonValue =
         value.ToString() |> string
 
     ///**Description**
@@ -92,7 +92,7 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let nil : Value =
+    let nil : JsonValue =
         box null
 
     ///**Description**
@@ -105,7 +105,7 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let inline bool (value : bool) : Value =
+    let inline bool (value : bool) : JsonValue =
         box value
 
     ///**Description**
@@ -119,7 +119,7 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let object (values : (string * Value) seq) : Value =
+    let object (values : (string * JsonValue) seq) : JsonValue =
         let o = obj()
         for (key, value) in values do
             o?(key) <- value
@@ -136,7 +136,7 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let inline array (values : Value array) : Value =
+    let inline array (values : JsonValue array) : JsonValue =
         box values
 
     ///**Description**
@@ -149,12 +149,12 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let inline list (values : Value list) : Value =
+    let inline list (values : JsonValue list) : JsonValue =
         // Don't use List.toArray as it may create a typed array
-        box (JS.Array.from(box values :?> JS.Iterable<Value>))
+        box (JS.Array.from(box values :?> JS.Iterable<JsonValue>))
 
-    let inline seq (values : Value seq) : Value =
-        box (JS.Array.from(values :?> JS.Iterable<Value>))
+    let inline seq (values : JsonValue seq) : JsonValue =
+        box (JS.Array.from(values :?> JS.Iterable<JsonValue>))
 
     ///**Description**
     /// Encode a dictionary
@@ -166,27 +166,27 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let dict (values : Map<string, Value>) : Value =
+    let dict (values : Map<string, JsonValue>) : JsonValue =
         values
         |> Map.toList
         |> object
 
-    let bigint (value : bigint) : Value =
+    let bigint (value : bigint) : JsonValue =
         box (value.ToString())
 
-    let datetimeOffset (value : System.DateTimeOffset) : Value =
+    let datetimeOffset (value : System.DateTimeOffset) : JsonValue =
         value.ToString("O", CultureInfo.InvariantCulture) |> string
 
-    let int64 (value : int64) : Value =
+    let int64 (value : int64) : JsonValue =
         box (value.ToString(CultureInfo.InvariantCulture))
 
-    let uint64 (value : uint64) : Value =
+    let uint64 (value : uint64) : JsonValue =
         box (value.ToString())
 
     let tuple2
             (enc1 : Encoder<'T1>)
             (enc2 : Encoder<'T2>)
-            (v1, v2) : Value =
+            (v1, v2) : JsonValue =
         box [| enc1 v1
                enc2 v2 |]
 
@@ -194,7 +194,7 @@ module Encode =
             (enc1 : Encoder<'T1>)
             (enc2 : Encoder<'T2>)
             (enc3 : Encoder<'T3>)
-            (v1, v2, v3) : Value =
+            (v1, v2, v3) : JsonValue =
         box [| enc1 v1
                enc2 v2
                enc3 v3 |]
@@ -204,7 +204,7 @@ module Encode =
             (enc2 : Encoder<'T2>)
             (enc3 : Encoder<'T3>)
             (enc4 : Encoder<'T4>)
-            (v1, v2, v3, v4) : Value =
+            (v1, v2, v3, v4) : JsonValue =
         box [| enc1 v1
                enc2 v2
                enc3 v3
@@ -216,7 +216,7 @@ module Encode =
             (enc3 : Encoder<'T3>)
             (enc4 : Encoder<'T4>)
             (enc5 : Encoder<'T5>)
-            (v1, v2, v3, v4, v5) : Value =
+            (v1, v2, v3, v4, v5) : JsonValue =
         box [| enc1 v1
                enc2 v2
                enc3 v3
@@ -230,7 +230,7 @@ module Encode =
             (enc4 : Encoder<'T4>)
             (enc5 : Encoder<'T5>)
             (enc6 : Encoder<'T6>)
-            (v1, v2, v3, v4, v5, v6) : Value =
+            (v1, v2, v3, v4, v5, v6) : JsonValue =
         box [| enc1 v1
                enc2 v2
                enc3 v3
@@ -246,7 +246,7 @@ module Encode =
             (enc5 : Encoder<'T5>)
             (enc6 : Encoder<'T6>)
             (enc7 : Encoder<'T7>)
-            (v1, v2, v3, v4, v5, v6, v7) : Value =
+            (v1, v2, v3, v4, v5, v6, v7) : JsonValue =
         box [| enc1 v1
                enc2 v2
                enc3 v3
@@ -264,7 +264,7 @@ module Encode =
             (enc6 : Encoder<'T6>)
             (enc7 : Encoder<'T7>)
             (enc8 : Encoder<'T8>)
-            (v1, v2, v3, v4, v5, v6, v7, v8) : Value =
+            (v1, v2, v3, v4, v5, v6, v7, v8) : JsonValue =
         box [| enc1 v1
                enc2 v2
                enc3 v3
@@ -284,7 +284,7 @@ module Encode =
     ///
     /// **Exceptions**
     ///
-    let datetime (value : System.DateTime) : Value =
+    let datetime (value : System.DateTime) : JsonValue =
         value.ToString("O", CultureInfo.InvariantCulture) |> string
 
     ///**Description**
@@ -298,7 +298,7 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let toString (space: int) (value: Value) : string =
+    let toString (space: int) (value: JsonValue) : string =
         JS.JSON.stringify(value, !!null, space)
 
     ///**Description**
@@ -311,7 +311,7 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let option (encoder : 'a -> Value) =
+    let option (encoder : 'a -> JsonValue) =
         Option.map encoder >> Option.defaultWith (fun _ -> nil)
 
     //////////////////
@@ -337,13 +337,13 @@ module Encode =
                         if isCamelCase then fi.Name.[..0].ToLowerInvariant() + fi.Name.[1..]
                         else fi.Name
                     let encode = autoEncoder extra isCamelCase fi.PropertyType
-                    fun (source: obj) (target: Value) ->
+                    fun (source: obj) (target: JsonValue) ->
                         let value = FSharpValue.GetRecordField(source, fi)
                         if not(isNull value) then // Discard null fields
                             target.[targetKey] <- encode value
                         target)
             fun (source: obj) ->
-                (Value(), setters) ||> Seq.fold (fun target set -> set source target)
+                (JsonValue(), setters) ||> Seq.fold (fun target set -> set source target)
         elif FSharpType.IsUnion(t, allowAccessToPrivateRepresentation=true) then
             fun (value: obj) ->
                 let info, fields = FSharpValue.GetUnionFields(value, t, allowAccessToPrivateRepresentation=true)
@@ -351,7 +351,7 @@ module Encode =
                 | 0 -> string info.Name
                 | len ->
                     let fieldTypes = info.GetFields()
-                    let target = Array.zeroCreate<Value> (len + 1)
+                    let target = Array.zeroCreate<JsonValue> (len + 1)
                     target.[0] <- string info.Name
                     for i = 1 to len do
                         let encode = autoEncoder extra isCamelCase fieldTypes.[i-1].PropertyType
@@ -394,7 +394,7 @@ module Encode =
                         fun value ->
                             // Fable compiles Guids as strings so this works, but maybe we should make the conversion explicit
                             // (see dotnet version) in case Fable implementation of Guids change
-                            (Value(), value :?> Map<string, obj>)
+                            (JsonValue(), value :?> Map<string, obj>)
                             ||> Seq.fold (fun target (KeyValue(k,v)) ->
                                 target.[k] <- valueEncoder v
                                 target)
@@ -468,4 +468,4 @@ module Encode =
     ///**Exceptions**
     ///
     [<System.Obsolete("Please use toString instead")>]
-    let encode (space: int) (value: Value) : string = toString space value
+    let encode (space: int) (value: JsonValue) : string = toString space value

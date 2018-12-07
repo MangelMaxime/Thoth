@@ -20,8 +20,8 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let string (value : string) : Value =
-        JValue(value) :> Value
+    let string (value : string) : JsonValue =
+        JValue(value) :> JsonValue
 
     ///**Description**
     /// Encode a GUID
@@ -34,7 +34,7 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let guid (value : System.Guid) : Value =
+    let guid (value : System.Guid) : JsonValue =
         value.ToString() |> string
 
     ///**Description**
@@ -48,8 +48,8 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let int (value : int) : Value =
-        JValue(value) :> Value
+    let int (value : int) : JsonValue =
+        JValue(value) :> JsonValue
 
     ///**Description**
     /// Encode a Float. `Infinity` and `NaN` are encoded as `null`.
@@ -62,8 +62,8 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let float (value : float) : Value =
-        JValue(value) :> Value
+    let float (value : float) : JsonValue =
+        JValue(value) :> JsonValue
 
     ///**Description**
     /// Encode a Decimal. (Currently decimal gets converted to float.)
@@ -76,8 +76,8 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let decimal (value : decimal) : Value =
-        JValue(value.ToString()) :> Value
+    let decimal (value : decimal) : JsonValue =
+        JValue(value.ToString()) :> JsonValue
 
     ///**Description**
     /// Encode null
@@ -89,8 +89,8 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let nil : Value =
-        JValue.CreateNull() :> Value
+    let nil : JsonValue =
+        JValue.CreateNull() :> JsonValue
 
     ///**Description**
     /// Encode a bool
@@ -102,8 +102,8 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let bool (value : bool) : Value =
-        JValue(value) :> Value
+    let bool (value : bool) : JsonValue =
+        JValue(value) :> JsonValue
 
     ///**Description**
     /// Encode an object
@@ -116,12 +116,12 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let object (values : (string * Value) list) : Value =
+    let object (values : (string * JsonValue) list) : JsonValue =
         values
         |> List.map (fun (key, value) ->
             JProperty(key, value)
         )
-        |> JObject :> Value
+        |> JObject :> JsonValue
 
     ///**Description**
     /// Encode an array
@@ -134,8 +134,8 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let array (values : Value array) : Value =
-        JArray(values) :> Value
+    let array (values : JsonValue array) : JsonValue =
+        JArray(values) :> JsonValue
 
     ///**Description**
     /// Encode a list
@@ -147,11 +147,11 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let list (values : Value list) : Value =
-        JArray(values) :> Value
+    let list (values : JsonValue list) : JsonValue =
+        JArray(values) :> JsonValue
 
-    let seq (values : Value seq) : Value =
-        JArray(values) :> Value
+    let seq (values : JsonValue seq) : JsonValue =
+        JArray(values) :> JsonValue
 
     ///**Description**
     /// Encode a dictionary
@@ -163,33 +163,33 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let dict (values : Map<string, Value>) =
+    let dict (values : Map<string, JsonValue>) =
         values
         |> Map.toList
         |> object
 
-    let bigint (value : bigint) : Value =
-        JValue(value.ToString(CultureInfo.InvariantCulture)) :> Value
+    let bigint (value : bigint) : JsonValue =
+        JValue(value.ToString(CultureInfo.InvariantCulture)) :> JsonValue
 
-    let int64 (value : int64) : Value =
-        JValue(value.ToString(CultureInfo.InvariantCulture)) :> Value
+    let int64 (value : int64) : JsonValue =
+        JValue(value.ToString(CultureInfo.InvariantCulture)) :> JsonValue
 
-    let uint32 (value : uint32) : Value =
-        JValue(value) :> Value
+    let uint32 (value : uint32) : JsonValue =
+        JValue(value) :> JsonValue
 
-    let uint64 (value : uint64) : Value =
-        JValue(value.ToString(CultureInfo.InvariantCulture)) :> Value
+    let uint64 (value : uint64) : JsonValue =
+        JValue(value.ToString(CultureInfo.InvariantCulture)) :> JsonValue
 
-    let datetime (value : System.DateTime) : Value =
-        JValue(value.ToString("O", CultureInfo.InvariantCulture)) :> Value
+    let datetime (value : System.DateTime) : JsonValue =
+        JValue(value.ToString("O", CultureInfo.InvariantCulture)) :> JsonValue
 
-    let datetimeOffset (value : System.DateTimeOffset) : Value =
-        JValue(value.ToString("O", CultureInfo.InvariantCulture)) :> Value
+    let datetimeOffset (value : System.DateTimeOffset) : JsonValue =
+        JValue(value.ToString("O", CultureInfo.InvariantCulture)) :> JsonValue
 
     let tuple2
             (enc1 : Encoder<'T1>)
             (enc2 : Encoder<'T2>)
-            (v1, v2) : Value =
+            (v1, v2) : JsonValue =
         [| enc1 v1
            enc2 v2 |] |> array
 
@@ -197,7 +197,7 @@ module Encode =
             (enc1 : Encoder<'T1>)
             (enc2 : Encoder<'T2>)
             (enc3 : Encoder<'T3>)
-            (v1, v2, v3) : Value =
+            (v1, v2, v3) : JsonValue =
         [| enc1 v1
            enc2 v2
            enc3 v3 |] |> array
@@ -207,7 +207,7 @@ module Encode =
             (enc2 : Encoder<'T2>)
             (enc3 : Encoder<'T3>)
             (enc4 : Encoder<'T4>)
-            (v1, v2, v3, v4) : Value =
+            (v1, v2, v3, v4) : JsonValue =
         [| enc1 v1
            enc2 v2
            enc3 v3
@@ -219,7 +219,7 @@ module Encode =
             (enc3 : Encoder<'T3>)
             (enc4 : Encoder<'T4>)
             (enc5 : Encoder<'T5>)
-            (v1, v2, v3, v4, v5) : Value =
+            (v1, v2, v3, v4, v5) : JsonValue =
         [| enc1 v1
            enc2 v2
            enc3 v3
@@ -233,7 +233,7 @@ module Encode =
             (enc4 : Encoder<'T4>)
             (enc5 : Encoder<'T5>)
             (enc6 : Encoder<'T6>)
-            (v1, v2, v3, v4, v5, v6) : Value =
+            (v1, v2, v3, v4, v5, v6) : JsonValue =
         [| enc1 v1
            enc2 v2
            enc3 v3
@@ -249,7 +249,7 @@ module Encode =
             (enc5 : Encoder<'T5>)
             (enc6 : Encoder<'T6>)
             (enc7 : Encoder<'T7>)
-            (v1, v2, v3, v4, v5, v6, v7) : Value =
+            (v1, v2, v3, v4, v5, v6, v7) : JsonValue =
         [| enc1 v1
            enc2 v2
            enc3 v3
@@ -267,7 +267,7 @@ module Encode =
             (enc6 : Encoder<'T6>)
             (enc7 : Encoder<'T7>)
             (enc8 : Encoder<'T8>)
-            (v1, v2, v3, v4, v5, v6, v7, v8) : Value =
+            (v1, v2, v3, v4, v5, v6, v7, v8) : JsonValue =
         [| enc1 v1
            enc2 v2
            enc3 v3
@@ -288,7 +288,7 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let toString (space: int) (token: Value) : string =
+    let toString (space: int) (token: JsonValue) : string =
         let format = if space = 0 then Formatting.None else Formatting.Indented
         use stream = new StringWriter(NewLine = "\n")
         use jsonWriter = new JsonTextWriter(
@@ -307,7 +307,7 @@ module Encode =
 
     type private EncoderCrate<'T>(enc: Encoder<'T>) =
         inherit BoxedEncoder()
-        override __.Encode(value: obj): Value =
+        override __.Encode(value: obj): JsonValue =
             enc (unbox value)
         member __.UnboxedEncoder = enc
 
@@ -340,7 +340,7 @@ module Encode =
                             target.[targetKey] <- encoder.Encode value
                         target)
             boxEncoder(fun (source: obj) ->
-                (JObject(), setters) ||> Seq.fold (fun target set -> set source target) :> Value)
+                (JObject(), setters) ||> Seq.fold (fun target set -> set source target) :> JsonValue)
         elif FSharpType.IsUnion(t, allowAccessToPrivateRepresentation=true) then
             boxEncoder(fun (value: obj) ->
                 let info, fields = FSharpValue.GetUnionFields(value, t, allowAccessToPrivateRepresentation=true)
@@ -348,7 +348,7 @@ module Encode =
                 | 0 -> string info.Name
                 | len ->
                     let fieldTypes = info.GetFields()
-                    let target = Array.zeroCreate<Value> (len + 1)
+                    let target = Array.zeroCreate<JsonValue> (len + 1)
                     target.[0] <- string info.Name
                     for i = 1 to len do
                         let encoder = autoEncoder extra isCamelCase fieldTypes.[i-1].PropertyType
@@ -362,7 +362,7 @@ module Encode =
             let ar = JArray()
             for x in xs :?> System.Collections.IEnumerable do
                 ar.Add(encoder.Encode(x))
-            ar :> Value)
+            ar :> JsonValue)
 
     and private autoEncoder (extra: ExtraCoders) isCamelCase (t: System.Type) : BoxedEncoder =
       let fullname = t.FullName
@@ -404,7 +404,7 @@ module Encode =
                                 let k = kvProps.[0].GetValue(kv)
                                 let v = kvProps.[1].GetValue(kv)
                                 target.[toString k] <- valueEncoder.Encode v
-                            target :> Value)
+                            target :> JsonValue)
                     | _ ->
                         let keyEncoder = keyType |> autoEncoder extra isCamelCase
                         boxEncoder(fun (value: obj) ->
@@ -413,7 +413,7 @@ module Encode =
                                 let k = kvProps.[0].GetValue(kv)
                                 let v = kvProps.[1].GetValue(kv)
                                 target.Add(JArray [|keyEncoder.Encode k; valueEncoder.Encode v|])
-                            target :> Value)
+                            target :> JsonValue)
                 else
                     autoEncodeRecordsAndUnions extra isCamelCase t
         else
@@ -445,7 +445,7 @@ module Encode =
             elif fullname = typeof<System.Guid>.FullName then
                 boxEncoder guid
             elif fullname = typeof<obj>.FullName then
-                boxEncoder(fun (v: obj) -> JValue(v) :> Value)
+                boxEncoder(fun (v: obj) -> JValue(v) :> JsonValue)
             else
                 autoEncodeRecordsAndUnions extra isCamelCase t
 
@@ -490,7 +490,7 @@ module Encode =
     ///**Exceptions**
     ///
     [<System.Obsolete("Please use toString instead")>]
-    let encode (space: int) (token: Value) : string = toString space token
+    let encode (space: int) (token: JsonValue) : string = toString space token
 
     ///**Description**
     /// Encode an option
@@ -502,5 +502,5 @@ module Encode =
     ///
     ///**Exceptions**
     ///
-    let option (encoder : 'a -> Value) =
+    let option (encoder : 'a -> JsonValue) =
         Option.map encoder >> Option.defaultWith (fun _ -> nil)

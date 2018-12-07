@@ -9,7 +9,7 @@ module Decode =
     open System.IO
 
     module private Helpers =
-        let anyToString (token: Value) : string =
+        let anyToString (token: JsonValue) : string =
             if isNull token then "null"
             else
                 use stream = new StringWriter(NewLine = "\n")
@@ -21,23 +21,23 @@ module Decode =
                 token.WriteTo(jsonWriter)
                 stream.ToString()
 
-        let inline getField (fieldName: string) (token: Value) = token.Item(fieldName)
-        let inline isBool (token: Value) = not(isNull token) && token.Type = JTokenType.Boolean
-        let inline isNumber (token: Value) = not(isNull token) && (token.Type = JTokenType.Float || token.Type = JTokenType.Integer)
-        let inline isInteger (token: Value) = not(isNull token) && (token.Type = JTokenType.Integer)
-        let inline isString (token: Value) = not(isNull token) && token.Type = JTokenType.String
-        let inline isGuid (token: Value) = not(isNull token) && token.Type = JTokenType.Guid
-        let inline isDate (token: Value) = not(isNull token) && token.Type = JTokenType.Date
-        let inline isArray (token: Value) = not(isNull token) && token.Type = JTokenType.Array
-        let inline isObject (token: Value) = not(isNull token) && token.Type = JTokenType.Object
-        let inline isUndefined (token: Value) = isNull token
-        let inline isNullValue (token: Value) = isNull token || token.Type = JTokenType.Null
-        let inline asBool (token: Value): bool = token.Value<bool>()
-        let inline asInt (token: Value): int = token.Value<int>()
-        let inline asFloat (token: Value): float = token.Value<float>()
-        let inline asDecimal (token: Value): System.Decimal = token.Value<System.Decimal>()
-        let inline asString (token: Value): string = token.Value<string>()
-        let inline asArray (token: Value): Value[] = token.Value<JArray>().Values() |> Seq.toArray
+        let inline getField (fieldName: string) (token: JsonValue) = token.Item(fieldName)
+        let inline isBool (token: JsonValue) = not(isNull token) && token.Type = JTokenType.Boolean
+        let inline isNumber (token: JsonValue) = not(isNull token) && (token.Type = JTokenType.Float || token.Type = JTokenType.Integer)
+        let inline isInteger (token: JsonValue) = not(isNull token) && (token.Type = JTokenType.Integer)
+        let inline isString (token: JsonValue) = not(isNull token) && token.Type = JTokenType.String
+        let inline isGuid (token: JsonValue) = not(isNull token) && token.Type = JTokenType.Guid
+        let inline isDate (token: JsonValue) = not(isNull token) && token.Type = JTokenType.Date
+        let inline isArray (token: JsonValue) = not(isNull token) && token.Type = JTokenType.Array
+        let inline isObject (token: JsonValue) = not(isNull token) && token.Type = JTokenType.Object
+        let inline isUndefined (token: JsonValue) = isNull token
+        let inline isNullValue (token: JsonValue) = isNull token || token.Type = JTokenType.Null
+        let inline asBool (token: JsonValue): bool = token.Value<bool>()
+        let inline asInt (token: JsonValue): int = token.Value<int>()
+        let inline asFloat (token: JsonValue): float = token.Value<float>()
+        let inline asDecimal (token: JsonValue): System.Decimal = token.Value<System.Decimal>()
+        let inline asString (token: JsonValue): string = token.Value<string>()
+        let inline asArray (token: JsonValue): JsonValue[] = token.Value<JArray>().Values() |> Seq.toArray
 
     let private genericMsg msg value newLine =
         try
@@ -82,7 +82,7 @@ module Decode =
 
     exception DecoderException of DecoderError
 
-    let unwrap (path : string) (decoder : Decoder<'T>) (value : Value) : 'T =
+    let unwrap (path : string) (decoder : Decoder<'T>) (value : JsonValue) : 'T =
         match decoder path value with
         | Ok success ->
             success
@@ -787,7 +787,7 @@ module Decode =
     let unboxDecoder<'T> (d: BoxedDecoder): Decoder<'T> =
         (d :?> DecoderCrate<'T>).UnboxedDecoder
 
-    let private autoObject (decoderInfos: (string * BoxedDecoder)[]) (path : string) (value: Value) =
+    let private autoObject (decoderInfos: (string * BoxedDecoder)[]) (path : string) (value: JsonValue) =
         if not (Helpers.isObject value) then
             (path, BadPrimitive ("an object", value)) |> Error
         else
@@ -798,7 +798,7 @@ module Decode =
                     field name decoder.BoxedDecoder path value
                     |> Result.map (fun v -> v::result))
 
-    let private mixedArray msg (decoders: BoxedDecoder[]) (path: string) (values: Value[]): Result<obj list, DecoderError> =
+    let private mixedArray msg (decoders: BoxedDecoder[]) (path: string) (values: JsonValue[]): Result<obj list, DecoderError> =
         if decoders.Length <> values.Length then
             (path, sprintf "Expected %i %s but got %i" decoders.Length msg values.Length
             |> FailMessage) |> Error
@@ -811,7 +811,7 @@ module Decode =
 
     let private genericOption t (decoder: BoxedDecoder) =
         let ucis = FSharpType.GetUnionCases(t)
-        fun (path : string) (value: Value) ->
+        fun (path : string) (value: JsonValue) ->
             if Helpers.isNullValue value then
                 Ok (FSharpValue.MakeUnion(ucis.[0], [||]))
             else
@@ -819,7 +819,7 @@ module Decode =
                 |> Result.map (fun value -> FSharpValue.MakeUnion(ucis.[1], [|value|]))
 
     let private genericList t (decoder: BoxedDecoder) =
-        fun (path : string) (value: Value) ->
+        fun (path : string) (value: JsonValue) ->
             if not (Helpers.isArray value) then
                 (path, BadPrimitive ("a list", value)) |> Error
             else
@@ -851,7 +851,7 @@ module Decode =
         let tupleType = typedefof<obj * obj>.MakeGenericType([|keyType; valueType|])
         let listType = typedefof< ResizeArray<obj> >.MakeGenericType([|tupleType|])
         let addMethod = listType.GetMethod("Add")
-        fun (path: string)  (value: Value) ->
+        fun (path: string)  (value: JsonValue) ->
             let empty = System.Activator.CreateInstance(listType)
             let kvs =
                 if Helpers.isArray value then
@@ -887,7 +887,7 @@ module Decode =
             kvs |> Result.map (fun kvs -> System.Activator.CreateInstance(t, kvs))
 
 
-    and private makeUnion extra isCamelCase t name (path : string) (values: Value[]) =
+    and private makeUnion extra isCamelCase t name (path : string) (values: JsonValue[]) =
         let uci =
             FSharpType.GetUnionCases(t, allowAccessToPrivateRepresentation=true)
             |> Array.tryFind (fun x -> x.Name = name)
@@ -915,7 +915,7 @@ module Decode =
                 |> Result.map (fun xs -> FSharpValue.MakeRecord(t, List.toArray xs, allowAccessToPrivateRepresentation=true)))
 
         elif FSharpType.IsUnion(t, allowAccessToPrivateRepresentation=true) then
-            boxDecoder(fun path (value: Value) ->
+            boxDecoder(fun path (value: JsonValue) ->
                 if Helpers.isString(value) then
                     let name = Helpers.asString value
                     makeUnion extra isCamelCase t name path [||]

@@ -11,46 +11,46 @@ module Decode =
 
     module internal Helpers =
         [<Emit("typeof $0")>]
-        let jsTypeof (_ : Value) : string = jsNative
+        let jsTypeof (_ : JsonValue) : string = jsNative
 
         [<Emit("$0 instanceof SyntaxError")>]
-        let isSyntaxError (_ : Value) : bool = jsNative
+        let isSyntaxError (_ : JsonValue) : bool = jsNative
 
-        let inline getField (fieldName: string) (o: Value) = o?(fieldName)
-        let inline isString (o: Value) : bool = o :? string
+        let inline getField (fieldName: string) (o: JsonValue) = o?(fieldName)
+        let inline isString (o: JsonValue) : bool = o :? string
 
-        let inline isBoolean (o: Value) : bool = o :? bool
+        let inline isBoolean (o: JsonValue) : bool = o :? bool
 
-        let inline isNumber (o: Value) : bool = jsTypeof o = "number"
+        let inline isNumber (o: JsonValue) : bool = jsTypeof o = "number"
 
-        let inline isArray (o: Value) : bool = JS.Array.isArray(o)
+        let inline isArray (o: JsonValue) : bool = JS.Array.isArray(o)
 
         [<Emit("Object.getPrototypeOf($0 || false) === Object.prototype")>]
-        let isObject (_ : Value) : bool = jsNative
+        let isObject (_ : JsonValue) : bool = jsNative
 
-        let inline isNaN (o: Value) : bool = JS.Number.isNaN(!!o)
+        let inline isNaN (o: JsonValue) : bool = JS.Number.isNaN(!!o)
 
-        let inline isNullValue (o: Value): bool = isNull o
+        let inline isNullValue (o: JsonValue): bool = isNull o
 
         [<Emit("-2147483648 < $0 && $0 < 2147483647 && ($0 | 0) === $0")>]
-        let isValidIntRange (_: Value) : bool = jsNative
+        let isValidIntRange (_: JsonValue) : bool = jsNative
 
         [<Emit("isFinite($0) && !($0 % 1)")>]
-        let isIntFinite (_: Value) : bool = jsNative
+        let isIntFinite (_: JsonValue) : bool = jsNative
 
-        let isUndefined (o: Value): bool = jsTypeof o = "undefined"
+        let isUndefined (o: JsonValue): bool = jsTypeof o = "undefined"
 
         [<Emit("JSON.stringify($0, null, 4) + ''")>]
-        let anyToString (_: Value) : string = jsNative
+        let anyToString (_: JsonValue) : string = jsNative
 
-        let inline isFunction (o: Value) : bool = jsTypeof o = "function"
+        let inline isFunction (o: JsonValue) : bool = jsTypeof o = "function"
 
-        let inline objectKeys (o: Value) : string seq = upcast JS.Object.keys(o)
-        let inline asBool (o: Value): bool = unbox o
-        let inline asInt (o: Value): int = unbox o
-        let inline asFloat (o: Value): float = unbox o
-        let inline asString (o: Value): string = unbox o
-        let inline asArray (o: Value): Value[] = unbox o
+        let inline objectKeys (o: JsonValue) : string seq = upcast JS.Object.keys(o)
+        let inline asBool (o: JsonValue): bool = unbox o
+        let inline asInt (o: JsonValue): int = unbox o
+        let inline asFloat (o: JsonValue): float = unbox o
+        let inline asString (o: JsonValue): string = unbox o
+        let inline asArray (o: JsonValue): JsonValue[] = unbox o
 
     let private genericMsg msg value newLine =
         try
@@ -788,7 +788,7 @@ module Decode =
     let private toMap<'key, 'value when 'key: comparison> (xs: ('key*'value) seq) = Map.ofSeq xs
     let private toSet<'key when 'key: comparison> (xs: 'key seq) = Set.ofSeq xs
 
-    let private autoObject (decoderInfos: (string * BoxedDecoder)[]) (path : string) (value: Value) =
+    let private autoObject (decoderInfos: (string * BoxedDecoder)[]) (path : string) (value: JsonValue) =
         if not (Helpers.isObject value) then
             (path, BadPrimitive ("an object", value)) |> Error
         else
@@ -799,7 +799,7 @@ module Decode =
                     field name decoder path value
                     |> Result.map (fun v -> v::result))
 
-    let private autoObject2 (keyDecoder: BoxedDecoder) (valueDecoder: BoxedDecoder) (path : string) (value: Value) =
+    let private autoObject2 (keyDecoder: BoxedDecoder) (valueDecoder: BoxedDecoder) (path : string) (value: JsonValue) =
         if not (Helpers.isObject value) then
             (path, BadPrimitive ("an object", value)) |> Error
         else
@@ -814,7 +814,7 @@ module Decode =
                         | Error er -> Error er
                         | Ok v -> (k,v)::acc |> Ok)
 
-    let private mixedArray msg (decoders: BoxedDecoder[]) (path: string) (values: Value[]): Result<Value list, DecoderError> =
+    let private mixedArray msg (decoders: BoxedDecoder[]) (path: string) (values: JsonValue[]): Result<JsonValue list, DecoderError> =
         if decoders.Length <> values.Length then
             (path, sprintf "Expected %i %s but got %i" decoders.Length msg values.Length
             |> FailMessage) |> Error
@@ -825,7 +825,7 @@ module Decode =
                 | Error _ -> acc
                 | Ok result -> decoder path value |> Result.map (fun v -> v::result))
 
-    let rec private makeUnion extra isCamelCase t name (path : string) (values: Value[]) =
+    let rec private makeUnion extra isCamelCase t name (path : string) (values: JsonValue[]) =
         let uci =
             FSharpType.GetUnionCases(t, allowAccessToPrivateRepresentation=true)
             |> Array.tryFind (fun x -> x.Name = name)
@@ -853,7 +853,7 @@ module Decode =
                 |> Result.map (fun xs -> FSharpValue.MakeRecord(t, List.toArray xs, allowAccessToPrivateRepresentation=true))
 
         elif FSharpType.IsUnion(t, allowAccessToPrivateRepresentation=true) then
-            fun path (value: Value) ->
+            fun path (value: JsonValue) ->
                 if Helpers.isString(value) then
                     let name = Helpers.asString value
                     makeUnion extra isCamelCase t name path [||]

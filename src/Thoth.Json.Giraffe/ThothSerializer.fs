@@ -42,19 +42,14 @@ type ThothSerializer (?isCamelCase : bool, ?extra: ExtraCoders) =
             (this :> IJsonSerializer).SerializeToString<'T>(o)
             |> Encoding.UTF8.GetBytes
 
+        // TODO: Giraffe only calls this when writing chunked JSON (and setting Response header "Transfer-Encoding" to "chunked")
+        // https://github.com/giraffe-fsharp/Giraffe/blob/f623527e1c537e77a07a5e594ced80f4f74016df/src/Giraffe/ResponseWriters.fs#L162
+        // But it doesn't work. We need to prefix the chunk with the byte lenght, and finish it with \r\n
+        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Transfer-Encoding#Directives
         member __.SerializeToStreamAsync (o : 'T) (stream : Stream) =
             upcast task {
                 use streamWriter = new System.IO.StreamWriter(stream, Utf8EncodingWithoutBom, DefaultBufferSize, true)
                 use jsonWriter = new JsonTextWriter(streamWriter)
-                if typedefof<'T> = typedefof<obj seq> then
-                    let t = typeof<'T>.GetGenericArguments().[0]
-                    let encoder = Encode.Auto.generateEncoderCached(t, ?isCamelCase=isCamelCase, ?extra=extra)
-                    jsonWriter.WriteStartArray()
-                    let enumerator = (box o :?> System.Collections.IEnumerable).GetEnumerator()
-                    while enumerator.MoveNext() do
-                        do! (encoder enumerator.Current).WriteToAsync(jsonWriter)
-                    jsonWriter.WriteEndArray()
-                else
-                    let encoder = Encode.Auto.generateEncoderCached<'T>(?isCamelCase=isCamelCase, ?extra=extra)
-                    do! (encoder o).WriteToAsync(jsonWriter)
+                let encoder = Encode.Auto.generateEncoderCached<'T>(?isCamelCase=isCamelCase, ?extra=extra)
+                do! (encoder o).WriteToAsync(jsonWriter)
             }

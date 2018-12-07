@@ -1,32 +1,32 @@
 namespace Thoth.Json.Net
 
-type Value = Newtonsoft.Json.Linq.JToken
+type JsonValue = Newtonsoft.Json.Linq.JToken
 
 type ErrorReason =
-    | BadPrimitive of string * Value
-    | BadPrimitiveExtra of string * Value * string
-    | BadType of string * Value
-    | BadField of string * Value
-    | BadPath of string * Value * string
-    | TooSmallArray of string * Value
+    | BadPrimitive of string * JsonValue
+    | BadPrimitiveExtra of string * JsonValue * string
+    | BadType of string * JsonValue
+    | BadField of string * JsonValue
+    | BadPath of string * JsonValue * string
+    | TooSmallArray of string * JsonValue
     | FailMessage of string
     | BadOneOf of string list
 
 type DecoderError = string * ErrorReason
 
-type Decoder<'T> = string -> Value -> Result<'T, DecoderError>
+type Decoder<'T> = string -> JsonValue -> Result<'T, DecoderError>
 
-type Encoder<'T> = 'T -> Value
+type Encoder<'T> = 'T -> JsonValue
 
 [<AbstractClass>]
 type BoxedDecoder() =
-    abstract Decode: path : string * token: Value -> Result<obj, DecoderError>
+    abstract Decode: path : string * token: JsonValue -> Result<obj, DecoderError>
     member this.BoxedDecoder: Decoder<obj> =
         fun path token -> this.Decode(path, token)
 
 [<AbstractClass>]
 type BoxedEncoder() =
-    abstract Encode: value:obj -> Value
+    abstract Encode: value:obj -> JsonValue
     member this.BoxedEncoder: Encoder<obj> = this.Encode
 
 type ExtraCoders = Map<string, BoxedEncoder * BoxedDecoder>
