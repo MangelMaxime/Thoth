@@ -5,9 +5,8 @@ type Value = obj
 type ErrorReason =
     | BadPrimitive of string * Value
     | BadPrimitiveExtra of string * Value * string
-    | BadField of string * Value
     | BadType of string * Value
-    | BadTypeAt of string * Value
+    | BadField of string * Value
     | BadPath of string * Value * string
     | TooSmallArray of string * Value
     | FailMessage of string

@@ -375,22 +375,12 @@ Expecting an int64 but instead got: "maxime"
                 equal expected actual
 
             testCase "an uint32 output an error if incorrect string" <| fun _ ->
-                #if FABLE_COMPILER
-                let expected =
-                    Error(
-                        """
-Error at: `$`
-Expecting an uint32 but instead got: "maxime"
-Reason: Input string was not in a correct format.
-                        """.Trim())
-                #else
                 let expected =
                     Error(
                         """
 Error at: `$`
 Expecting an uint32 but instead got: "maxime"
                         """.Trim())
-                #endif
 
                 let actual =
                     Decode.fromString Decode.uint32 "\"maxime\""
@@ -412,22 +402,12 @@ Expecting an uint32 but instead got: "maxime"
                 equal expected actual
 
             testCase "an uint64 output an error if incorrect string" <| fun _ ->
-                #if FABLE_COMPILER
-                let expected =
-                    Error(
-                        """
-Error at: `$`
-Expecting an uint64 but instead got: "maxime"
-Reason: Input string was not in a correct format.
-                        """.Trim())
-                #else
                 let expected =
                     Error(
                         """
 Error at: `$`
 Expecting an uint64 but instead got: "maxime"
                         """.Trim())
-                #endif
 
                 let actual =
                     Decode.fromString Decode.uint64 "\"maxime\""
@@ -798,7 +778,7 @@ Expecting an int but instead got: "maxime"
                 let expected =
                     Error(
                         """
-Error at: `$.height`
+Error at: `$`
 Expecting an object with a field named `height` but instead got:
 {
     "name": "maxime",
@@ -1017,7 +997,7 @@ I run into the following problems:
 
 Error at: `$[0]`
 Expecting a string but instead got: 1
-Error at: `$[0].test`
+Error at: `$[0]`
 Expecting an object but instead got:
 1
                         """.Trim())
@@ -1080,28 +1060,28 @@ Expecting an object but instead got:
 
                 equal expectedUndefinedField actualUndefinedField
 
-            testCase "combining option and field decoders works" <| fun _ ->
+            testCase "combining field and option decoders works" <| fun _ ->
                 let json = """{ "name": "maxime", "age": 25, "something_undefined": null }"""
 
                 let expectedValid = Ok(Some "maxime")
                 let actualValid =
-                    Decode.fromString (Decode.option (Decode.field "name" Decode.string) ) json
+                    Decode.fromString (Decode.field "name" (Decode.option Decode.string)) json
 
                 equal expectedValid actualValid
 
-                match Decode.fromString (Decode.option (Decode.field "name" Decode.int) ) json with
+                match Decode.fromString (Decode.field "name" (Decode.option Decode.int)) json with
                 | Error _ -> ()
                 | Ok _ -> failwith "Expected type error for `name` field"
 
                 let expectedMissingField = Ok(None)
                 let actualMissingField =
-                    Decode.fromString (Decode.option (Decode.field "height" Decode.int) ) json
+                    Decode.fromString (Decode.field "height" (Decode.option Decode.int)) json
 
                 equal expectedMissingField actualMissingField
 
                 let expectedUndefinedField = Ok(None)
                 let actualUndefinedField =
-                    Decode.fromString (Decode.option (Decode.field "something_undefined" Decode.string) ) json
+                    Decode.fromString (Decode.field "something_undefined" (Decode.option Decode.string)) json
 
                 equal expectedUndefinedField actualUndefinedField
 
@@ -1174,7 +1154,7 @@ Expecting an object but instead got:
                 let expected =
                     Error(
                         """
-Error at: `$.version`
+Error at: `$`
 Expecting an object with a field named `version` but instead got:
 {
     "info": 3,
@@ -1389,7 +1369,7 @@ Expecting an object with a field named `version` but instead got:
                 let expected =
                     Error(
                         """
-Error at: `$.name`
+Error at: `$`
 Expecting an object with a field named `name` but instead got:
 {
     "age": 25
@@ -1540,7 +1520,7 @@ Expecting a string but instead got: 12
                     Error(
                         """
 Error at: `$.user`
-Expecting an object at `user` but instead got:
+Expecting an object but instead got:
 "maxime"
                         """.Trim())
 
@@ -1618,20 +1598,21 @@ Expecting a string but instead got: 12
 
                 equal expected actual
 
-            testCase "get.Optional.At returns None if non-object in path" <| fun _ ->
-                let json = """{ "user": "maxime" }"""
-                let expected = Ok({ optionalField = None })
+            // REVIEW: Is this test right, I'd expect this to be a type error not a missing optional value
+            // testCase "get.Optional.At returns None if non-object in path" <| fun _ ->
+            //     let json = """{ "user": "maxime" }"""
+            //     let expected = Ok({ optionalField = None })
 
-                let decoder =
-                    Decode.object
-                        (fun get ->
-                            { optionalField = get.Optional.At [ "user"; "name" ] Decode.string }
-                        )
+            //     let decoder =
+            //         Decode.object
+            //             (fun get ->
+            //                 { optionalField = get.Optional.At [ "user"; "name" ] Decode.string }
+            //             )
 
-                let actual =
-                    Decode.fromString decoder json
+            //     let actual =
+            //         Decode.fromString decoder json
 
-                equal expected actual
+            //     equal expected actual
 
             testCase "get.Optional.At returns None if field missing" <| fun _ ->
                 let json = """{ "user": { "name": "maxime", "age": 25 } }"""
@@ -1783,7 +1764,7 @@ Expecting a string but instead got: 12
                 let expected =
                     Error (
                         """
-Error at: `$.radius`
+Error at: `$`
 Expecting an object with a field named `radius` but instead got:
 {
     "enabled": true,
@@ -2169,54 +2150,40 @@ Expecting an object with a field named `radius` but instead got:
                           Must = "must value" } : RecordWithOptionalClass)
                 equal expected actual
 
-//             testCase "Auto.fromString returns an Error for field using a non optional class" <| fun _ ->
-//                 let json = """{ "class" : null, "must": "must value"}"""
-//                 let actual = Decode.Auto.fromString<RecordWithRequiredClass>(json, isCamelCase=true)
-//                 #if FABLE_COMPILER
-//                 let expected =
-//                     Error (
-//                         """
-// Error at: `$.class`
-// I run into a `fail` decoder: Class types cannot be automatically deserialized: Tests.Decode.BaseClass
-//                         """.Trim())
-//                 #else
-//                 let expected =
-//                     Error (
-//                         """
-// Error at: `$.class`
-// I run into a `fail` decoder: Class types cannot be automatically deserialized: Tests.Decode+BaseClass
-//                         """.Trim())
-//                 #endif
-//                 equal expected actual
+            testCase "Auto.fromString works for records missing optional field value on classes" <| fun _ ->
+                let json = """{ "must": "must value"}"""
+                let actual = Decode.Auto.fromString<RecordWithOptionalClass>(json, isCamelCase=true)
+                let expected =
+                    Ok ({ MaybeClass = None
+                          Must = "must value" } : RecordWithOptionalClass)
+                equal expected actual
+
+            testCase "Auto.generateDecoder throws for field using a non optional class" <| fun _ ->
+                let expected = "Cannot generate auto decoder for Tests.Decode.BaseClass. Please pass an extra decoder."
+                let errorMsg =
+                    try
+                        let decoder = Decode.Auto.generateDecoder<RecordWithRequiredClass>(isCamelCase=true)
+                        ""
+                    with ex ->
+                        ex.Message
+                errorMsg.Replace("+", ".") |> equal expected
 
             testCase "Auto.fromString works for Class marked as optional" <| fun _ ->
-                let json = """{ }"""
+                let json = """null"""
 
                 let actual = Decode.Auto.fromString<BaseClass option>(json, isCamelCase=true)
                 let expected = Ok None
                 equal expected actual
 
-//             testCase "Auto.fromString returns an Error for Class" <| fun _ ->
-//                 let json = """{ }"""
-
-//                 let actual = Decode.Auto.fromString<BaseClass>(json, isCamelCase=true)
-//                 #if FABLE_COMPILER
-//                 let expected =
-//                     Error (
-//                         """
-// Error at: `$`
-// I run into a `fail` decoder: Class types cannot be automatically deserialized: Tests.Decode.BaseClass
-//                         """.Trim())
-//                 #else
-//                 let expected =
-//                     Error (
-//                         """
-// Error at: `$`
-// I run into a `fail` decoder: Class types cannot be automatically deserialized: Tests.Decode+BaseClass
-//                         """.Trim())
-//                 #endif
-
-//                 equal expected actual
+            testCase "Auto.generateDecoder throws for Class" <| fun _ ->
+                let expected = "Cannot generate auto decoder for Tests.Decode.BaseClass. Please pass an extra decoder."
+                let errorMsg =
+                    try
+                        let decoder = Decode.Auto.generateDecoder<BaseClass>(isCamelCase=true)
+                        ""
+                    with ex ->
+                        ex.Message
+                errorMsg.Replace("+", ".") |> equal expected
 
             testCase "Auto.fromString works for records missing an optional field" <| fun _ ->
                 let json = """{ "must": "must value"}"""

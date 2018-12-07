@@ -1,7 +1,6 @@
 {
     "private": true,
     "scripts": {
-        "fable-splitter": "node node_modules/fable-splitter/dist/cli.js",
         "node-sass": "node node_modules/node-sass/bin/node-sass",
         "server": "cd docs/public && reload -b"
     },
@@ -18,8 +17,9 @@
         "bulma-switch": "^2.0.0",
         "bulma-tooltip": "^2.0.1",
         "code-lightner": "^0.2.1",
+        "fable-compiler": "^2.1.4",
         "fable-loader": "^2.0.0-alpha-001",
-        "fable-splitter": "^2.0.0-alpha-001",
+        "fable-splitter": "^2.1.0",
         "fable-utils": "^1.0.6",
         "font-awesome": "^4.7.0",
         "handlebars": "^4.0.11",

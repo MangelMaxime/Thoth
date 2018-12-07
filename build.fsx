@@ -36,7 +36,8 @@ let srcFiles =
     ++ "./src/Thoth.Elmish.FormBuilder/Thoth.Elmish.FormBuilder.fsproj"
     ++ "./src/Thoth.Elmish.FormBuilder.BasicFields/Thoth.Elmish.FormBuilder.BasicFields.fsproj"
 
-let testsGlob = "tests/**/*.fsproj"
+let fableTestsGlob = "tests/fable/**/*.fsproj"
+let dotnetTestsGlob = "tests/dotnet/**/*.fsproj"
 let docFile = "./docs/Docs.fsproj"
 
 let root = __SOURCE_DIRECTORY__
@@ -119,7 +120,7 @@ Target.create "YarnInstall"(fun _ ->
 
 Target.create "DotnetRestore" (fun _ ->
     srcFiles
-    ++ testsGlob
+    ++ dotnetTestsGlob
     ++ docFile
     |> Seq.iter (fun proj ->
         DotNet.restore id proj
@@ -141,26 +142,26 @@ let build project framework =
         { p with Framework = Some framework } ) project
 
 Target.create "MochaTest" (fun _ ->
-    !! testsGlob
+    !! fableTestsGlob
     |> Seq.iter(fun proj ->
         let projDir = proj |> Path.getDirectory
+        let configFile = projDir </> "splitter.config.js"
         //Compile to JS
-        let result = DotNet.exec (dtntWorkDir projDir) "fable" "fable-splitter -- -c tests/splitter.config.js"
-
-        if not result.OK then failwithf "Build of tests project failed."
+        Yarn.exec ("fable-splitter -c " + configFile) id
 
         //Run mocha tests
-        let projDirOutput = projDir </> "bin"
+        //TODO: Seems latest fable-splitter outputs tests Main file to "tests" subfolder, bug?
+        let projDirOutput = projDir </> "bin/tests"
         Yarn.exec ("run mocha " + projDirOutput) id
     )
 )
 
-let testNetFrameworkDir = root </> "tests" </> "bin" </> "Release" </> "net461"
-let testNetCoreDir = root </> "tests" </> "bin" </> "Release" </> "netcoreapp2.0"
+let testNetFrameworkDir = root </> "tests" </> "dotnet" </> "bin" </> "Release" </> "net461"
+let testNetCoreDir = root </> "tests" </> "dotnet" </> "bin" </> "Release" </> "netcoreapp2.0"
 
 Target.create "ExpectoTest" (fun _ ->
-    build "tests/Thoth.Tests.fsproj" "netcoreapp2.0"
-    build "tests/Thoth.Tests.fsproj" "net461"
+    build "tests/dotnet/Thoth.Tests.fsproj" "netcoreapp2.0"
+    build "tests/dotnet/Thoth.Tests.fsproj" "net461"
 
     if Environment.isUnix then
         mono testNetFrameworkDir [ "Thoth.Tests.exe" ]
@@ -247,13 +248,12 @@ Target.create "Docs.Build" (fun _ ->
 )
 
 Target.create "Watch" (fun _ ->
-    !! testsGlob
+    !! fableTestsGlob
     |> Seq.iter(fun proj ->
         let projDir = proj |> Path.getDirectory
+        let configFile = projDir </> "splitter.config.js"
         //Compile to JS
-        let result = DotNet.exec (dtntWorkDir projDir) "fable" "fable-splitter -- -c tests/splitter.config.js -w"
-
-        if not result.OK then failwithf "Fable watch failed for tests."
+        Yarn.exec ("fable-splitter -w -c " + configFile) id
     )
 )
 

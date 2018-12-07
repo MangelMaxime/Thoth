@@ -10,21 +10,28 @@ module Decode =
 
     module private Helpers =
         let anyToString (token: Value) : string =
-            use stream = new StringWriter(NewLine = "\n")
-            use jsonWriter = new JsonTextWriter(
-                                    stream,
-                                    Formatting = Formatting.Indented,
-                                    Indentation = 4 )
+            if isNull token then "null"
+            else
+                use stream = new StringWriter(NewLine = "\n")
+                use jsonWriter = new JsonTextWriter(
+                                        stream,
+                                        Formatting = Formatting.Indented,
+                                        Indentation = 4 )
 
-            token.WriteTo(jsonWriter)
-            stream.ToString()
+                token.WriteTo(jsonWriter)
+                stream.ToString()
 
-        let inline isBool (token: Value) = token.Type = JTokenType.Boolean
-        let inline isNumber (token: Value) = token.Type = JTokenType.Float || token.Type = JTokenType.Integer
-        let inline isString (token: Value) = token.Type = JTokenType.String
-        let inline isArray (token: Value) = token.Type = JTokenType.Array
-        let inline isObject (token: Value) = token.Type = JTokenType.Object
-        let inline isNull (token: Value) = token.Type = JTokenType.Null
+        let inline getField (fieldName: string) (token: Value) = token.Item(fieldName)
+        let inline isBool (token: Value) = not(isNull token) && token.Type = JTokenType.Boolean
+        let inline isNumber (token: Value) = not(isNull token) && (token.Type = JTokenType.Float || token.Type = JTokenType.Integer)
+        let inline isInteger (token: Value) = not(isNull token) && (token.Type = JTokenType.Integer)
+        let inline isString (token: Value) = not(isNull token) && token.Type = JTokenType.String
+        let inline isGuid (token: Value) = not(isNull token) && token.Type = JTokenType.Guid
+        let inline isDate (token: Value) = not(isNull token) && token.Type = JTokenType.Date
+        let inline isArray (token: Value) = not(isNull token) && token.Type = JTokenType.Array
+        let inline isObject (token: Value) = not(isNull token) && token.Type = JTokenType.Object
+        let inline isUndefined (token: Value) = isNull token
+        let inline isNullValue (token: Value) = isNull token || token.Type = JTokenType.Null
         let inline asBool (token: Value): bool = token.Value<bool>()
         let inline asInt (token: Value): int = token.Value<int>()
         let inline asFloat (token: Value): float = token.Value<float>()
@@ -52,8 +59,6 @@ module Decode =
             | BadPrimitive (msg, value) ->
                 genericMsg msg value false
             | BadType (msg, value) ->
-                genericMsg msg value true
-            | BadTypeAt (msg, value) ->
                 genericMsg msg value true
             | BadPrimitiveExtra (msg, value, reason) ->
                 genericMsg msg value false + "\nReason: " + reason
@@ -88,25 +93,11 @@ module Decode =
     // Runners ///
     /////////////
 
-    let private decodeValueError path (decoder : Decoder<'T>) =
-        fun value ->
-            try
-                match decoder path value with
-                | Ok success ->
-                    Ok success
-                | Error error ->
-                    Error error
-            with
-                | DecoderException error ->
-                    Error error
-
     let fromValue (path : string) (decoder : Decoder<'T>) =
         fun value ->
-            match decodeValueError path decoder value with
-            | Ok success ->
-                Ok success
-            | Error error ->
-                Error (errorToString error)
+            match decoder path value with
+            | Ok success -> Ok success
+            | Error error -> Error (errorToString error)
 
     let fromString (decoder : Decoder<'T>) =
         fun value ->
@@ -140,9 +131,9 @@ module Decode =
     let guid : Decoder<System.Guid> =
         fun path value ->
             // Using Helpers.isString fails because Json.NET directly assigns Guid type
-            if value.Type = JTokenType.Guid then
+            if Helpers.isGuid value then
                 value.Value<System.Guid>() |> Ok
-            elif value.Type = JTokenType.String then
+            elif Helpers.isString value then
                 match System.Guid.TryParse (Helpers.asString value) with
                 | true, x -> Ok x
                 | _ -> (path, BadPrimitive("a guid", value)) |> Error
@@ -150,13 +141,14 @@ module Decode =
 
     let int : Decoder<int> =
         fun path token ->
-            if token.Type = JTokenType.Integer then
+            if Helpers.isInteger token then
+                // TODO: Is not enough to convert to int directly? Maybe these checks hurt performance?
                 let value = token.Value<decimal> ()
                 if value >= (decimal System.Int32.MinValue) && value <= (decimal System.Int32.MaxValue) then
                     Ok (int32 value)
                 else
                     (path, BadPrimitiveExtra("an int", token, "Value was either too large or too small for an int")) |> Error
-            elif token.Type = JTokenType.String then
+            elif Helpers.isString token then
                 match System.Int32.TryParse (Helpers.asString token, NumberStyles.Any, CultureInfo.InvariantCulture) with
                 | true, x -> Ok x
                 | _ -> (path, BadPrimitive("an int", token)) |> Error
@@ -165,9 +157,9 @@ module Decode =
 
     let int64 : Decoder<int64> =
         fun path token ->
-            if token.Type = JTokenType.Integer then
+            if Helpers.isInteger token then
                 Ok(token.Value<int64>())
-            elif token.Type = JTokenType.String then
+            elif Helpers.isString token then
                 match System.Int64.TryParse (Helpers.asString token, NumberStyles.Any, CultureInfo.InvariantCulture) with
                 | true, x -> Ok x
                 | _ -> (path, BadPrimitive("an int64", token)) |> Error
@@ -175,13 +167,13 @@ module Decode =
 
     let uint32 : Decoder<uint32> =
         fun path token ->
-            if token.Type = JTokenType.Integer then
+            if Helpers.isInteger token then
                 let value = token.Value<decimal> ()
                 if value >= 0m && value <= (decimal System.UInt32.MaxValue) then
                     Ok (uint32 value)
                 else
                     (path, BadPrimitiveExtra("an uint32", token, "Value was either too large or too small for an uint32")) |> Error
-            elif token.Type = JTokenType.String then
+            elif Helpers.isString token then
                 match System.UInt32.TryParse (Helpers.asString token, NumberStyles.Any, CultureInfo.InvariantCulture) with
                 | true, x -> Ok x
                 | _ -> (path, BadPrimitive("an uint32", token)) |> Error
@@ -189,13 +181,13 @@ module Decode =
 
     let uint64 : Decoder<uint64> =
         fun path token ->
-            if token.Type = JTokenType.Integer then
+            if Helpers.isInteger token then
                 let value = token.Value<decimal>()
                 if value >= 0m && value <= (decimal System.UInt64.MaxValue) then
                     Ok (uint64 value)
                 else
                     (path, BadPrimitiveExtra("an uint64", token, "Value was either too large or too small for an uint64")) |> Error
-            elif token.Type = JTokenType.String then
+            elif Helpers.isString token then
                 match System.UInt64.TryParse (Helpers.asString token, NumberStyles.Any, CultureInfo.InvariantCulture) with
                 | true, x -> Ok x
                 | _ -> (path, BadPrimitive("an uint64", token)) |> Error
@@ -239,9 +231,9 @@ module Decode =
 
     let datetime : Decoder<System.DateTime> =
         fun path token ->
-            if token.Type = JTokenType.Date then
+            if Helpers.isDate token then
                 token.Value<System.DateTime>().ToUniversalTime() |> Ok
-            elif token.Type = JTokenType.String then
+            elif Helpers.isString token then
                 match System.DateTime.TryParse (Helpers.asString token, CultureInfo.InvariantCulture, DateTimeStyles.None) with
                 | true, x -> x.ToUniversalTime() |> Ok
                 | _ -> (path, BadPrimitive("a datetime", token)) |> Error
@@ -250,9 +242,9 @@ module Decode =
 
     let datetimeOffset : Decoder<System.DateTimeOffset> =
         fun path token ->
-            if token.Type = JTokenType.Date then
+            if Helpers.isDate token then
                 token.Value<System.DateTime>() |> System.DateTimeOffset |> Ok
-            elif token.Type = JTokenType.String then
+            elif Helpers.isString token then
                 match System.DateTimeOffset.TryParse (Helpers.asString token, CultureInfo.InvariantCulture, DateTimeStyles.None) with
                 | true, x -> Ok x
                 | _ -> (path, BadPrimitive("a datetimeoffset", token)) |> Error
@@ -264,57 +256,53 @@ module Decode =
     ///////////////////////
 
     let field (fieldName: string) (decoder : Decoder<'value>) : Decoder<'value> =
-        fun path token ->
-            let currentPath = path + "." + fieldName
-            if token.Type = JTokenType.Object then
-                let fieldValue = token.Item(fieldName)
-                if isNull fieldValue then
-                    (currentPath, BadField ("an object with a field named `" + fieldName + "`", token)) |> Error
-                else
-                    decoder currentPath fieldValue
+        fun path value ->
+            if Helpers.isObject value then
+                let fieldValue = Helpers.getField fieldName value
+                match decoder (path + "." + fieldName) fieldValue with
+                | Ok _ as ok -> ok
+                | Error _ as er ->
+                    if Helpers.isUndefined fieldValue then
+                        Error(path, BadField ("an object with a field named `" + fieldName + "`", value))
+                    else er
             else
-                (currentPath, BadType("an object", token))
-                |> Error
-
-    exception UndefinedValueException of string
-    exception NonObjectTypeException
+                Error(path, BadType("an object", value))
 
     let at (fieldNames: string list) (decoder : Decoder<'value>) : Decoder<'value> =
-        fun path token ->
-            let mutable cValue = token
-            let mutable currentPath = path
-            let mutable index = 0
-            try
-                for fieldName in fieldNames do
-                    if cValue.Type = JTokenType.Object then
-                        let currentNode = cValue.Item(fieldName)
-                        currentPath <- currentPath + "." + fieldName
-                        if isNull currentNode then
-                            raise (UndefinedValueException fieldName)
-                        else
-                            cValue <- currentNode
+        fun firstPath firstValue ->
+            let pathErrorMsg() =
+                "an object with path `" + (String.concat "." fieldNames) + "`"
+            ((firstPath, firstValue, None), fieldNames)
+            ||> List.fold (fun (curPath, curValue, res) field ->
+                match res with
+                | Some _ -> curPath, curValue, res
+                | None ->
+                    if Helpers.isNullValue curValue then
+                        let res = Error(curPath, BadPath(pathErrorMsg(), firstValue, field))
+                        curPath, curValue, Some res
+                    elif Helpers.isObject curValue then
+                        let curValue = Helpers.getField field curValue
+                        curPath + "." + field, curValue, None
                     else
-                        raise NonObjectTypeException
-                    index <- index + 1
-
-                unwrap currentPath decoder cValue |> Ok
-            with
-                | NonObjectTypeException ->
-                    let path = String.concat "." fieldNames.[..index-1]
-                    (currentPath, BadTypeAt ("an object at `" + path + "`", cValue))
-                    |> Error
-                | UndefinedValueException fieldName ->
-                    let msg = "an object with path `" + (String.concat "." fieldNames) + "`"
-                    (currentPath, BadPath (msg, token, fieldName))
-                    |> Error
+                        let res = Error(curPath, BadType("an object", curValue))
+                        curPath, curValue, Some res)
+            |> function
+                | _, _, Some res -> res
+                | lastPath, lastValue, None ->
+                    match decoder lastPath lastValue with
+                    | Ok _ as ok -> ok
+                    | Error _ as er ->
+                        if Helpers.isUndefined lastValue then
+                            Error(lastPath, BadPath (pathErrorMsg(), firstValue, List.tryLast fieldNames |> Option.defaultValue ""))
+                        else er
 
     let index (requestedIndex: int) (decoder : Decoder<'value>) : Decoder<'value> =
         fun path token ->
             let currentPath = path + ".[" + (Operators.string requestedIndex) + "]"
-            if token.Type = JTokenType.Array then
+            if Helpers.isArray token then
                 let vArray = Helpers.asArray token
                 if requestedIndex < vArray.Length then
-                    unwrap currentPath decoder (vArray.[requestedIndex]) |> Ok
+                    decoder currentPath (vArray.[requestedIndex])
                 else
                     let msg =
                         "a longer array. Need index `"
@@ -329,49 +317,26 @@ module Decode =
                 (currentPath, BadPrimitive("an array", token))
                 |> Error
 
+    let option (decoder : Decoder<'value>) : Decoder<'value option> =
+        fun path value ->
+            if Helpers.isNullValue value then Ok None
+            else decoder path value |> Result.map Some
 
     let optional (fieldName : string) (decoder : Decoder<'value>) : Decoder<'value option> =
-        fun path v ->
-            match decodeValueError path (field fieldName decoder) v with
-            | Ok v -> Ok (Some v)
-            | Error (_, BadField _ ) -> Ok None
-            | Error (_, BadType (_, jToken))
-            | Error (_, BadPrimitive (_, jToken)) when jToken.Type = JTokenType.Null -> Ok None
-            | Error error ->
-                raise (DecoderException error)
+        field fieldName (option decoder)
 
     let optionalAt (fieldNames : string list) (decoder : Decoder<'value>) : Decoder<'value option> =
-        fun path v ->
-            match decodeValueError path (at fieldNames decoder) v with
-            | Ok v -> Ok (Some v)
-            | Error (_, BadPath _ )
-            | Error (_, BadTypeAt _) -> Ok None
-            | Error (_, BadType (_, jToken))
-            | Error (_, BadPrimitive (_, jToken)) when jToken.Type = JTokenType.Null -> Ok None
-            | Error error ->
-                raise (DecoderException error)
+        at fieldNames (option decoder)
 
     //////////////////////
     // Data structure ///
     ////////////////////
 
-    let private listPrivate (decoder : Decoder<'value>) path token =
-        let tokens = Helpers.asArray token
-        let mutable i = tokens.Length
-        (tokens, Ok []) ||> Array.foldBack (fun value acc ->
-            i <- i - 1
-            match acc with
-            | Error _ -> acc
-            | Ok acc ->
-                match decoder (path + "[" + (i.ToString()) + "]") value with
-                | Error er -> Error er
-                | Ok value -> Ok (value::acc))
-
     let list (decoder : Decoder<'value>) : Decoder<'value list> =
-        fun path token ->
-            if token.Type = JTokenType.Array then
+        fun path value ->
+            if Helpers.isArray value then
                 let mutable i = -1
-                let tokens = Helpers.asArray token
+                let tokens = Helpers.asArray value
                 (Ok [], tokens) ||> Array.fold (fun acc value ->
                     i <- i + 1
                     match acc with
@@ -382,14 +347,14 @@ module Decode =
                         | Ok value -> Ok (value::acc))
                 |> Result.map List.rev
             else
-                (path, BadPrimitive ("a list", token))
+                (path, BadPrimitive ("a list", value))
                 |> Error
 
     let array (decoder : Decoder<'value>) : Decoder<'value array> =
-        fun path token ->
-            if token.Type = JTokenType.Array then
+        fun path value ->
+            if Helpers.isArray value then
                 let mutable i = -1
-                let tokens = Helpers.asArray token
+                let tokens = Helpers.asArray value
                 let arr = Array.zeroCreate tokens.Length
                 (Ok arr, tokens) ||> Array.fold (fun acc value ->
                     i <- i + 1
@@ -400,40 +365,28 @@ module Decode =
                         | Error er -> Error er
                         | Ok value -> acc.[i] <- value; Ok acc)
             else
-                (path, BadPrimitive ("an array", token))
+                (path, BadPrimitive ("an array", value))
                 |> Error
 
     let keyValuePairs (decoder : Decoder<'value>) : Decoder<(string * 'value) list> =
-        fun path token ->
-            if token.Type = JTokenType.Object then
-                let value = token.Value<JObject>()
-
-                value.Properties()
-                |> Seq.map (fun prop ->
-                    (prop.Name, value.Item(prop.Name) |> unwrap path decoder)
-                )
-                |> Seq.toList
-                |> Ok
+        fun path value ->
+            if Helpers.isObject value then
+                let value = value.Value<JObject>()
+                (Ok [], value.Properties()) ||> Seq.fold (fun acc prop ->
+                    match acc with
+                    | Error _ -> acc
+                    | Ok acc ->
+                        match Helpers.getField prop.Name value |> decoder path with
+                        | Error er -> Error er
+                        | Ok value -> (prop.Name, value)::acc |> Ok)
+                |> Result.map List.rev
             else
-                (path, BadPrimitive ("an object", token))
+                (path, BadPrimitive ("an object", value))
                 |> Error
 
     //////////////////////////////
     // Inconsistent Structure ///
     ////////////////////////////
-
-    let option (d1 : Decoder<'value>) : Decoder<'value option> =
-        fun path value ->
-            if Helpers.isNull value then
-                Ok None
-            else
-                match d1 path value with
-                | Ok v -> Ok (Some v)
-                | Error (_, BadField _ ) -> Ok None
-                | Error (_, BadType (_, jToken))
-                | Error (_, BadPrimitive (_, jToken)) when jToken.Type = JTokenType.Null -> Ok None
-                | Error error -> Error error
-
 
     let oneOf (decoders : Decoder<'value> list) : Decoder<'value> =
         fun path value ->
@@ -454,7 +407,7 @@ module Decode =
 
     let nil (output : 'a) : Decoder<'a> =
         fun path token ->
-            if token.Type = JTokenType.Null then
+            if Helpers.isNullValue token then
                 Ok output
             else
                 (path, BadPrimitive("null", token)) |> Error
@@ -471,11 +424,9 @@ module Decode =
 
     let andThen (cb: 'a -> Decoder<'b>) (decoder : Decoder<'a>) : Decoder<'b> =
         fun path value ->
-            match decodeValueError path decoder value with
-            | Error error ->
-                raise (DecoderException error)
-            | Ok result ->
-                cb result path value
+            match decoder path value with
+            | Error error -> Error error
+            | Ok result -> cb result path value
 
     /////////////////////
     // Map functions ///
@@ -484,34 +435,32 @@ module Decode =
     let map
         (ctor : 'a -> 'value)
         (d1 : Decoder<'a>) : Decoder<'value> =
-        (fun path value ->
-            let t = unwrap path d1 value
-            Ok (ctor t)
-        )
+        fun path value ->
+            match d1 path value with
+            | Ok v1 -> Ok (ctor v1)
+            | Error er -> Error er
 
     let map2
         (ctor : 'a -> 'b -> 'value)
         (d1 : Decoder<'a>)
         (d2 : Decoder<'b>) : Decoder<'value> =
-        (fun path value ->
-            let t = unwrap path d1 value
-            let t2 = unwrap path d2 value
-
-            Ok (ctor t t2)
-        )
+        fun path value ->
+            match d1 path value, d2 path value with
+            | Ok v1, Ok v2 -> Ok (ctor v1 v2)
+            | Error er,_ -> Error er
+            | _,Error er -> Error er
 
     let map3
         (ctor : 'a -> 'b -> 'c -> 'value)
         (d1 : Decoder<'a>)
         (d2 : Decoder<'b>)
         (d3 : Decoder<'c>) : Decoder<'value> =
-        (fun path value ->
-            let v1 = unwrap path d1 value
-            let v2 = unwrap path d2 value
-            let v3 = unwrap path d3 value
-
-            Ok (ctor v1 v2 v3)
-        )
+        fun path value ->
+            match d1 path value, d2 path value, d3 path value with
+            | Ok v1, Ok v2, Ok v3 -> Ok (ctor v1 v2 v3)
+            | Error er,_,_ -> Error er
+            | _,Error er,_ -> Error er
+            | _,_,Error er -> Error er
 
     let map4
         (ctor : 'a -> 'b -> 'c -> 'd -> 'value)
@@ -519,14 +468,13 @@ module Decode =
         (d2 : Decoder<'b>)
         (d3 : Decoder<'c>)
         (d4 : Decoder<'d>) : Decoder<'value> =
-        (fun path value ->
-            let v1 = unwrap path d1 value
-            let v2 = unwrap path d2 value
-            let v3 = unwrap path d3 value
-            let v4 = unwrap path d4 value
-
-            Ok (ctor v1 v2 v3 v4)
-        )
+        fun path value ->
+            match d1 path value, d2 path value, d3 path value, d4 path value with
+            | Ok v1, Ok v2, Ok v3, Ok v4 -> Ok (ctor v1 v2 v3 v4)
+            | Error er,_,_,_ -> Error er
+            | _,Error er,_,_ -> Error er
+            | _,_,Error er,_ -> Error er
+            | _,_,_,Error er -> Error er
 
     let map5
         (ctor : 'a -> 'b -> 'c -> 'd -> 'e -> 'value)
@@ -535,15 +483,14 @@ module Decode =
         (d3 : Decoder<'c>)
         (d4 : Decoder<'d>)
         (d5 : Decoder<'e>) : Decoder<'value> =
-        (fun path value ->
-            let v1 = unwrap path d1 value
-            let v2 = unwrap path d2 value
-            let v3 = unwrap path d3 value
-            let v4 = unwrap path d4 value
-            let v5 = unwrap path d5 value
-
-            Ok (ctor v1 v2 v3 v4 v5)
-        )
+        fun path value ->
+            match d1 path value, d2 path value, d3 path value, d4 path value, d5 path value with
+            | Ok v1, Ok v2, Ok v3, Ok v4, Ok v5 -> Ok (ctor v1 v2 v3 v4 v5)
+            | Error er,_,_,_,_ -> Error er
+            | _,Error er,_,_,_ -> Error er
+            | _,_,Error er,_,_ -> Error er
+            | _,_,_,Error er,_ -> Error er
+            | _,_,_,_,Error er -> Error er
 
     let map6
         (ctor : 'a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'value)
@@ -553,16 +500,15 @@ module Decode =
         (d4 : Decoder<'d>)
         (d5 : Decoder<'e>)
         (d6 : Decoder<'f>) : Decoder<'value> =
-        (fun path value ->
-            let v1 = unwrap path d1 value
-            let v2 = unwrap path d2 value
-            let v3 = unwrap path d3 value
-            let v4 = unwrap path d4 value
-            let v5 = unwrap path d5 value
-            let v6 = unwrap path d6 value
-
-            Ok (ctor v1 v2 v3 v4 v5 v6)
-        )
+        fun path value ->
+            match d1 path value, d2 path value, d3 path value, d4 path value, d5 path value, d6 path value with
+            | Ok v1, Ok v2, Ok v3, Ok v4, Ok v5, Ok v6 -> Ok (ctor v1 v2 v3 v4 v5 v6)
+            | Error er,_,_,_,_,_ -> Error er
+            | _,Error er,_,_,_,_ -> Error er
+            | _,_,Error er,_,_,_ -> Error er
+            | _,_,_,Error er,_,_ -> Error er
+            | _,_,_,_,Error er,_ -> Error er
+            | _,_,_,_,_,Error er -> Error er
 
     let map7
         (ctor : 'a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'g -> 'value)
@@ -573,17 +519,16 @@ module Decode =
         (d5 : Decoder<'e>)
         (d6 : Decoder<'f>)
         (d7 : Decoder<'g>) : Decoder<'value> =
-        (fun path value ->
-            let v1 = unwrap path d1 value
-            let v2 = unwrap path d2 value
-            let v3 = unwrap path d3 value
-            let v4 = unwrap path d4 value
-            let v5 = unwrap path d5 value
-            let v6 = unwrap path d6 value
-            let v7 = unwrap path d7 value
-
-            Ok (ctor v1 v2 v3 v4 v5 v6 v7)
-        )
+        fun path value ->
+            match d1 path value, d2 path value, d3 path value, d4 path value, d5 path value, d6 path value, d7 path value with
+            | Ok v1, Ok v2, Ok v3, Ok v4, Ok v5, Ok v6, Ok v7 -> Ok (ctor v1 v2 v3 v4 v5 v6 v7)
+            | Error er,_,_,_,_,_,_ -> Error er
+            | _,Error er,_,_,_,_,_ -> Error er
+            | _,_,Error er,_,_,_,_ -> Error er
+            | _,_,_,Error er,_,_,_ -> Error er
+            | _,_,_,_,Error er,_,_ -> Error er
+            | _,_,_,_,_,Error er,_ -> Error er
+            | _,_,_,_,_,_,Error er -> Error er
 
     let map8
         (ctor : 'a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'g -> 'h -> 'value)
@@ -595,18 +540,17 @@ module Decode =
         (d6 : Decoder<'f>)
         (d7 : Decoder<'g>)
         (d8 : Decoder<'h>) : Decoder<'value> =
-            (fun path value ->
-                let v1 = unwrap path d1 value
-                let v2 = unwrap path d2 value
-                let v3 = unwrap path d3 value
-                let v4 = unwrap path d4 value
-                let v5 = unwrap path d5 value
-                let v6 = unwrap path d6 value
-                let v7 = unwrap path d7 value
-                let v8 = unwrap path d8 value
-
-                Ok (ctor v1 v2 v3 v4 v5 v6 v7 v8)
-            )
+        fun path value ->
+            match d1 path value, d2 path value, d3 path value, d4 path value, d5 path value, d6 path value, d7 path value, d8 path value with
+            | Ok v1, Ok v2, Ok v3, Ok v4, Ok v5, Ok v6, Ok v7, Ok v8 -> Ok (ctor v1 v2 v3 v4 v5 v6 v7 v8)
+            | Error er,_,_,_,_,_,_,_ -> Error er
+            | _,Error er,_,_,_,_,_,_ -> Error er
+            | _,_,Error er,_,_,_,_,_ -> Error er
+            | _,_,_,Error er,_,_,_,_ -> Error er
+            | _,_,_,_,Error er,_,_,_ -> Error er
+            | _,_,_,_,_,Error er,_,_ -> Error er
+            | _,_,_,_,_,_,Error er,_ -> Error er
+            | _,_,_,_,_,_,_,Error er -> Error er
 
     let dict (decoder : Decoder<'value>) : Decoder<Map<string, 'value>> =
         map Map.ofList (keyValuePairs decoder)
@@ -631,53 +575,39 @@ module Decode =
 
     let object (builder: IGetters -> 'value) : Decoder<'value> =
         fun path v ->
+            // TODO: Cache IRequiredGetter and IOptionalGetter?
             builder { new IGetters with
                 member __.Required =
                     { new IRequiredGetter with
                         member __.Field (fieldName : string) (decoder : Decoder<_>) =
-                            match decodeValueError path (field fieldName decoder) v with
-                            | Ok v -> v
-                            | Error error ->
-                                raise (DecoderException error)
+                            unwrap path (field fieldName decoder) v
                         member __.At (fieldNames : string list) (decoder : Decoder<_>) =
-                            match decodeValueError path (at fieldNames decoder) v with
-                            | Ok v -> v
-                            | Error error ->
-                                raise (DecoderException error)
+                            unwrap path (at fieldNames decoder) v
                         member __.Raw (decoder: Decoder<_>) =
-                            match decodeValueError path decoder v with
-                            | Ok v -> v
-                            | Error error ->
-                                raise (DecoderException error) }
+                            unwrap path decoder v }
                 member __.Optional =
                     { new IOptionalGetter with
                         member __.Field (fieldName : string) (decoder : Decoder<_>) =
-                            match decodeValueError path (field fieldName decoder) v with
-                            | Ok v -> Some v
-                            | Error (_, BadField _ ) -> None
-                            | Error (_, BadType (_, jToken))
-                            | Error (_, BadPrimitive (_, jToken)) when jToken.Type = JTokenType.Null -> None
-                            | Error error ->
-                                raise (DecoderException error)
+                            unwrap path (field fieldName (option decoder)) v
                         member __.At (fieldNames : string list) (decoder : Decoder<_>) =
-                            if Helpers.isObject v then
-                                match decodeValueError path (at fieldNames decoder) v with
-                                | Ok v -> Some v
-                                | Error (_, BadPath _ )
-                                | Error (_, BadTypeAt _) -> None
-                                | Error (_, BadType (_, jToken))
-                                | Error (_, BadPrimitive (_, jToken)) when jToken.Type = JTokenType.Null -> None
-                                | Error error ->
-                                    raise (DecoderException error)
-                            else
-                                raise (DecoderException (path, BadType ("an object", v)))
+                            unwrap path (at fieldNames (option decoder)) v
+                        // REVIEW: I would have preferred to use `unwrap path (option decoder) v`
+                        // but this is necessary to make the tests pass... can we change the tests? ;)
                         member __.Raw (decoder: Decoder<_>) =
-                            match decodeValueError path decoder v with
+                            match decoder path v with
                             | Ok v -> Some v
-                            | Error (_, BadField _ ) -> None
-                            | Error (_, BadPrimitive (_, jToken)) when jToken.Type = JTokenType.Null -> None
-                            | Error error ->
-                                raise (DecoderException error) }
+                            | Error((_, reason) as error) ->
+                                match reason with
+                                | BadPrimitive(_,v)
+                                | BadPrimitiveExtra(_,v,_)
+                                | BadType(_,v) ->
+                                    if Helpers.isNullValue v then None
+                                    else raise (DecoderException error)
+                                | BadField _
+                                | BadPath _ -> None
+                                | TooSmallArray _
+                                | FailMessage _
+                                | BadOneOf _ -> raise (DecoderException error) }
             } |> Ok
 
     ///////////////////////
@@ -843,17 +773,6 @@ module Decode =
 
     open FSharp.Reflection
 
-    type FieldType =
-        | Optional of System.Type
-        | Required
-
-        member this.ToBool
-            with get () =
-                match this with
-                | Optional _ -> true
-                | Required -> false
-
-
     type private DecoderCrate<'T>(dec: Decoder<'T>) =
         inherit BoxedDecoder()
         override __.Decode(path, token) =
@@ -868,27 +787,16 @@ module Decode =
     let unboxDecoder<'T> (d: BoxedDecoder): Decoder<'T> =
         (d :?> DecoderCrate<'T>).UnboxedDecoder
 
-    let private autoObject (decoderInfos: (FieldType * string * BoxedDecoder)[]) (path : string) (value: Value) =
+    let private autoObject (decoderInfos: (string * BoxedDecoder)[]) (path : string) (value: Value) =
         if not (Helpers.isObject value) then
             (path, BadPrimitive ("an object", value)) |> Error
         else
-            (decoderInfos, Ok []) ||> Array.foldBack (fun (fieldType, name, decoder) acc ->
+            (decoderInfos, Ok []) ||> Array.foldBack (fun (name, decoder) acc ->
                 match acc with
                 | Error _ -> acc
                 | Ok result ->
-                    match fieldType with
-                    | FieldType.Optional typ ->
-                        optional name decoder.BoxedDecoder path value
-                        |> Result.map (fun v ->
-                            match v with
-                            | Some v ->
-                                let ucis = FSharpType.GetUnionCases(typ, allowAccessToPrivateRepresentation=true)
-                                (FSharpValue.MakeUnion(ucis.[1], [|v|], allowAccessToPrivateRepresentation=true))::result
-                            | None -> box None::result
-                        )
-                    | FieldType.Required ->
-                        field name decoder.BoxedDecoder path value
-                        |> Result.map (fun v -> v::result))
+                    field name decoder.BoxedDecoder path value
+                    |> Result.map (fun v -> v::result))
 
     let private mixedArray msg (decoders: BoxedDecoder[]) (path: string) (values: Value[]): Result<obj list, DecoderError> =
         if decoders.Length <> values.Length then
@@ -902,22 +810,16 @@ module Decode =
                 | Ok result -> decoder.Decode(path, value) |> Result.map (fun v -> v::result))
 
     let private genericOption t (decoder: BoxedDecoder) =
-        let ucis = FSharpType.GetUnionCases(t, allowAccessToPrivateRepresentation=true)
+        let ucis = FSharpType.GetUnionCases(t)
         fun (path : string) (value: Value) ->
-            if Helpers.isNull value then
-                box None |> Ok
+            if Helpers.isNullValue value then
+                Ok (FSharpValue.MakeUnion(ucis.[0], [||]))
             else
-                match decoder.Decode(path, value) with
-                | Ok v -> Ok (FSharpValue.MakeUnion(ucis.[1], [|v|], allowAccessToPrivateRepresentation=true))
-                | Error (_, BadField _ ) ->
-                    box None |> Ok
-                | Error (_, BadType (_, jToken))
-                | Error (_, BadPrimitive (_, jToken)) when jToken.Type = JTokenType.Null ->
-                    box None |> Ok
-                | Error error -> Error error
+                decoder.Decode(path, value)
+                |> Result.map (fun value -> FSharpValue.MakeUnion(ucis.[1], [|value|]))
 
     let private genericList t (decoder: BoxedDecoder) =
-        fun (path : string)  (value: Value) ->
+        fun (path : string) (value: Value) ->
             if not (Helpers.isArray value) then
                 (path, BadPrimitive ("a list", value)) |> Error
             else
@@ -1001,27 +903,14 @@ module Decode =
 
     and private autoDecodeRecordsAndUnions extra (isCamelCase : bool) (isOptional : bool) (t: System.Type): BoxedDecoder =
         if FSharpType.IsRecord(t, allowAccessToPrivateRepresentation=true) then
+            let decoders =
+                FSharpType.GetRecordFields(t, allowAccessToPrivateRepresentation=true)
+                |> Array.map (fun fi ->
+                    let name =
+                        if isCamelCase then fi.Name.[..0].ToLowerInvariant() + fi.Name.[1..]
+                        else fi.Name
+                    name, autoDecoder extra isCamelCase false fi.PropertyType)
             boxDecoder(fun path value ->
-                let decoders =
-                    FSharpType.GetRecordFields(t, allowAccessToPrivateRepresentation=true)
-                    |> Array.map (fun fi ->
-                        let name =
-                            if isCamelCase then
-                                fi.Name.[..0].ToLowerInvariant() + fi.Name.[1..]
-                            else
-                                fi.Name
-
-                        let fieldType, propertyType =
-                            if fi.PropertyType.IsGenericType then
-                                let fullname = fi.PropertyType.GetGenericTypeDefinition().FullName
-                                if fullname = typedefof<obj option>.FullName then
-                                    FieldType.Optional fi.PropertyType, fi.PropertyType.GenericTypeArguments.[0]
-                                else
-                                    FieldType.Required, fi.PropertyType
-                            else
-                                FieldType.Required, fi.PropertyType
-
-                        fieldType, name, autoDecoder extra isCamelCase fieldType.ToBool propertyType)
                 autoObject decoders path value
                 |> Result.map (fun xs -> FSharpValue.MakeRecord(t, List.toArray xs, allowAccessToPrivateRepresentation=true)))
 
@@ -1037,9 +926,9 @@ module Decode =
                 else (path, BadPrimitive("a string or array", value)) |> Error)
         else
             if isOptional then
-                boxDecoder(fun path _ ->
-                    (path, BadPrimitive ("Generating an error message as the field is optional so the `option` decoders will return `None` instead of failing", JValue.CreateNull()))
-                    |> Error)
+                // The error will only happen at runtime if the value is not null
+                // See https://github.com/MangelMaxime/Thoth/pull/84#issuecomment-444837773
+                boxDecoder(fun path value -> Error(path, BadType("an extra coder for " + t.FullName, value)))
             else
                 failwithf "Cannot generate auto decoder for %s. Please pass an extra decoder." t.FullName
 
@@ -1119,8 +1008,8 @@ module Decode =
                 boxDecoder guid
             elif fullname = typeof<obj>.FullName then
                 boxDecoder (fun _ v ->
-                if v.Type = JTokenType.Null then Ok null
-                else Ok v)
+                    if Helpers.isNullValue v then Ok(null: obj)
+                    else v.Value<obj>() |> Ok)
             else autoDecodeRecordsAndUnions extra isCamelCase isOptional t
 
     type Auto =
