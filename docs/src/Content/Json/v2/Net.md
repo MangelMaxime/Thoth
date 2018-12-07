@@ -26,7 +26,7 @@ type User =
       Email : string
       Followers : int }
 
-    static member Decoder : Decoder<User> =
+    static member Decoder : Decode.Decoder<User> =
         Decode.object
             (fun get ->
                 { Id = get.Required.Field "id" Decode.int
