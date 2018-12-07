@@ -135,7 +135,7 @@ type Point =
     { X : int
       Y : int }
 
-    static member Decoder : Decoder<Point> =
+    static member Decoder : Decode.Decoder<Point> =
         Decode.map2 (fun x y ->
                 { X = x
                   Y = y } : Point)
@@ -159,7 +159,7 @@ type User =
       Email : string
       Followers : int }
 
-    static member Decoder : Decoder<User> =
+    static member Decoder : Decode.Decoder<User> =
         Decode.object
             (fun get ->
                 { Id = get.Required.Field "id" Decode.int
