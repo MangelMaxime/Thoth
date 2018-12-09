@@ -8,7 +8,7 @@ nuget FSharp.Core redirects:force
 nuget Fable.Import.Browser
 nuget Newtonsoft.Json >= 11.0.2
 nuget Expecto
-nuget Fable.Elmish
+nuget Fable.Elmish prerelease
 nuget Fable.PowerPack
 nuget Fable.React
 nuget Fable.Import.HMR
