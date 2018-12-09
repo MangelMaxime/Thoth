@@ -8,7 +8,6 @@ module Toast =
     open Fable.Helpers.React.Props
     open Elmish
     open Fable.Core.JsInterop
-    open Fable.PowerPack
 
     importSideEffects "./css/toast-base.css"
     importSideEffects "./css/toast-minimal.css"
