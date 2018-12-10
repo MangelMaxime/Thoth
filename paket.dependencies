@@ -2,7 +2,6 @@ source https://www.nuget.org/api/v2
 
 storage:none
 
-clitool dotnet-fable
 nuget Fable.Core
 nuget FSharp.Core redirects:force
 nuget Fable.Import.Browser

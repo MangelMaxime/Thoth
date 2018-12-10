@@ -1,3 +1,7 @@
+### 2.0.0-beta-001
+
+* Elmish 3.0 compat
+
 ### 1.0.0
 
 * Release stable
