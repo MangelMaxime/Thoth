@@ -4,3 +4,4 @@ dotnet-fable
 Fable.Elmish
 Fable.React
 Fable.Import.HMR
+Fable.Promise
