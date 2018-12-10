@@ -8,7 +8,6 @@ module Toast =
     open Fable.Helpers.React.Props
     open Elmish
     open Fable.Core.JsInterop
-    open Fable.PowerPack
 
     importSideEffects "./css/toast-base.css"
     importSideEffects "./css/toast-minimal.css"
@@ -440,7 +439,9 @@ module Toast =
               view = fun model dispatch ->
                 div [ ]
                     [ view renderer model dispatch
-                      program.view model.UserModel (UserMsg >> dispatch) ] }
+                      program.view model.UserModel (UserMsg >> dispatch) ]
+              // syncDispatch is only intended for .NET
+              syncDispatch = id }
 
     /// **Description**
     /// Default implementation for the Toast renderer,
