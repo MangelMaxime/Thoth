@@ -440,14 +440,8 @@ module Toast =
                 div [ ]
                     [ view renderer model dispatch
                       program.view model.UserModel (UserMsg >> dispatch) ]
-              syncDispatch = fun dispatch ->
-                    let syncDispatch = program.syncDispatch (UserMsg >> dispatch)
-                    fun msg ->
-                        match msg with
-                        | UserMsg msg -> syncDispatch msg
-                        // REVIEW: Not sure what to do here, do we need syncDispatch for Toast messages?
-                        // As syncDispatch is meant for .NET maybe we don't need it at all: `syncDispatch = id`
-                        | msg -> dispatch msg }
+              // syncDispatch is only intended for .NET
+              syncDispatch = id }
 
     /// **Description**
     /// Default implementation for the Toast renderer,
