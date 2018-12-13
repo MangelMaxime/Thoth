@@ -111,6 +111,12 @@ module Decode =
                     errorToString error
                     |> Error
 
+    let unsafeFromString (decoder : Decoder<'T>) =
+        fun value ->
+            match fromString decoder value with
+            | Ok x -> x
+            | Error msg -> failwith msg
+
     [<System.Obsolete("Please use fromValue instead")>]
     let decodeValue (path : string) (decoder : Decoder<'T>) = fromValue path decoder
 
