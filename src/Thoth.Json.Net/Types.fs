@@ -26,7 +26,7 @@ type BoxedDecoder() =
 
 [<AbstractClass>]
 type BoxedEncoder() =
-    abstract Encode: value:obj -> JsonValue
+    abstract Encode: value: obj -> JsonValue
     member this.BoxedEncoder: Encoder<obj> = this.Encode
 
 type ExtraCoders = Map<string, BoxedEncoder * BoxedDecoder>

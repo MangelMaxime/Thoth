@@ -284,7 +284,7 @@ module Decode =
 
     let at (fieldNames: string list) (decoder : Decoder<'value>) : Decoder<'value> =
         fun firstPath firstValue ->
-            let pathErrorMsg() =
+            let pathErrorMsg () =
                 "an object with path `" + (String.concat "." fieldNames) + "`"
             ((firstPath, firstValue, None), fieldNames)
             ||> List.fold (fun (curPath, curValue, res) field ->
