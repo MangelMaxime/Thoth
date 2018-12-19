@@ -995,9 +995,9 @@ Expecting an array but instead got: 1
                         """
 I run into the following problems:
 
-Error at: `$[0]`
+Error at: `$.[0]`
 Expecting a string but instead got: 1
-Error at: `$[0]`
+Error at: `$.[0]`
 Expecting an object but instead got:
 1
                         """.Trim())

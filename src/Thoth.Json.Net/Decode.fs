@@ -348,7 +348,7 @@ module Decode =
                     match acc with
                     | Error _ -> acc
                     | Ok acc ->
-                        match decoder (path + "[" + (i.ToString()) + "]") value with
+                        match decoder (path + ".[" + (i.ToString()) + "]") value with
                         | Error er -> Error er
                         | Ok value -> Ok (value::acc))
                 |> Result.map List.rev
@@ -367,7 +367,7 @@ module Decode =
                     match acc with
                     | Error _ -> acc
                     | Ok acc ->
-                        match decoder (path + "[" + (i.ToString()) + "]") value with
+                        match decoder (path + ".[" + (i.ToString()) + "]") value with
                         | Error er -> Error er
                         | Ok value -> acc.[i] <- value; Ok acc)
             else
