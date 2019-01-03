@@ -265,6 +265,15 @@ module Decode =
             else
                 (path, BadPrimitive("a datetime", value)) |> Error
 
+    let timespan : Decoder<System.TimeSpan> =
+        fun path value ->
+            if Helpers.isString value then
+                match System.TimeSpan.TryParse(Helpers.asString value) with
+                | true, x -> Ok x
+                | _ -> (path, BadPrimitive("a timespan", value)) |> Error
+            else
+                (path, BadPrimitive("a timespan", value)) |> Error
+
     /////////////////////////
     // Object primitives ///
     ///////////////////////
@@ -941,6 +950,8 @@ module Decode =
                 boxDecoder datetime
             elif fullname = typeof<System.DateTimeOffset>.FullName then
                 boxDecoder datetimeOffset
+            elif fullname = typeof<System.TimeSpan>.FullName then
+                boxDecoder timespan                
             elif fullname = typeof<System.Guid>.FullName then
                 boxDecoder guid
             elif fullname = typeof<obj>.FullName then

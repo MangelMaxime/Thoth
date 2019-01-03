@@ -1946,10 +1946,10 @@ fable-babel-plugins@~2.1.0:
   resolved "https://registry.yarnpkg.com/fable-babel-plugins/-/fable-babel-plugins-2.1.0.tgz#b3202a25f51a6acdf6bc34dc10dd13cf732d291d"
   integrity sha512-5ZUVrlflbvgA3saIyGJhB1ANqoyZ8UJo12iYSROivql1x9PfKjv16pteNoDFCe6UC1Tn+HaQX46BxyllzLsBTw==
 
-fable-compiler@2.1.4:
-  version "2.1.4"
-  resolved "https://registry.yarnpkg.com/fable-compiler/-/fable-compiler-2.1.4.tgz#36774f2f37a42f91b06fc0d51af34035a85c3a78"
-  integrity sha512-2iUIq4soU96/nKxa8g1U4mAMVZLJZKBCMYq4ITviwtIa6ganS4f4uo4kAxSTsIM2PGl6EwPRYuJLBCEfj+yejQ==
+fable-compiler@^2.1.10:
+  version "2.1.10"
+  resolved "https://registry.yarnpkg.com/fable-compiler/-/fable-compiler-2.1.10.tgz#b57b10975bd0e51152b5ae4bc2ccb3abe73172d3"
+  integrity sha512-/tX4hyHEKxoSiP2xeNCXwRQkCYqhd5lImh7w03bFdoCxBCdgh6EQSRNvWV/astJwOEat/tUmeBTtOwYh9vPQXw==
 
 fable-splitter@^2.1.0:
   version "2.1.0"

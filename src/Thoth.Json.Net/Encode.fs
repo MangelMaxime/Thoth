@@ -186,6 +186,9 @@ module Encode =
     let datetimeOffset (value : System.DateTimeOffset) : JsonValue =
         JValue(value.ToString("O", CultureInfo.InvariantCulture)) :> JsonValue
 
+    let timespan (value : System.TimeSpan) : JsonValue =
+        JValue(value.ToString()) :> JsonValue
+
     let tuple2
             (enc1 : Encoder<'T1>)
             (enc2 : Encoder<'T2>)
@@ -442,6 +445,8 @@ module Encode =
                 boxEncoder datetime
             elif fullname = typeof<System.DateTimeOffset>.FullName then
                 boxEncoder datetimeOffset
+            elif fullname = typeof<System.TimeSpan>.FullName then
+                boxEncoder timespan
             elif fullname = typeof<System.Guid>.FullName then
                 boxEncoder guid
             elif fullname = typeof<obj>.FullName then
