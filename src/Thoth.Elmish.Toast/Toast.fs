@@ -33,6 +33,7 @@ module Toast =
         { Inputs : (string * 'msg) list
           Message : string
           Title : string option
+          Group : string option
           Icon : 'icon option
           Position : Position
           Delay : TimeSpan option
@@ -44,6 +45,7 @@ module Toast =
             { Inputs = []
               Message = ""
               Title = None
+              Group = None
               Icon = None
               Delay = Some (TimeSpan.FromSeconds 3.)
               Position = BottomLeft
@@ -56,6 +58,7 @@ module Toast =
           Inputs : (string * (unit -> unit)) list
           Message : string
           Title : string option
+          Group : string option
           Icon : 'icon option
           Position : Position
           Delay : TimeSpan option
@@ -71,6 +74,10 @@ module Toast =
     /// Set the title content
     let title title (builder : Builder<_, _>) =
         { builder with Title = Some title }
+
+    /// Set the group name
+    let group group (builder : Builder<_, _>) =
+        { builder with Group = Some group }
 
     /// Set the position
     let position pos (builder : Builder<_, _>) =
@@ -116,6 +123,7 @@ module Toast =
                                     )
                                 Message = builder.Message
                                 Title = builder.Title
+                                Group = builder.Group
                                 Icon = builder.Icon
                                 Position = builder.Position
                                 Delay = builder.Delay
@@ -269,6 +277,15 @@ module Toast =
               Toasts_TC : Toast<'icon> list
               Toasts_TR : Toast<'icon> list }
 
+
+        let inline addToast newToast toasts = 
+            let shouldKeep toast = 
+                newToast.Group |> Option.isNone
+                ||
+                newToast.Group <> toast.Group
+
+            newToast::(toasts |> List.filter shouldKeep)
+
         let inline private removeToast guid =
             List.filter (fun item -> item.Guid <> guid )
 
@@ -371,12 +388,12 @@ module Toast =
                             | None -> Cmd.none
 
                         match newToast.Position with
-                        | BottomLeft -> { model with Toasts_BL = newToast::model.Toasts_BL }, cmd
-                        | BottomCenter -> { model with Toasts_BC = newToast::model.Toasts_BC }, cmd
-                        | BottomRight -> { model with Toasts_BR = newToast::model.Toasts_BR }, cmd
-                        | TopLeft -> { model with Toasts_TL = newToast::model.Toasts_TL }, cmd
-                        | TopCenter -> { model with Toasts_TC = newToast::model.Toasts_TC }, cmd
-                        | TopRight -> { model with Toasts_TR = newToast::model.Toasts_TR }, cmd
+                        | BottomLeft -> { model with Toasts_BL = addToast newToast model.Toasts_BL }, cmd
+                        | BottomCenter -> { model with Toasts_BC = addToast newToast model.Toasts_BC }, cmd
+                        | BottomRight -> { model with Toasts_BR = addToast newToast model.Toasts_BR }, cmd
+                        | TopLeft -> { model with Toasts_TL = addToast newToast model.Toasts_TL }, cmd
+                        | TopCenter -> { model with Toasts_TC = addToast newToast model.Toasts_TC }, cmd
+                        | TopRight -> { model with Toasts_TR = addToast newToast model.Toasts_TR }, cmd
 
                     | Remove toast ->
                         match toast.Position with
