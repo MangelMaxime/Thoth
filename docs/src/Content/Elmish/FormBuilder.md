@@ -164,7 +164,7 @@ let private update msg model =
 6. Render your form in your view function
 
 ```fsharp
-let private formActions (formState : FormSate) dispatch =
+let private formActions (formState : FormState) dispatch =
     div [ ]
         [ button [ OnClick (fun _ ->
                     dispatch Submit
