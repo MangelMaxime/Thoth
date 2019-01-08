@@ -146,3 +146,53 @@ type BasicInput private (state : Input.State) =
 
     member __.AddValidator (validator) =
         BasicInput { state with Validators = state.Validators @ [ validator ] }
+        
+type BasicPassword private (state : Input.State) =
+
+    member __.WithDefaultView () : FieldBuilder =
+        { Type = "password"
+          State = state
+          Name = state.Name
+          Config = Input.config }
+
+    member __.WithCustomView (view) : FieldBuilder =
+        { Type = "password"
+          State = state
+          Name = state.Name
+          Config = { Input.config with View = view } }
+
+    static member Create(name : string) =
+        BasicPassword
+            { Label = ""
+              Value = ""
+              Type = "password"
+              Placeholder = None
+              Validators = [ ]
+              ValidationState = Valid
+              Name = name }
+
+    member __.WithLabel (label : string) =
+        BasicPassword { state with Label = label }
+
+    member __.WithValue (value : string) =
+        BasicPassword { state with Value = value }
+
+    member __.WithType (typ : string) =
+        BasicPassword { state with Type = typ }
+
+    member __.WithPlaceholder (placeholder : string) =
+        BasicPassword { state with Placeholder = Some placeholder }
+
+    member __.IsRequired (?msg : String) =
+        let msg = defaultArg msg "The password is required"
+
+        let validator (state : Input.State) =
+            if String.IsNullOrWhiteSpace state.Value then
+                Invalid msg
+            else
+                Valid
+
+        BasicPassword { state with Validators = state.Validators @ [ validator ] }
+
+    member __.AddValidator (validator) =
+        BasicPassword { state with Validators = state.Validators @ [ validator ] }
