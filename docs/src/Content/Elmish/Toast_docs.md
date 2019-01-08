@@ -91,6 +91,7 @@ type Position =
 |---|---|
 | `Toast.message` | Create a toast and set the message content |
 | `Toast.title` | Set the title content |
+| `Toast.group` | Set the name of the group. Only the latest toast with this name will be displayed |
 | `Toast.position` | Set the position |
 | `Toast.addInput` | Add an input to the toast |
 | `Toast.icon` | Set the icon |
