@@ -174,9 +174,9 @@ let private formActions (formState : FormSate) dispatch =
 let private view model dispatch =
     Form.render
         { Config = formConfig
-          State = formState
+          State = model.FormState
           Dispatch = dispatch
-          ActionsArea = (formActions formState dispatch)
+          ActionsArea = (formActions model.FormState dispatch)
           Loader = Form.DefaultLoader }
 ```
 
