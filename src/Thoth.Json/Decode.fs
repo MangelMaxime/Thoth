@@ -39,7 +39,7 @@ module Decode =
 
         let inline isArray (o: obj) : bool = JS.Array.isArray(o)
 
-        [<Emit("Object.getPrototypeOf($0 || false) === Object.prototype")>]
+        [<Emit("$0 === null ? false : (Object.getPrototypeOf($0 || false) === Object.prototype)")>]
         let isObject (_ : obj) : bool = jsNative
 
         let inline isNaN (o: obj) : bool = JS.Number.isNaN(!!o)
