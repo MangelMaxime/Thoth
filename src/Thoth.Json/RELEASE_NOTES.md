@@ -1,3 +1,7 @@
+#### NEXT
+
+* Fix #103: Optional Records fail with Auto Decoder in Internet Explorer (by @SCullman)
+
 #### 2.5.0
 
 * Make auto decoder support record/unions with private constructors
