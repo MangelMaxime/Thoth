@@ -3,8 +3,8 @@ module Demos.FormBuilder
 open Elmish
 open Fable.Helpers.React
 open Fable.Helpers.React.Props
-open Thoth.Elmish
 open System
+open Thoth.Elmish
 open Thoth.Elmish.FormBuilder
 open Thoth.Elmish.FormBuilder.BasicFields
 open Fable.PowerPack
@@ -116,8 +116,9 @@ type Model =
 
 let getLanguages =
     promise {
-        let! res = FakeServer.getLanguages ()
-        return res
+        // We are calling directly `FakeServer.getLanguages` but in a
+        // real case you would make a server request
+        return! FakeServer.getLanguages ()
     }
 
 let createProfile (body : string) : JS.Promise<CreationResponse> =

@@ -63,7 +63,17 @@ Later, we will learn how to build custom fields.
 
 ---------------
 
-1. Register the message dedicated to the `FormBuilder`
+1. Open the library modules
+
+```fsharp
+open Thoth.Elmish
+open Thoth.Elmish.FormBuilder
+open Thoth.Elmish.FormBuilder.BasicFields
+```
+
+---------------
+
+2. Register the message dedicated to the `FormBuilder`
 
 ```fsharp
 type Msg =
@@ -73,7 +83,7 @@ type Msg =
 
 ---------------
 
-2. Store the `FormBuilder` instance in your model
+3. Store the `FormBuilder` instance in your model
 
 ```fsharp
 type Model =
@@ -84,7 +94,7 @@ type Model =
 
 ---------------
 
-3. Create your form using the builder API
+4. Create your form using the builder API
 
 ```fsharp
 let (formState, formConfig) =
@@ -130,7 +140,7 @@ Each field needs to have a unique name. I found the following duplicate name:
 ---------------
 
 
-4. Initialize the `FormBuilder` in your init function
+5. Initialize the `FormBuilder` in your init function
 
 <div class="message is-warning">
 <div class="message-body">
@@ -148,7 +158,7 @@ let private init _ =
 
 ---------------
 
-5. Handle `OnFormMsg` in your update function
+6. Handle `OnFormMsg` in your update function
 
 ```fsharp
 let private update msg model =
@@ -161,7 +171,7 @@ let private update msg model =
 
 ---------------
 
-6. Render your form in your view function
+7. Render your form in your view function
 
 ```fsharp
 let private formActions (formState : FormBuilder.Types.State) dispatch =
