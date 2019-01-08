@@ -2034,7 +2034,7 @@ Expecting an object with a field named `radius` but instead got:
 
             testCase "Auto decoders works for decimal" <| fun _ ->
                 let extra = Extra.empty |> Extra.withDecimal
-                let value = 0.7833263478179128134089M
+                let value = 0.7833M
                 let json = Encode.Auto.toString(4, value, extra=extra)
                 let res = Decode.Auto.unsafeFromString<decimal>(json, extra=extra)
                 equal value res

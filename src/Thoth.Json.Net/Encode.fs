@@ -77,7 +77,7 @@ module Encode =
     ///**Exceptions**
     ///
     let decimal (value : decimal) : JsonValue =
-        JValue(value.ToString()) :> JsonValue
+        JValue(value.ToString(CultureInfo.InvariantCulture)) :> JsonValue
 
     ///**Description**
     /// Encode null

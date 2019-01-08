@@ -1,3 +1,4 @@
+version 5.193.0
 source https://www.nuget.org/api/v2
 
 storage:none
@@ -7,6 +8,7 @@ nuget FSharp.Core redirects:force
 nuget Fable.Import.Browser
 nuget Newtonsoft.Json >= 11.0.2
 nuget Expecto
+nuget Argu 5.1
 nuget Fable.Elmish prerelease
 nuget Fable.PowerPack
 nuget Fable.React
@@ -50,6 +52,8 @@ group Docs
     nuget Fable.PowerPack
     nuget Fable.Import.Node
     nuget Fulma
+    nuget Fable.FontAwesome
+    nuget Fable.FontAwesome.Free
 
     github akamud/vscode-theme-onelight themes/OneLight.json
     github ionide/ionide-fsgrammar grammar/fsharp.json
@@ -62,13 +66,17 @@ group Demos
 
     nuget FSharp.Core redirects:force
     nuget Fable.Core
-    nuget Fable.Elmish
-    nuget Fable.Elmish.React
-    nuget Fable.Elmish.Browser
-    nuget Fable.Elmish.Debugger
-    nuget Fable.Elmish.HMR
+    nuget Fable.Elmish prerelease
+    nuget Fable.Elmish.React prerelease
+    nuget Fable.Elmish.Browser prerelease
+    nuget Fable.Elmish.Debugger prerelease
+    nuget Fable.Elmish.HMR prerelease
     nuget Fable.PowerPack
     nuget Fable.React
     nuget Fulma
-    nuget Fulma.Extensions
+    nuget Fulma.Extensions.Wikiki.Tooltip
+    nuget Fulma.Extensions.Wikiki.Switch
+    nuget Fulma.Extensions.Wikiki.Checkradio
+    nuget Fable.FontAwesome
+    nuget Fable.FontAwesome.Free
     nuget Fable.Import.HMR
