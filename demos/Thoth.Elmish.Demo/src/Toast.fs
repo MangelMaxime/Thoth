@@ -5,8 +5,9 @@ open Fable.Helpers.React
 open Fable.Helpers.React.Props
 open Fulma
 open Thoth.Elmish
-open Fulma.FontAwesome
-open Fulma.Extensions
+open Fable.FontAwesome
+open Fable.FontAwesome.Free
+open Fulma.Extensions.Wikiki
 open System
 open Fable.Import
 open Fable.Core
@@ -22,50 +23,60 @@ module CopyButton =
         ofImport "default" "./js/CopyButton.js" (keyValueList CaseRules.LowerFirst props) []
 
 let renderToastWithFulma =
-    { new Toast.IRenderer<Fa.I.FontAwesomeIcons> with
-        member __.Toast children color =
-            Notification.notification [ Notification.CustomClass color ]
-                children
-        member __.CloseButton onClick =
-            Notification.delete [ Props [ OnClick onClick ] ]
-                [ ]
-        member __.InputArea children =
-            Columns.columns [ Columns.IsGapless
-                              Columns.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ]
-                              Columns.CustomClass "notify-inputs-area" ]
-                children
-        member __.Input (txt : string) (callback : (unit -> unit)) =
-            Column.column [ ]
-                [ Button.button [ Button.OnClick (fun _ -> callback ())
-                                  Button.Color IsWhite ]
-                    [ str txt ] ]
-        member __.Title txt =
-            Heading.h5 []
-                [ str txt ]
-        member __.Icon (icon : Fa.I.FontAwesomeIcons) =
-            Icon.faIcon [ Icon.Size IsMedium ]
-                [ Fa.icon icon
-                  Fa.fa2x ]
-        member __.SingleLayout title message =
-            div [ ]
-                [ title; message ]
-        member __.Message txt =
-            span [ ]
-                [ str txt ]
-        member __.SplittedLayout iconView title message =
-            Columns.columns [ Columns.IsGapless
-                              Columns.IsVCentered ]
-                [ Column.column [ Column.Width (Screen.All, Column.Is2) ]
-                    [ iconView ]
-                  Column.column [ ]
-                    [ title
-                      message ] ]
-        member __.StatusToColor status =
-            match status with
-            | Toast.Success -> "is-success"
-            | Toast.Warning -> "is-warning"
-            | Toast.Error -> "is-danger"
-            | Toast.Info -> "is-info" }
+        { new Toast.IRenderer<Fa.IconOption> with
+            member __.Toast children color =
+                Notification.notification [ Notification.CustomClass color ]
+                    children
+
+            member __.CloseButton onClick =
+                Notification.delete [ Props [ OnClick onClick ] ]
+                    [ ]
+
+            member __.InputArea children =
+                Columns.columns [ Columns.IsGapless
+                                  Columns.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ]
+                                  Columns.CustomClass "notify-inputs-area" ]
+                    children
+
+            member __.Input (txt : string) (callback : (unit -> unit)) =
+                Column.column [ ]
+                    [ Button.button [ Button.OnClick (fun _ -> callback ())
+                                      Button.Color IsWhite ]
+                        [ str txt ] ]
+
+            member __.Title txt =
+                Heading.h5 []
+                           [ str txt ]
+
+            member __.Icon (icon : Fa.IconOption) =
+                Icon.icon [ Icon.Size IsMedium ]
+                    [ Fa.i [ icon
+                             Fa.Size Fa.Fa2x ]
+                        [ ] ]
+
+            member __.SingleLayout title message =
+                div [ ]
+                    [ title; message ]
+
+            member __.Message txt =
+                span [ ]
+                     [ str txt ]
+
+            member __.SplittedLayout iconView title message =
+                Columns.columns [ Columns.IsGapless
+                                  Columns.IsVCentered ]
+                    [ Column.column [ Column.Width (Screen.All, Column.Is2) ]
+                        [ iconView ]
+                      Column.column [ ]
+                        [ title
+                          message ] ]
+
+            member __.StatusToColor status =
+                match status with
+                | Toast.Success -> "is-success"
+                | Toast.Warning -> "is-warning"
+                | Toast.Error -> "is-danger"
+                | Toast.Info -> "is-info" }
 
 type State =
     | Initial
@@ -187,9 +198,15 @@ let private buildStatus (step : Step) =
     builder step.Builder, step.ToCode()
 
 let private buildIcon (step : Step) =
+    let iconValue =
+        if step.Model.Renderer = Renderer.Fulma then
+            unbox Fa.Icon step.Model.Icon
+        else
+            step.Model.Icon
+
     if step.Model.Icon <> "" then
         step
-        |> Step.ApplyBuilder (Toast.icon step.Model.Icon)
+        |> Step.ApplyBuilder (Toast.icon iconValue)
         |> Step.AddCode (sprintf "Toast.icon \"%s\"" step.Model.Icon)
     else
         step
@@ -353,6 +370,7 @@ let private checkradioPositions activePosition dispatch =
     positions
     |> List.map (fun position ->
         Checkradio.radio [ Checkradio.Name "toast-position"
+                           Checkradio.Id ("toast-position-" + (position.ToString()))
                            Checkradio.Checked (activePosition = position)
                            Checkradio.OnChange (fun _ -> dispatch (ChangePosition position)) ]
             [ str (position.ToString()) ]
@@ -370,6 +388,7 @@ let private checkradioStatuses activeStatus dispatch =
         Checkradio.radio [ Checkradio.IsCircle
                            Checkradio.HasBackgroundColor
                            Checkradio.Name "toast-type"
+                           Checkradio.Id ("toast-type" + (status.ToString()))
                            Checkradio.Color color
                            Checkradio.Checked (activeStatus = status)
                            Checkradio.OnChange (fun _ -> dispatch (ChangeStatus status)) ]
@@ -434,11 +453,13 @@ let private viewBuilder (model : Model) dispatch =
                 [ Field.div [ ]
                     [ Label.label [ ]
                         [ str "Icon"
-                          Icon.faIcon [ Icon.Props [ Tooltip.dataTooltip "Demo only support Font Awesome" ]
-                                        Icon.CustomClass Tooltip.ClassName ]
-                            [ Fa.icon Fa.I.QuestionCircleO ] ]
+                          Icon.icon [ Icon.Props [ Tooltip.dataTooltip "Demo only support Font Awesome 5" ]
+                                      Icon.CustomClass Tooltip.ClassName ]
+                            [ Fa.i [ Fa.Regular.QuestionCircle ]
+                                [ ] ] ]
                       Control.div [ ]
                         [ Input.text [ Input.Value model.Icon
+                                       Input.Placeholder "Ex: fas fa-check"
                                        Input.OnChange (fun ev -> dispatch (ChangeIcon ev.Value)) ] ]
                       Help.help [ ]
                         [ str "If empty, no icon will be added to the Toast" ] ] ]
@@ -473,14 +494,17 @@ let private viewBuilder (model : Model) dispatch =
             //         [ str "With progress bar" ] ]
                Column.column [ ]
                 [ Switch.switch [ Switch.Checked model.WithCloseButton
+                                  Switch.Id "with-close-button"
                                   Switch.OnChange (fun _ -> dispatch ToggleWithCloseButton) ]
                     [ str "With close button" ] ]
                Column.column [ ]
                 [ Switch.switch [ Switch.Checked model.DismissOnClick
+                                  Switch.Id "dismiss-on-click"
                                   Switch.OnChange (fun _ -> dispatch ToggleDismissOnClick) ]
                     [ str "Dismiss on click" ] ]
                Column.column [ ]
                 [ Switch.switch [ Switch.Checked model.NoTimeOut
+                                  Switch.Id "no-timeout"
                                   Switch.OnChange (fun _ -> dispatch ToggleNoTimeOut) ]
                     [ str "No timeout" ] ] ]
           Field.div [ ]

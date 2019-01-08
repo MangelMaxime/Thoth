@@ -27,6 +27,9 @@ let inline dtntWorkDir wd =
     DotNet.Options.lift dotnetSdk.Value
     >> DotNet.Options.withWorkingDirectory wd
 
+let inline yarnWorkDir (ws : string) (yarnParams : Yarn.YarnParams) =
+    { yarnParams with WorkingDirectory = ws }
+
 let srcFiles =
     !! "./src/Thoth.Json/Thoth.Json.fsproj"
     ++ "./src/Thoth.Json.Net/Thoth.Json.Net.fsproj"
@@ -204,9 +207,9 @@ Target.create "Docs.Watch" (fun _ ->
         let projDir = proj |> Path.getDirectory
 
         [ async {
-            let result = DotNet.exec (dtntWorkDir projDir) "fable" "yarn-run fable-splitter --port free -- -c docs/splitter.config.js -w"
-
-            if not result.OK then failwithf "Docs.Watch fable watch mode failed."
+            Yarn.exec
+                "fable-splitter --port free -c docs/splitter.config.js -w"
+                (yarnWorkDir projDir)
           }
           async {
             Yarn.exec "run node-sass --output-style compressed --watch --output docs/public/ docs/scss/main.scss" id
@@ -227,7 +230,7 @@ Target.create "Docs.Setup" (fun _ ->
     Directory.ensure "./docs/public/demos/"
 
     // Copy files from node_modules allow us to manage them via yarn
-    Shell.copyDir "./docs/public/fonts" "./node_modules/font-awesome/fonts" (fun _ -> true)
+    Shell.copyDir "./docs/public/fonts" "./node_modules/@fortawesome/fontawesome-free/webfonts" (fun _ -> true)
     // Copy demos file
     Shell.copyDir "./docs/public/demos" "./demos/Thoth.Elmish.Demo/output/" (fun _ -> true)
 
@@ -239,9 +242,10 @@ Target.create "Docs.Build" (fun _ ->
     |> Seq.iter (fun proj ->
         let projDir = proj |> Path.getDirectory
 
-        let result = DotNet.exec (dtntWorkDir projDir) "fable" "yarn-run fable-splitter --port free -- -c docs/splitter.config.js -p"
+        Yarn.exec
+            "fable-splitter --port free -c docs/splitter.config.js -p"
+            (yarnWorkDir projDir)
 
-        if not result.OK then failwithf "Fable build failed."
         buildSass ()
         applyAutoPrefixer ()
     )
@@ -260,29 +264,17 @@ Target.create "Watch" (fun _ ->
 Target.create "Build.Demos" (fun _ ->
     Yarn.install (fun o -> { o with WorkingDirectory = "./demos/Thoth.Elmish.Demo/" })
 
-    DotNet.restore (dtntWorkDir (root </> "demos" </> "Thoth.Elmish.Demo")) ""
-
-    let result =
-        DotNet.exec
-            (dtntWorkDir (root </> "demos" </> "Thoth.Elmish.Demo"))
-            "fable"
-            "webpack -- -p"
-
-    if not result.OK then failwithf "Fable build failed for demos."
+    Yarn.exec
+        "webpack -- -p"
+        (yarnWorkDir (root </> "demos" </> "Thoth.Elmish.Demo"))
 )
 
 Target.create "Watch.Demos" (fun _ ->
     Yarn.install (fun o -> { o with WorkingDirectory = "./demos/Thoth.Elmish.Demo/" })
 
-    DotNet.restore (dtntWorkDir (root </> "demos" </> "Thoth.Elmish.Demo")) ""
-
-    let result =
-        DotNet.exec
-            (dtntWorkDir (root </> "demos" </> "Thoth.Elmish.Demo"))
-            "fable"
-            "webpack-dev-server"
-
-    if not result.OK then failwithf "Fable build failed for demos."
+    Yarn.exec
+        "webpack-dev-server"
+        (yarnWorkDir (root </> "demos" </> "Thoth.Elmish.Demo"))
 )
 
 let needsPublishing (versionRegex: Regex) (releaseNotes: ReleaseNotes.ReleaseNotes) projFile =

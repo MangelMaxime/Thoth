@@ -15,8 +15,12 @@ $colors: map-merge($colors, $addColors);
 
 $navbar-item-color: $white;
 
+// Font Awesome
 $fa-font-path: "./fonts/";
-@import './../../node_modules/font-awesome/scss/font-awesome';
+@import './../../node_modules/@fortawesome/fontawesome-free/scss/fontawesome';
+@import './../../node_modules/@fortawesome/fontawesome-free/scss/regular';
+@import './../../node_modules/@fortawesome/fontawesome-free/scss/solid';
+@import './../../node_modules/@fortawesome/fontawesome-free/scss/brands';
 
 @import './../../node_modules/bulma/bulma';
 @import './../../node_modules/bulma-switch/dist/css/bulma-switch.sass';

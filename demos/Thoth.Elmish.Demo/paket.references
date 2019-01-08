@@ -9,5 +9,8 @@ group Demos
     Fable.PowerPack
     Fable.React
     Fulma
-    Fulma.Extensions
-    dotnet-fable
+    Fulma.Extensions.Wikiki.Tooltip
+    Fulma.Extensions.Wikiki.Switch
+    Fulma.Extensions.Wikiki.Checkradio
+    Fable.FontAwesome
+    Fable.FontAwesome.Free
