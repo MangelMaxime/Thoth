@@ -63,5 +63,3 @@ let json = Encode.Auto.toString(4, user)
 //     "Followers": 0
 // }
 ```
-
-Please see "Auto decoder" for more information about generating coders automatically.

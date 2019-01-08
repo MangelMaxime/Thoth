@@ -44,9 +44,3 @@ type User =
               "followers", Encode.int user.Followers
             ]
 ```
-
-## Giraffe
-
-If you're using the [Giraffe](https://github.com/giraffe-fsharp/Giraffe) or [Saturn](https://saturnframework.org/) web servers, you can use the `Thoth.Json.Giraffe` package to enable automatic JSON serialization with Toth in your responses. Check [how to add a custom serializer](https://github.com/giraffe-fsharp/Giraffe/blob/master/DOCUMENTATION.md#using-a-different-json-serializer) to Giraffe.
-
-> The `ThothSerializer` type also include some static helpers to deal with JSON directly for the request and response streams.
