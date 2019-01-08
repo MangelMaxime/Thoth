@@ -8,7 +8,6 @@ module Toast =
     open Fable.Helpers.React.Props
     open Elmish
     open Fable.Core.JsInterop
-    open Fable.PowerPack
 
     importSideEffects "./css/toast-base.css"
     importSideEffects "./css/toast-minimal.css"
@@ -403,11 +402,12 @@ module Toast =
                   Toasts_TC = []
                   Toasts_TR = [] }, cmd
 
-            let notifcationEvent (dispatch : Elmish.Dispatch<Notifiable<_, _>>) =
+            let notificationEvent (dispatch : Elmish.Dispatch<Notifiable<_, _>>) =
                 // If HMR support is active, then we provide have a custom implementation.
                 // This is needed to avoid:
                 // - flickering (trigger several react renderer process)
                 // - attaching several event listener to the same event
+                #if DEBUG
                 if not (isNull HMR.``module``.hot) then
                     if HMR.``module``.hot.status() <> HMR.Idle then
                         Browser.window.removeEventListener(eventIdentifier, !!Browser.window?(eventIdentifier))
@@ -418,6 +418,7 @@ module Toast =
 
                     Browser.window.addEventListener(eventIdentifier, !!Browser.window?(eventIdentifier))
                 else
+                #endif
                     Browser.window.addEventListener(eventIdentifier, !^(fun ev ->
                         let ev = ev :?> Browser.CustomEvent
                         dispatch (Add (unbox ev.detail))
@@ -429,7 +430,7 @@ module Toast =
                             model, cmd |> Cmd.map UserMsg) >> createModel
 
             let subs model =
-                Cmd.batch [ [ notifcationEvent ]
+                Cmd.batch [ [ notificationEvent ]
                             program.subscribe model.UserModel |> Cmd.map UserMsg ]
 
             { init = init
@@ -440,7 +441,9 @@ module Toast =
               view = fun model dispatch ->
                 div [ ]
                     [ view renderer model dispatch
-                      program.view model.UserModel (UserMsg >> dispatch) ] }
+                      program.view model.UserModel (UserMsg >> dispatch) ]
+              // syncDispatch is only intended for .NET
+              syncDispatch = id }
 
     /// **Description**
     /// Default implementation for the Toast renderer,

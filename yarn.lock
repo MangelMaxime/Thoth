@@ -1978,7 +1978,7 @@ fable-loader@^2.0.0-alpha-001:
   version "2.0.0-alpha-003"
   resolved "https://registry.yarnpkg.com/fable-loader/-/fable-loader-2.0.0-alpha-003.tgz#5fb78f1a2cbe925df1436702d1dc818a074d65fd"
   dependencies:
-    fable-utils "^1.0.4"
+    fable-babel-plugins "~2.1.0"
 
 fable-splitter@^2.1.0:
   version "2.1.0"
@@ -1992,7 +1992,7 @@ fable-splitter@^2.1.0:
     fable-babel-plugins "~2.1.0"
     fs-extra "^7.0.0"
 
-fable-utils@^1.0.4, fable-utils@^1.0.6:
+fable-utils@^1.0.6:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/fable-utils/-/fable-utils-1.0.6.tgz#df4af260a2948b7562e3cbcfa044a3482b5c0573"
 
