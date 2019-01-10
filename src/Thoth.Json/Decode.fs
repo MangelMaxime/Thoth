@@ -95,7 +95,7 @@ module Decode =
 
     exception DecoderException of DecoderError
 
-    let unwrap (path : string) (decoder : Decoder<'T>) (value : obj) : 'T =
+    let private unwrap (path : string) (decoder : Decoder<'T>) (value : obj) : 'T =
         match decoder path value with
         | Ok success ->
             success
