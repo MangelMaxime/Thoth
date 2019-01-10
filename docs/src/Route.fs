@@ -12,6 +12,10 @@ let [<Literal>] Index = Host + "index.html"
 [<RequireQualifiedAccess>]
 module Json =
 
+    let [<Literal>] v1 = Host + "json/" + "v1.html"
+    let [<Literal>] v2 = Host + "json/" + "v2.html"
+    let [<Literal>] v3 = Host + "json/" + "v3.html"
+
     module v1 =
         let [<Literal>] Encode = Host + "json/" + "v1/" + "encode.html"
         let [<Literal>] Decode = Host + "json/" + "v1/" + "decode.html"

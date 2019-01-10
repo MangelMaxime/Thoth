@@ -4,13 +4,9 @@ open Renderer
 
 FromMarkdown.renderNormal (Route.Index) "Index.md"
 
-FromMarkdown.renderWithTOC (Route.Json.v1.Encode) "Json/v1/Encode.md"
-FromMarkdown.renderWithTOC (Route.Json.v1.Decode) "Json/v1/Decode.md"
-FromMarkdown.renderWithTOC (Route.Json.v1.Net) "Json/v1/Net.md"
-
-FromMarkdown.renderWithTOC (Route.Json.v2.Encode) "Json/v2/Encode.md"
-FromMarkdown.renderWithTOC (Route.Json.v2.Decode) "Json/v2/Decode.md"
-FromMarkdown.renderWithTOC (Route.Json.v2.Net) "Json/v2/Net.md"
+FromMarkdown.renderWithTOC (Route.Json.v1) "Json/v1.md"
+FromMarkdown.renderWithTOC (Route.Json.v2) "Json/v2.md"
+FromMarkdown.renderWithTOC (Route.Json.v3) "Json/v3.md"
 
 FromMarkdown.renderWithTOC (Route.Elmish.Debouncer) "Elmish/Debouncer.md"
 FromMarkdown.renderWithTOC (Route.Elmish.Toast.Docs) "Elmish/Toast_docs.md"

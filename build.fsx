@@ -265,7 +265,7 @@ Target.create "Build.Demos" (fun _ ->
     Yarn.install (fun o -> { o with WorkingDirectory = "./demos/Thoth.Elmish.Demo/" })
 
     Yarn.exec
-        "webpack -- -p"
+        "webpack -p"
         (yarnWorkDir (root </> "demos" </> "Thoth.Elmish.Demo"))
 )
 
