@@ -7,7 +7,7 @@ const hasProp = ({}).hasOwnProperty
 
 const permalinkHref = slug => `#${slug}`
 
-const renderPermalink = (slug, state, idx) => {
+const renderPermalink = (slug, state, idx, showAnchor) => {
     const space = () =>
         Object.assign(new state.Token('text', '', 0), { content: ' ' });
 
@@ -15,7 +15,8 @@ const renderPermalink = (slug, state, idx) => {
         Object.assign(new state.Token('link_open', 'a', 1), {
             attrs: [
                 ['href', permalinkHref(slug, state)],
-                ['aria-hidden', 'true']
+                ['aria-hidden', 'true'],
+                ['style', showAnchor ? 'visibility:visible' : 'visibility:hidden']
             ]
         }),
         Object.assign(new state.Token('anchor_open', 'span', 1), {
@@ -25,7 +26,9 @@ const renderPermalink = (slug, state, idx) => {
             ]
         }),
         new state.Token('anchor_open', 'span', -1),
-        Object.assign(new state.Token('html_block', '', 0), { content: '#' }),
+        Object.assign(new state.Token('html_block', '', 0), {
+            content: showAnchor ? '#' : ''
+        }),
         new state.Token('link_close', 'a', -1)
     ];
 
@@ -58,7 +61,7 @@ const anchor = (md) => {
         const tokens = state.tokens
 
         tokens
-            .filter(token => token.type === 'heading_open' && token.tag !== "h1")
+            .filter(token => token.type === 'heading_open')
             .forEach(token => {
                 // Aggregate the next token children text.
                 const title = tokens[tokens.indexOf(token) + 1].children
@@ -67,7 +70,7 @@ const anchor = (md) => {
 
                 const slug = uniqueSlug(slugify(title), slugs);
 
-                renderPermalink(slug, state, tokens.indexOf(token));
+                renderPermalink(slug, state, tokens.indexOf(token), token.tag !== "h1");
             });
     })
 }

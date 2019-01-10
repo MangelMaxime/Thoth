@@ -15,8 +15,12 @@ $colors: map-merge($colors, $addColors);
 
 $navbar-item-color: $white;
 
+// Font Awesome
 $fa-font-path: "./fonts/";
-@import './../../node_modules/font-awesome/scss/font-awesome';
+@import './../../node_modules/@fortawesome/fontawesome-free/scss/fontawesome';
+@import './../../node_modules/@fortawesome/fontawesome-free/scss/regular';
+@import './../../node_modules/@fortawesome/fontawesome-free/scss/solid';
+@import './../../node_modules/@fortawesome/fontawesome-free/scss/brands';
 
 @import './../../node_modules/bulma/bulma';
 @import './../../node_modules/bulma-switch/dist/css/bulma-switch.sass';
@@ -109,12 +113,21 @@ $fa-font-path: "./fonts/";
 .toc {
     position: fixed;
     border-left: 1px solid #e0e0e0;
+    padding-left: 1rem;
 
     a {
-        color: $menu-label-color;
+        color: $text;
         &:hover {
             color: $link;
         }
+    }
+
+    .toc-label {
+        color: #7a7a7a;
+        font-size: 0.75em;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 10px 0 0 0;
     }
 
     .toc-headings {

@@ -118,6 +118,7 @@ type Record9 =
       d: (MyUnion option) []
       e: Map<string, Record2>
       f: System.DateTime
+      g: Set<Record2>
     }
 
 type User =
@@ -208,10 +209,23 @@ type MyObj2 =
     { Enabled: bool
       Shape: Shape option }
 
+exception CustomException
+
+type BigIntRecord =
+    { bigintField: bigint }
+
+type ChildType =
+    { ChildField: string }
+    static member Encode(x: ChildType) =
+        Encode.string x.ChildField
+    static member Decoder =
+        Decode.string |> Decode.map (fun x -> { ChildField = x })
+
+type ParentRecord =
+    { ParentField: ChildType }
+
 type RecordWithPrivateConstructor = private { Foo1: int; Foo2: float }
 type UnionWithPrivateConstructor = private Bar of string | Baz
-
-exception CustomException
 
 let tests : Test =
     testList "Thoth.Json.Decode" [
@@ -361,22 +375,12 @@ Expecting an int64 but instead got: "maxime"
                 equal expected actual
 
             testCase "an uint32 output an error if incorrect string" <| fun _ ->
-                #if FABLE_COMPILER
-                let expected =
-                    Error(
-                        """
-Error at: `$`
-Expecting an uint32 but instead got: "maxime"
-Reason: Input string was not in a correct format.
-                        """.Trim())
-                #else
                 let expected =
                     Error(
                         """
 Error at: `$`
 Expecting an uint32 but instead got: "maxime"
                         """.Trim())
-                #endif
 
                 let actual =
                     Decode.fromString Decode.uint32 "\"maxime\""
@@ -398,22 +402,12 @@ Expecting an uint32 but instead got: "maxime"
                 equal expected actual
 
             testCase "an uint64 output an error if incorrect string" <| fun _ ->
-                #if FABLE_COMPILER
-                let expected =
-                    Error(
-                        """
-Error at: `$`
-Expecting an uint64 but instead got: "maxime"
-Reason: Input string was not in a correct format.
-                        """.Trim())
-                #else
                 let expected =
                     Error(
                         """
 Error at: `$`
 Expecting an uint64 but instead got: "maxime"
                         """.Trim())
-                #endif
 
                 let actual =
                     Decode.fromString Decode.uint64 "\"maxime\""
@@ -451,9 +445,7 @@ Expecting a bigint but instead got: "maxime"
                 let actual =
                     Decode.fromString Decode.datetime "\"2018-10-01T11:12:55.00Z\""
 
-                match actual with
-                | Ok date -> equal (expected = date) true
-                | Error error -> failwith error
+                equal (Ok expected) actual
 
             testCase "a datetime output an error if invalid string" <| fun _ ->
                 let expected =
@@ -471,7 +463,7 @@ Expecting a datetime but instead got: "invalid_string"
             testCase "a datetime works with TimeZone" <| fun _ ->
                 let localDate = DateTime(2018, 10, 1, 11, 12, 55, DateTimeKind.Local)
 
-                let expected = Ok (localDate)
+                let expected = Ok (localDate.ToUniversalTime())
                 let json = sprintf "\"%s\"" (localDate.ToString("O"))
                 let actual =
                     Decode.fromString Decode.datetime json
@@ -786,7 +778,7 @@ Expecting an int but instead got: "maxime"
                 let expected =
                     Error(
                         """
-Error at: `$.height`
+Error at: `$`
 Expecting an object with a field named `height` but instead got:
 {
     "name": "maxime",
@@ -1003,9 +995,9 @@ Expecting an array but instead got: 1
                         """
 I run into the following problems:
 
-Error at: `$`
+Error at: `$.[0]`
 Expecting a string but instead got: 1
-Error at: `$.test`
+Error at: `$.[0]`
 Expecting an object but instead got:
 1
                         """.Trim())
@@ -1068,28 +1060,28 @@ Expecting an object but instead got:
 
                 equal expectedUndefinedField actualUndefinedField
 
-            testCase "combining option and field decoders works" <| fun _ ->
+            testCase "combining field and option decoders works" <| fun _ ->
                 let json = """{ "name": "maxime", "age": 25, "something_undefined": null }"""
 
                 let expectedValid = Ok(Some "maxime")
                 let actualValid =
-                    Decode.fromString (Decode.option (Decode.field "name" Decode.string) ) json
+                    Decode.fromString (Decode.field "name" (Decode.option Decode.string)) json
 
                 equal expectedValid actualValid
 
-                match Decode.fromString (Decode.option (Decode.field "name" Decode.int) ) json with
+                match Decode.fromString (Decode.field "name" (Decode.option Decode.int)) json with
                 | Error _ -> ()
                 | Ok _ -> failwith "Expected type error for `name` field"
 
                 let expectedMissingField = Ok(None)
                 let actualMissingField =
-                    Decode.fromString (Decode.option (Decode.field "height" Decode.int) ) json
+                    Decode.fromString (Decode.field "height" (Decode.option Decode.int)) json
 
                 equal expectedMissingField actualMissingField
 
                 let expectedUndefinedField = Ok(None)
                 let actualUndefinedField =
-                    Decode.fromString (Decode.option (Decode.field "something_undefined" Decode.string) ) json
+                    Decode.fromString (Decode.field "something_undefined" (Decode.option Decode.string)) json
 
                 equal expectedUndefinedField actualUndefinedField
 
@@ -1148,7 +1140,7 @@ Expecting an object but instead got:
                     | _ ->
                         Decode.fail <| "Trying to decode info, but version " + (version.ToString()) + "is not supported"
 
-                let info : Decode.Decoder<int> =
+                let info : Decoder<int> =
                     Decode.field "version" Decode.int
                     |> Decode.andThen infoHelp
 
@@ -1162,14 +1154,14 @@ Expecting an object but instead got:
                 let expected =
                     Error(
                         """
-Error at: `$.version`
+Error at: `$`
 Expecting an object with a field named `version` but instead got:
 {
     "info": 3,
     "data": 2
 }
                         """.Trim())
-                let infoHelp version : Decode.Decoder<int> =
+                let infoHelp version : Decoder<int> =
                     match version with
                     | 4 ->
                         Decode.succeed 1
@@ -1377,7 +1369,7 @@ Expecting an object with a field named `version` but instead got:
                 let expected =
                     Error(
                         """
-Error at: `$.name`
+Error at: `$`
 Expecting an object with a field named `name` but instead got:
 {
     "age": 25
@@ -1528,7 +1520,7 @@ Expecting a string but instead got: 12
                     Error(
                         """
 Error at: `$.user`
-Expecting an object at `user` but instead got:
+Expecting an object but instead got:
 "maxime"
                         """.Trim())
 
@@ -1606,20 +1598,21 @@ Expecting a string but instead got: 12
 
                 equal expected actual
 
-            testCase "get.Optional.At returns None if non-object in path" <| fun _ ->
-                let json = """{ "user": "maxime" }"""
-                let expected = Ok({ optionalField = None })
+            // REVIEW: Is this test right, I'd expect this to be a type error not a missing optional value
+            // testCase "get.Optional.At returns None if non-object in path" <| fun _ ->
+            //     let json = """{ "user": "maxime" }"""
+            //     let expected = Ok({ optionalField = None })
 
-                let decoder =
-                    Decode.object
-                        (fun get ->
-                            { optionalField = get.Optional.At [ "user"; "name" ] Decode.string }
-                        )
+            //     let decoder =
+            //         Decode.object
+            //             (fun get ->
+            //                 { optionalField = get.Optional.At [ "user"; "name" ] Decode.string }
+            //             )
 
-                let actual =
-                    Decode.fromString decoder json
+            //     let actual =
+            //         Decode.fromString decoder json
 
-                equal expected actual
+            //     equal expected actual
 
             testCase "get.Optional.At returns None if field missing" <| fun _ ->
                 let json = """{ "user": { "name": "maxime", "age": 25 } }"""
@@ -1771,7 +1764,7 @@ Expecting a string but instead got: 12
                 let expected =
                     Error (
                         """
-Error at: `$.radius`
+Error at: `$`
 Expecting an object with a field named `radius` but instead got:
 {
     "enabled": true,
@@ -1950,6 +1943,7 @@ Expecting an object with a field named `radius` but instead got:
                       d = [|Some(Foo 14); None|]
                       e = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
                       f = System.DateTime.Now
+                      g = set [{ a = 2.; b = 2. }; { a = -1.5; b = 0. }]
                     }
                 let json = Encode.Auto.toString(4, value)
                 // printfn "AUTO ENCODED %s" json
@@ -1961,6 +1955,8 @@ Expecting an object with a field named `radius` but instead got:
                 equal None r2.d.[1]
                 equal -1.5 (Map.find "ah" r2.e).a
                 equal 2.   (Map.find "oh" r2.e).b
+                equal true (Set.contains { a = -1.5; b = 0. } r2.g)
+                equal false (Set.contains { a = 1.5; b = 0. } r2.g)
 
             testCase "Auto serialization works with recursive types" <| fun _ ->
                 let len xs =
@@ -1997,11 +1993,11 @@ Expecting an object with a field named `radius` but instead got:
                 let res = Decode.Auto.unsafeFromString<int>(json)
                 equal value res
 
-            // TODO: Use an int64 value that exceeds int32 capacity (also for uint64)
             testCase "Auto decoders works for int64" <| fun _ ->
-                let value = 12L
-                let json = Encode.Auto.toString(4, value)
-                let res = Decode.Auto.unsafeFromString<int64>(json)
+                let extra = Extra.empty |> Extra.withInt64
+                let value = 9999999999L
+                let json = Encode.Auto.toString(4, value, extra=extra)
+                let res = Decode.Auto.unsafeFromString<int64>(json, extra=extra)
                 equal value res
 
             testCase "Auto decoders works for uint32" <| fun _ ->
@@ -2011,15 +2007,17 @@ Expecting an object with a field named `radius` but instead got:
                 equal value res
 
             testCase "Auto decoders works for uint64" <| fun _ ->
-                let value = 12UL
-                let json = Encode.Auto.toString(4, value)
-                let res = Decode.Auto.unsafeFromString<uint64>(json)
+                let extra = Extra.empty |> Extra.withUInt64
+                let value = 9999999999999999999UL
+                let json = Encode.Auto.toString(4, value, extra=extra)
+                let res = Decode.Auto.unsafeFromString<uint64>(json, extra=extra)
                 equal value res
 
             testCase "Auto decoders works for bigint" <| fun _ ->
-                let value = 12I
-                let json = Encode.Auto.toString(4, value)
-                let res = Decode.Auto.unsafeFromString<bigint>(json)
+                let extra = Extra.empty |> Extra.withBigInt
+                let value = 99999999999999999999999I
+                let json = Encode.Auto.toString(4, value, extra=extra)
+                let res = Decode.Auto.unsafeFromString<bigint>(json, extra=extra)
                 equal value res
 
             testCase "Auto decoders works for bool" <| fun _ ->
@@ -2035,31 +2033,25 @@ Expecting an object with a field named `radius` but instead got:
                 equal value res
 
             testCase "Auto decoders works for decimal" <| fun _ ->
+                let extra = Extra.empty |> Extra.withDecimal
                 let value = 0.7833M
-                let json = Encode.Auto.toString(4, value)
-                let res = Decode.Auto.unsafeFromString<decimal>(json)
+                let json = Encode.Auto.toString(4, value, extra=extra)
+                let res = Decode.Auto.unsafeFromString<decimal>(json, extra=extra)
                 equal value res
 
-            testCase "Auto decoders works for datetime" <| fun _ ->
-                let value = DateTime.Now
-                let json = Encode.Auto.toString(4, value)
-                let res = Decode.Auto.unsafeFromString<DateTime>(json)
-                equal value.Date res.Date
-                equal value.Hour res.Hour
-                equal value.Minute res.Minute
-                equal value.Second res.Second
+            // testCase "Auto decoders works for datetime" <| fun _ ->
+            //     let value = DateTime.Now
+            //     let json = Encode.Auto.toString(4, value)
+            //     let res = Decode.Auto.unsafeFromString<DateTime>(json)
+            //     equal value.Date res.Date
+            //     equal value.Hour res.Hour
+            //     equal value.Minute res.Minute
+            //     equal value.Second res.Second
 
             testCase "Auto decoders works for datetime UTC" <| fun _ ->
                 let value = DateTime.UtcNow
                 let json = Encode.Auto.toString(4, value)
                 let res = Decode.Auto.unsafeFromString<DateTime>(json)
-                // printfn "SOURCE %A JSON %s OUTPUT %A (kind %A)" value json res res.Kind
-                let res =
-                    // TODO: Fable and .NET return different kinds when decoding DateTime, review
-                    match res.Kind with
-                    | DateTimeKind.Utc -> res
-                    | DateTimeKind.Local -> res.ToUniversalTime()
-                    | _ (* Unespecified *) -> res.ToLocalTime().ToUniversalTime()
                 equal value.Date res.Date
                 equal value.Hour res.Hour
                 equal value.Minute res.Minute
@@ -2158,54 +2150,40 @@ Expecting an object with a field named `radius` but instead got:
                           Must = "must value" } : RecordWithOptionalClass)
                 equal expected actual
 
-            testCase "Auto.fromString returns an Error for field using a non optional class" <| fun _ ->
-                let json = """{ "class" : null, "must": "must value"}"""
-                let actual = Decode.Auto.fromString<RecordWithRequiredClass>(json, isCamelCase=true)
-                #if FABLE_COMPILER
+            testCase "Auto.fromString works for records missing optional field value on classes" <| fun _ ->
+                let json = """{ "must": "must value"}"""
+                let actual = Decode.Auto.fromString<RecordWithOptionalClass>(json, isCamelCase=true)
                 let expected =
-                    Error (
-                        """
-Error at: `$.class`
-I run into a `fail` decoder: Class types cannot be automatically deserialized: Tests.Decode.BaseClass
-                        """.Trim())
-                #else
-                let expected =
-                    Error (
-                        """
-Error at: `$.class`
-I run into a `fail` decoder: Class types cannot be automatically deserialized: Tests.Decode+BaseClass
-                        """.Trim())
-                #endif
+                    Ok ({ MaybeClass = None
+                          Must = "must value" } : RecordWithOptionalClass)
                 equal expected actual
 
+            testCase "Auto.generateDecoder throws for field using a non optional class" <| fun _ ->
+                let expected = "Cannot generate auto decoder for Tests.Decode.BaseClass. Please pass an extra decoder."
+                let errorMsg =
+                    try
+                        let decoder = Decode.Auto.generateDecoder<RecordWithRequiredClass>(isCamelCase=true)
+                        ""
+                    with ex ->
+                        ex.Message
+                errorMsg.Replace("+", ".") |> equal expected
+
             testCase "Auto.fromString works for Class marked as optional" <| fun _ ->
-                let json = """{ }"""
+                let json = """null"""
 
                 let actual = Decode.Auto.fromString<BaseClass option>(json, isCamelCase=true)
                 let expected = Ok None
                 equal expected actual
 
-            testCase "Auto.fromString returns an Error for Class" <| fun _ ->
-                let json = """{ }"""
-
-                let actual = Decode.Auto.fromString<BaseClass>(json, isCamelCase=true)
-                #if FABLE_COMPILER
-                let expected =
-                    Error (
-                        """
-Error at: `$`
-I run into a `fail` decoder: Class types cannot be automatically deserialized: Tests.Decode.BaseClass
-                        """.Trim())
-                #else
-                let expected =
-                    Error (
-                        """
-Error at: `$`
-I run into a `fail` decoder: Class types cannot be automatically deserialized: Tests.Decode+BaseClass
-                        """.Trim())
-                #endif
-
-                equal expected actual
+            testCase "Auto.generateDecoder throws for Class" <| fun _ ->
+                let expected = "Cannot generate auto decoder for Tests.Decode.BaseClass. Please pass an extra decoder."
+                let errorMsg =
+                    try
+                        let decoder = Decode.Auto.generateDecoder<BaseClass>(isCamelCase=true)
+                        ""
+                    with ex ->
+                        ex.Message
+                errorMsg.Replace("+", ".") |> equal expected
 
             testCase "Auto.fromString works for records missing an optional field" <| fun _ ->
                 let json = """{ "must": "must value"}"""
@@ -2214,6 +2192,30 @@ I run into a `fail` decoder: Class types cannot be automatically deserialized: T
                     Ok ({ Maybe = None
                           Must = "must value" } : TestMaybeRecord)
                 equal expected actual
+
+            testCase "Auto.fromString works with maps encoded as objects" <| fun _ ->
+                let expected = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
+                let json = """{"ah":{"a":-1.5,"b":0},"oh":{"a":2,"b":2}}"""
+                let actual = Decode.Auto.fromString json
+                equal (Ok expected) actual
+
+            testCase "Auto.fromString works with maps encoded as arrays" <| fun _ ->
+                let expected = Map [({ a = 2.; b = 2. }, "oh"); ({ a = -1.5; b = 0. }, "ah")]
+                let json = """[[{"a":-1.5,"b":0},"ah"],[{"a":2,"b":2},"oh"]]"""
+                let actual = Decode.Auto.fromString json
+                equal (Ok expected) actual
+
+            testCase "Decoder.Auto.toString works with bigint extra" <| fun _ ->
+                let extra = Extra.empty |> Extra.withBigInt
+                let expected = { bigintField = 9999999999999999999999I }
+                let actual = Decode.Auto.fromString("""{"bigintField":"9999999999999999999999"}""", extra=extra)
+                equal (Ok expected) actual
+
+            testCase "Decoder.Auto.toString works with custom extra" <| fun _ ->
+                let extra = Extra.empty |> Extra.withCustom ChildType.Encode ChildType.Decoder
+                let expected = { ParentField = { ChildField = "bumbabon" } }
+                let actual = Decode.Auto.fromString("""{"ParentField":"bumbabon"}""", extra=extra)
+                equal (Ok expected) actual
 
             testCase "Auto.fromString works with records with private constructors" <| fun _ ->
                 let json = """{ "foo1": 5, "foo2": 7.8 }"""
@@ -2224,5 +2226,16 @@ I run into a `fail` decoder: Class types cannot be automatically deserialized: T
                 let json = """[ "Baz", ["Bar", "foo"]]"""
                 Decode.Auto.fromString<UnionWithPrivateConstructor list>(json, isCamelCase=true)
                 |> equal (Ok [Baz; Bar "foo"])
+
+            testCase "Auto.generateDecoderCached works" <| fun _ ->
+                let expected = Ok { Id = 0; Name = "maxime"; Email = "mail@domain.com"; Followers = 0 }
+                let json = """{ "id" : 0, "name": "maxime", "email": "mail@domain.com", "followers": 0 }"""
+                let decoder1 = Decode.Auto.generateDecoderCached<User>(isCamelCase=true)
+                let decoder2 = Decode.Auto.generateDecoderCached<User>(isCamelCase=true)
+                let actual1 = Decode.fromString decoder1 json
+                let actual2 = Decode.fromString decoder2 json
+                equal expected actual1
+                equal expected actual2
+                equal actual1 actual2
         ]
     ]

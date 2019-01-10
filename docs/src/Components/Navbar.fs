@@ -4,7 +4,8 @@ module Components.Navbar
     open Fable.Helpers.React
     open Fable.Helpers.React.Props
     open Fulma
-    open Fulma.FontAwesome
+    open Fable.FontAwesome
+    open Fable.FontAwesome.Free
 
     let private shadow =
         div [ ClassName "bd-special-shadow"
@@ -24,14 +25,16 @@ module Components.Navbar
 
         [ Navbar.Item.a [ props "Github" "https://github.com/MangelMaxime/Thoth"
                           Navbar.Item.CustomClass visibility ]
-            [ Icon.faIcon [ ]
-                [ Fa.icon Fa.I.Github
-                  Fa.faLg ] ]
+            [ Icon.icon [ ]
+                [ Fa.i [ Fa.Brand.Github
+                         Fa.Size Fa.FaLarge ]
+                    [ ] ] ]
           Navbar.Item.a [ props "Twitter" "https://twitter.com/MangelMaxime"
                           Navbar.Item.CustomClass ("twitter " + visibility) ]
-            [ Icon.faIcon [ ]
-                [ Fa.icon Fa.I.Twitter
-                  Fa.faLg ] ]
+            [ Icon.icon [ ]
+                [ Fa.i [ Fa.Brand.Twitter
+                         Fa.Size Fa.FaLarge ]
+                    [ ] ] ]
         ] |> ofList
 
     let tweetUrl = "https://twitter.com/intent/tweet?via=MangelMaxime&text=Thoth%20is%20a%20set%20of%20several%20libraries%20for%20working%20with%20@FableCompiler%20applications"
@@ -43,18 +46,20 @@ module Components.Navbar
                     [ Button.a [ Button.CustomClass "twitter"
                                  Button.Props [ Href tweetUrl
                                                 Target "_blank" ] ]
-                        [ Icon.faIcon [ ]
-                            [ Fa.icon Fa.I.Twitter
-                              Fa.faLg ]
+                        [ Icon.icon [ ]
+                            [ Fa.i [ Fa.Brand.Twitter
+                                     Fa.Size Fa.FaLarge ]
+                                [ ] ]
                           span [ ] [ str "Tweet" ]
                         ]
                     ]
                   Control.p [ ]
                     [ Button.a [ Button.CustomClass "github"
                                  Button.Props [ Href "https://github.com/MangelMaxime/Thoth" ] ]
-                        [ Icon.faIcon [ ]
-                            [ Fa.icon Fa.I.Github
-                              Fa.faLg ]
+                        [ Icon.icon [ ]
+                            [ Fa.i [ Fa.Brand.Github
+                                     Fa.Size Fa.FaLarge ]
+                                [ ] ]
                           span [ ] [ str "Github" ]
                         ]
                     ]
@@ -68,33 +73,16 @@ module Components.Navbar
 
     let private navbarJson pageUrl =
         Navbar.Dropdown.div [ ]
-            [ Navbar.Item.div [ ]
-                [ strong [ ]
-                    [ str "Version 2" ] ]
-              Navbar.divider [ ] [ ]
-              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v2.Decode)
-                              Navbar.Item.Props [ Href Route.Json.v2.Decode ] ]
-                [ str "Decode" ]
-              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v2.Encode )
-                              Navbar.Item.Props [ Href Route.Json.v2.Encode ] ]
-                [ str "Encode" ]
-              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v2.Net )
-                              Navbar.Item.Props [ Href Route.Json.v2.Net ] ]
-                [ str ".Net & NetCore" ]
-              Navbar.divider [ ] [ ]
-              Navbar.Item.div [ ]
-                [ strong [ ]
-                    [ str "Version 1" ] ]
-              Navbar.divider [ ] [ ]
-              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v1.Decode)
-                              Navbar.Item.Props [ Href Route.Json.v1.Decode ] ]
-                [ str "Decode" ]
-              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v1.Encode )
-                              Navbar.Item.Props [ Href Route.Json.v1.Encode ] ]
-                [ str "Encode" ]
-              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v1.Net )
-                              Navbar.Item.Props [ Href Route.Json.v1.Net ] ]
-                [ str ".Net & NetCore" ] ]
+            [ Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v1)
+                              Navbar.Item.Props [ Href Route.Json.v1 ] ]
+                [ div [ ]
+                    [ str "Version 1 - Obsolete" ] ]
+              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v2)
+                              Navbar.Item.Props [ Href Route.Json.v2 ] ]
+                [ str "Version 2 - Stable " ]
+              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v3)
+                              Navbar.Item.Props [ Href Route.Json.v3 ] ]
+                [ str "Version 3 - Beta" ] ]
 
     let private navbarElmish pageUrl =
         Navbar.Dropdown.div [ ]

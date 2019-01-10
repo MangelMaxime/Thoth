@@ -7,6 +7,7 @@ open Thoth.Json.Net
 #endif
 open Util.Testing
 open System
+open Tests.Decode
 
 type User =
     { Id : int
@@ -26,6 +27,9 @@ type SmallRecord =
         Encode.object [
             "fieldA", Encode.string x.fieldA
         ]
+
+type RecordWithPrivateConstructor = private { Foo1: int; Foo2: float }
+type UnionWithPrivateConstructor = private Bar of string | Baz
 
 let tests : Test =
     testList "Thoth.Json.Encode" [
@@ -145,7 +149,7 @@ let tests : Test =
                 equal expected actual
 
             testCase "a decimal works" <| fun _ ->
-                let expected = "0.7833"
+                let expected = "\"0.7833\""
                 let actual =
                     0.7833M
                     |> Encode.decimal
@@ -353,6 +357,79 @@ let tests : Test =
                 let actual = Encode.Auto.toString(0, value, true)
                 equal expected actual
 
+            testCase "Encode.Auto.generateEncoder works" <| fun _ ->
+                let value =
+                    { a = 5
+                      b = "bar"
+                      c = [false, 3; true, 5; false, 10]
+                      d = [|Some(Foo 14); None|]
+                      e = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
+                      f = DateTime(2018, 11, 28, 11, 10, 29, DateTimeKind.Utc)
+                      g = set [{ a = 2.; b = 2. }; { a = -1.5; b = 0. }]
+                    }
+                let encoder = Encode.Auto.generateEncoder<Record9>()
+                let actual = encoder value |> Encode.toString 0
+                let expected = """{"a":5,"b":"bar","c":[[false,3],[true,5],[false,10]],"d":[["Foo",14],null],"e":{"ah":{"a":-1.5,"b":0},"oh":{"a":2,"b":2}},"f":"2018-11-28T11:10:29Z","g":[{"a":-1.5,"b":0},{"a":2,"b":2}]}"""
+                // Don't fail because of non-meaningful decimal digits ("2" vs "2.0")
+                let actual = System.Text.RegularExpressions.Regex.Replace(actual, @"\.0+(?!\d)", "")
+                equal expected actual
+
+            testCase "Encode.Auto.generateEncoderCached works" <| fun _ ->
+                let value =
+                    { a = 5
+                      b = "bar"
+                      c = [false, 3; true, 5; false, 10]
+                      d = [|Some(Foo 14); None|]
+                      e = Map [("oh", { a = 2.; b = 2. }); ("ah", { a = -1.5; b = 0. })]
+                      f = DateTime(2018, 11, 28, 11, 10, 29, DateTimeKind.Utc)
+                      g = set [{ a = 2.; b = 2. }; { a = -1.5; b = 0. }]
+                    }
+                let encoder1 = Encode.Auto.generateEncoderCached<Record9>()
+                let encoder2 = Encode.Auto.generateEncoderCached<Record9>()
+                let actual1 = encoder1 value |> Encode.toString 0
+                let actual2 = encoder2 value |> Encode.toString 0
+                let expected = """{"a":5,"b":"bar","c":[[false,3],[true,5],[false,10]],"d":[["Foo",14],null],"e":{"ah":{"a":-1.5,"b":0},"oh":{"a":2,"b":2}},"f":"2018-11-28T11:10:29Z","g":[{"a":-1.5,"b":0},{"a":2,"b":2}]}"""
+                // Don't fail because of non-meaningful decimal digits ("2" vs "2.0")
+                let actual1 = System.Text.RegularExpressions.Regex.Replace(actual1, @"\.0+(?!\d)", "")
+                let actual2 = System.Text.RegularExpressions.Regex.Replace(actual2, @"\.0+(?!\d)", "")
+                equal expected actual1
+                equal expected actual2
+                equal actual1 actual2
+
+            testCase "Encode.Auto.toString works with bigint extra" <| fun _ ->
+                let extra =
+                    Extra.empty
+                    |> Extra.withBigInt
+                let expected = """{"bigintField":"9999999999999999999999"}"""
+                let value = { bigintField = 9999999999999999999999I }
+                let actual = Encode.Auto.toString(0, value, extra=extra)
+                equal expected actual
+
+            testCase "Encode.Auto.toString works with custom extra" <| fun _ ->
+                let extra =
+                    Extra.empty
+                    |> Extra.withCustom ChildType.Encode ChildType.Decoder
+                let expected = """{"ParentField":"bumbabon"}"""
+                let value = { ParentField = { ChildField = "bumbabon" } }
+                let actual = Encode.Auto.toString(0, value, extra=extra)
+                equal expected actual
+
+            testCase "Encode.Auto.toString serializes maps with Guid keys as JSON objects" <| fun _ ->
+                let m = Map [Guid.NewGuid(), 1; Guid.NewGuid(), 2]
+                let json = Encode.Auto.toString(0, m)
+                json.[0] = '{' |> equal true
+
+            testCase "Encode.Auto.toString works with records with private constructors" <| fun _ ->
+                let expected = """{"foo1":5,"foo2":7.8}"""
+                let x = { Foo1 = 5; Foo2 = 7.8 }: RecordWithPrivateConstructor
+                Encode.Auto.toString(0, x, isCamelCase=true)
+                |> equal expected
+
+            testCase "Encode.Auto.toString works with unions with private constructors" <| fun _ ->
+                let expected = """["Baz",["Bar","foo"]]"""
+                let x = [Baz; Bar "foo"]
+                Encode.Auto.toString(0, x, isCamelCase=true)
+                |> equal expected
         ]
 
     ]

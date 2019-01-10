@@ -15,9 +15,8 @@ module Renderer.Page
           Href : string }
 
     type TOC_Item =
-        { Parent : TitleInfo
-          Children : TitleInfo list }
-
+        | Header of TitleInfo
+        | Category of TitleInfo * TitleInfo list
 
     type PageConfig =
         { PageUrl : string
@@ -46,58 +45,78 @@ Powered by [Fulma](https://mangelmaxime.github.io/Fulma/), [Fable static-web-gen
         let normal = resolve "${entryDir}/templates/template.hbs"
         let withTOC = resolve "${entryDir}/templates/template_with_toc.hbs"
 
+    let unescape (s : string) =
+        s
+            .Replace("&lt;", "<")
+            .Replace("&gt;", ">")
+            .Replace("&quot;", "\"")
+            .Replace("&apos;", "'")
+            .Replace("&amp;", "&")
+
     let tableOfContent (pageBody : string) =
         let titles =
             Regex.Matches(pageBody, "<h([\d])><a href=\"(.*)\" a.*>.*<\/a>(.*)<\/h([\d])>", RegexOptions.IgnoreCase)
             |> Seq.cast<Fable.Import.JS.RegExpExecArray>
             |> Seq.filter (fun item ->
                 let level = int item.[1]
-                level = 2 || level = 3
+                level <= 3
             )
             |> Seq.map (fun item ->
                 { Level = int item.[1]
-                  Text = item.[3]
+                  Text = unescape item.[3]
                   Href = item.[2] }
             )
             |> Seq.toList
 
-        let rec apply (titles : TitleInfo list) (items : TOC_Item list) =
-            match titles with
-            | head::tail ->
+        let rec apply (headings : TitleInfo list) (items : TOC_Item list) =
+            match headings with
+            | head::tail when head.Level = 1 ->
+                apply tail (items @ [ Header head ])
+
+            | head::tail when head.Level = 2 ->
                 let subItems =
                     tail
-                    |> List.takeWhile (fun title ->
-                        title.Level = 3
+                    |> List.takeWhile (fun heading ->
+                        heading.Level = 3
                     )
 
-                let mainItem =
-                    { Parent = head
-                      Children = subItems }
+                apply tail.[subItems.Length..] (items @ [ Category (head, subItems) ])
 
-                apply (tail.[subItems.Length..]) (items @ [ mainItem ])
+            | head::tail ->
+                printfn "When extracting the TOC, I wasn't able to handle:\n%A\n If you think this is an error, please report an issue" head
+                apply tail items
+
             | [ ] -> items
 
         let tocItems = apply titles []
 
         tocItems
         |> List.map (fun item ->
-            let subItems =
-                if item.Children.Length = 0 then
-                    unbox null
-                else
-                    item.Children
-                    |> List.map (fun child ->
-                        li [ ]
-                            [ a [ Href child.Href ]
-                                [ str child.Text ] ]
-                    )
-                    |> ul [ Class "toc-sub-headings" ]
+            match item with
+            | Header info ->
+                div [ Class "toc-label" ]
+                    [ a [ Href info.Href ]
+                        [ str info.Text ] ]
 
-            ul [ Class "toc-headings" ]
-                [ li [ ]
-                    [ a [ Href item.Parent.Href ]
-                        [ str item.Parent.Text ]
-                      subItems ] ]
+            | Category (title, children) ->
+
+                let subItems =
+                    if children.Length = 0 then
+                        unbox null
+                    else
+                        children
+                        |> List.map (fun child ->
+                            li [ ]
+                                [ a [ Href child.Href ]
+                                    [ str child.Text ] ]
+                        )
+                        |> ul [ Class "toc-sub-headings" ]
+
+                ul [ Class "toc-headings" ]
+                    [ li [ ]
+                        [ a [ Href title.Href ]
+                            [ str title.Text ]
+                          subItems ] ]
         )
         |> nav [ Class "toc" ]
         |> parseReactStatic
