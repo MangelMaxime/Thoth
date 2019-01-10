@@ -1,0 +1,235 @@
+<!doctype html>
+<html class="has-navbar-fixed-top">
+
+<head>
+    <title>Thoth</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /> <link rel="stylesheet" type="text/css" href="https://mangelmaxime.github.io/Thoth/main.css"/>
+</head>
+
+<body>
+    <nav class="navbar is-fixed-top is-thoth-primary"><div class="bd-special-shadow" style="opacity:1;transform:scaleY(1)"></div><div class="container"><div class="navbar-brand"><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/index.html"><p class="title is-4">Thoth</p></a><a class="navbar-item is-hidden-desktop" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class=" fab fa-github fa-lg"></i></span></a><a class="navbar-item twitter is-hidden-desktop" href="https://twitter.com/MangelMaxime"><span class="icon"><i class=" fab fa-twitter fa-lg"></i></span></a><div class="navbar-burger"><span></span><span></span><span></span></div></div><div class="navbar-menu" id="navMenu"><div class="navbar-item is-hoverable has-dropdown"><div class="navbar-link">Json</div><div class="navbar-dropdown"><a class="navbar-item is-active" href="https://mangelmaxime.github.io/Thoth/json/v1.html"><div>Version 1 - Obsolete</div></a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v2.html">Version 2 - Stable </a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/json/v3.html">Version 3 - Beta</a></div></div><div class="navbar-item is-hoverable has-dropdown"><div class="navbar-link">Elmish</div><div class="navbar-dropdown"><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/elmish/debouncer.html">Debouncer</a><div class="navbar-divider"></div><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/elmish/FormBuilder.html">FormBuilder</a><div class="navbar-divider"></div><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/elmish/toast_docs.html">Toast - Docs</a><a class="navbar-item" href="https://mangelmaxime.github.io/Thoth/elmish/toast_demo.html">Toast - Demo</a></div></div></div><div class="navbar-end"><a class="navbar-item is-hidden-mobile" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class=" fab fa-github fa-lg"></i></span></a><a class="navbar-item twitter is-hidden-mobile" href="https://twitter.com/MangelMaxime"><span class="icon"><i class=" fab fa-twitter fa-lg"></i></span></a><div class="navbar-item"><div class="field is-grouped"><p class="control"><a class="button twitter" href="https://twitter.com/intent/tweet?via=MangelMaxime&amp;text=Thoth%20is%20a%20set%20of%20several%20libraries%20for%20working%20with%20@FableCompiler%20applications" target="_blank"><span class="icon"><i class=" fab fa-twitter fa-lg"></i></span><span>Tweet</span></a></p><p class="control"><a class="button github" href="https://github.com/MangelMaxime/Thoth"><span class="icon"><i class=" fab fa-github fa-lg"></i></span><span>Github</span></a></p></div></div></div></div></nav>
+    <div class="container">
+        <section class="section">
+            <div class="columns">
+                <div class="column is-9-desktop is-12-mobile">
+                    <div class="content" style="margin: 1rem 0 0">
+                        <article class="message is-warning">
+  <div class="message-body">
+<p>Your are looking at <strong>version 1</strong> of Thoth.Json and Thoth.Json.Net.</p>
+<p>Please consider upgrading your project to a newest version.</p>
+  </div>
+</article>
+<h1><a href="#decoder" aria-hidden="true" style="visibility:hidden"><span class="anchor" id="decoder"></span></a> Decoder</h1>
+<p>Turn JSON values into F# values.</p>
+<p>By using a Decoder instead of Fable <code>ofJson</code> function, you will be guaranteed that the JSON structure is correct.
+This is especially useful if you use Fable without sharing your domain with the server.</p>
+<p><em>This module is inspired by <a href="http://package.elm-lang.org/packages/elm-lang/core/latest/Json-Decode">Json.Decode from Elm</a>
+and <a href="http://package.elm-lang.org/packages/NoRedInk/elm-decode-pipeline/latest">elm-decode-pipeline</a>.</em></p>
+<p>As so, to complete this documentation, you can also take a look at the <a href="https://guide.elm-lang.org/interop/json.html">Elm documentation</a>.</p>
+<h2><a href="#what-is-a-decoder" aria-hidden="true" style="visibility:visible"><span class="anchor" id="what-is-a-decoder"></span>#</a> What is a Decoder ?</h2>
+<p>Here is the signature of a <code>Decoder</code>:</p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">type</span><span> </span><span style="color: #C18401">Decoder</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">&#039;T</span><span style="color: #A626A4">&gt;</span><span> </span><span style="color: #A626A4">=</span><span> obj </span><span style="color: #A626A4">-&gt;</span><span> Result</span><span style="color: #A626A4">&lt;</span><span>&#039;T</span><span style="color: #A626A4">,</span><span> DecoderError</span><span style="color: #A626A4">&gt;</span></code></pre>
+<p>This is taking an &quot;untyped&quot; value and checking if it has the expected structure. If the structure is correct,
+then you get an <code>Ok</code> result, otherwise an <code>Error</code> explaining why the decoder failed.</p>
+<h2><a href="#primitives-decoders" aria-hidden="true" style="visibility:visible"><span class="anchor" id="primitives-decoders"></span>#</a> Primitives decoders</h2>
+<ul>
+<li><code>string : Decoder&lt;String&gt;</code></li>
+<li><code>int : Decoder&lt;Int&gt;</code></li>
+<li><code>float : Decoder&lt;Float&gt;</code></li>
+<li><code>bool : Decoder&lt;Bool&gt;</code></li>
+</ul>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">open</span><span> </span><span style="color: #4078F2">Thoth.Json.Decode</span>
+
+<span style="color: #A626A4">&gt;</span><span> decodeString string </span><span style="color: #50A14F">&quot;\&quot;maxime\&quot;&quot;</span>
+<span style="color: #A626A4">val</span><span> </span><span style="color: #E45649">it</span><span style="color: #383A42"> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Result</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">string</span><span style="color: #A626A4">,</span><span> </span><span style="color: #C18401">string</span><span style="color: #A626A4">&gt;</span><span style="color: #383A42"> </span><span style="color: #A626A4">=</span><span style="color: #383A42"> Ok </span><span>&quot;</span><span style="color: #383A42">maxime</span><span>&quot;</span>
+
+<span style="color: #A626A4">&gt;</span><span> decodeString int </span><span style="color: #50A14F">&quot;25&quot;</span>
+<span style="color: #A626A4">val</span><span> </span><span style="color: #E45649">it</span><span style="color: #383A42"> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Result</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">int</span><span style="color: #A626A4">,</span><span> </span><span style="color: #C18401">string</span><span style="color: #A626A4">&gt;</span><span style="color: #383A42"> </span><span style="color: #A626A4">=</span><span style="color: #383A42"> Ok 25</span>
+
+<span style="color: #A626A4">&gt;</span><span> decodeString bool </span><span style="color: #50A14F">&quot;true&quot;</span>
+<span style="color: #A626A4">val</span><span> </span><span style="color: #E45649">it</span><span style="color: #383A42"> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Result</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">bool</span><span style="color: #A626A4">,</span><span> </span><span style="color: #C18401">string</span><span style="color: #A626A4">&gt;</span><span style="color: #383A42"> </span><span style="color: #A626A4">=</span><span style="color: #383A42"> Ok true</span>
+
+<span style="color: #A626A4">&gt;</span><span> decodeString float </span><span style="color: #50A14F">&quot;true&quot;</span>
+<span style="color: #A626A4">val</span><span> </span><span style="color: #E45649">it</span><span style="color: #383A42"> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Result</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">float</span><span style="color: #A626A4">,</span><span> </span><span style="color: #C18401">string</span><span style="color: #A626A4">&gt;</span><span style="color: #383A42"> </span><span style="color: #A626A4">=</span><span style="color: #383A42"> Err </span><span>&quot;</span><span style="color: #383A42">Expecting a float but instead got</span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">true</span><span>&quot;</span></code></pre>
+<p>With these primitives decoders we can handle the basic JSON values.</p>
+<h2><a href="#collections" aria-hidden="true" style="visibility:visible"><span class="anchor" id="collections"></span>#</a> Collections</h2>
+<p>There are special decoders for the following collections.</p>
+<ul>
+<li><code>list : Decoder&lt;'value&gt; -&gt; Decoder&lt;'value list&gt;</code></li>
+<li><code>array : Decoder&lt;'value&gt; -&gt; Decoder&lt;'value array&gt;</code></li>
+</ul>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">open</span><span> </span><span style="color: #4078F2">Thoth.Json.Decode</span>
+
+<span style="color: #A626A4">&gt;</span><span> decodeString </span><span style="color: #A626A4">(</span><span>array int</span><span style="color: #A626A4">)</span><span> </span><span style="color: #50A14F">&quot;[1, 2, 3]&quot;</span>
+<span style="color: #A626A4">val</span><span> </span><span style="color: #E45649">it</span><span style="color: #383A42"> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Result</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">int</span><span> </span><span style="color: #A626A4">[],</span><span> </span><span style="color: #C18401">string</span><span style="color: #A626A4">&gt;</span><span style="color: #383A42"> </span><span style="color: #A626A4">=</span><span style="color: #383A42">  Ok </span><span style="color: #A626A4">[|</span><span style="color: #383A42">1</span><span style="color: #A626A4">,</span><span style="color: #383A42"> 2</span><span style="color: #A626A4">,</span><span style="color: #383A42"> 3</span><span style="color: #A626A4">|]</span>
+
+<span style="color: #A626A4">&gt;</span><span> decodeString </span><span style="color: #A626A4">(</span><span>list string</span><span style="color: #A626A4">)</span><span> </span><span style="color: #50A14F">&quot;&quot;&quot;[&quot;Maxime&quot;, &quot;Alfonso&quot;, &quot;Vesper&quot;]&quot;&quot;&quot;</span>
+<span style="color: #A626A4">val</span><span> </span><span style="color: #E45649">it</span><span style="color: #383A42"> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Result</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">string</span><span> </span><span style="color: #C18401">list</span><span style="color: #A626A4">,</span><span> </span><span style="color: #C18401">string</span><span style="color: #A626A4">&gt;</span><span style="color: #383A42"> </span><span style="color: #A626A4">=</span><span style="color: #383A42"> Ok </span><span style="color: #A626A4">[</span><span>&quot;</span><span style="color: #383A42">Maxime</span><span>&quot;</span><span style="color: #A626A4">,</span><span style="color: #383A42"> </span><span>&quot;</span><span style="color: #383A42">Alfonso</span><span>&quot;</span><span style="color: #A626A4">,</span><span style="color: #383A42"> </span><span>&quot;</span><span style="color: #383A42">Vesper</span><span>&quot;</span><span style="color: #A626A4">]</span></code></pre>
+<h2><a href="#decoding-objects" aria-hidden="true" style="visibility:visible"><span class="anchor" id="decoding-objects"></span>#</a> Decoding Objects</h2>
+<p>In order to decode objects, you can use:</p>
+<ul>
+<li><code>field : string -&gt; Decoder&lt;'value&gt; -&gt; Decoder&lt;'value&gt;</code>
+<ul>
+<li>Decode a JSON object, requiring a particular field.</li>
+</ul>
+</li>
+<li><code>at : string list -&gt; Decoder&lt;'value&gt; -&gt; Decoder&lt;'value&gt;</code>
+<ul>
+<li>Decode a JSON object, requiring certain path.</li>
+</ul>
+</li>
+</ul>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">open</span><span> </span><span style="color: #4078F2">Thoth.Json.Decode</span>
+
+<span style="color: #A626A4">&gt;</span><span> decodeString </span><span style="color: #A626A4">(</span><span>field </span><span style="color: #50A14F">&quot;x&quot;</span><span> int</span><span style="color: #A626A4">)</span><span> </span><span style="color: #50A14F">&quot;&quot;&quot;{&quot;x&quot;: 10, &quot;y&quot;: 21}&quot;&quot;&quot;</span>
+<span style="color: #A626A4">val</span><span> </span><span style="color: #E45649">it</span><span style="color: #383A42"> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Result</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">int</span><span style="color: #A626A4">,</span><span> </span><span style="color: #C18401">string</span><span style="color: #A626A4">&gt;</span><span style="color: #383A42"> </span><span style="color: #A626A4">=</span><span style="color: #383A42"> Ok 10</span>
+
+<span style="color: #A626A4">&gt;</span><span> decodeString </span><span style="color: #A626A4">(</span><span>field </span><span style="color: #50A14F">&quot;y&quot;</span><span> int</span><span style="color: #A626A4">)</span><span> </span><span style="color: #50A14F">&quot;&quot;&quot;{&quot;x&quot;: 10, &quot;y&quot;: 21}&quot;&quot;&quot;</span>
+<span style="color: #A626A4">val</span><span> </span><span style="color: #E45649">it</span><span style="color: #383A42"> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Result</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">int</span><span style="color: #A626A4">,</span><span> </span><span style="color: #C18401">string</span><span style="color: #A626A4">&gt;</span><span style="color: #383A42"> </span><span style="color: #A626A4">=</span><span style="color: #383A42"> Ok 21</span></code></pre>
+<p><strong>Important:</strong></p>
+<p>These two decoders only take into account the field or path. The object can have other fields/paths with other content.</p>
+<h3><a href="#map-functions" aria-hidden="true" style="visibility:visible"><span class="anchor" id="map-functions"></span>#</a> Map functions</h3>
+<p>To get data from several fields and convert them into a record you will need to use the <code>map</code> functions
+like <code>map2</code>, <code>map3</code>, ..., <code>map8</code>.</p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">open</span><span> </span><span style="color: #4078F2">Thoth.Json.Decode</span>
+
+<span style="color: #A626A4">type</span><span> </span><span style="color: #C18401">Point</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">{</span><span> X </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">int</span>
+<span>      Y </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">int </span><span style="color: #A626A4">}</span>
+
+<span>    </span><span style="color: #A626A4">static member</span><span> </span><span style="color: #E45649">Decoder</span><span style="color: #383A42"> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Decoder</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">Point</span><span style="color: #A626A4">&gt;</span><span> </span><span style="color: #A626A4">=</span>
+<span>        map2 </span><span style="color: #A626A4">(fun</span><span style="color: #383A42"> x y </span><span style="color: #A626A4">-&gt;</span>
+<span>                </span><span style="color: #A626A4">{</span><span> X </span><span style="color: #A626A4">=</span><span> x</span>
+<span>                  Y </span><span style="color: #A626A4">=</span><span> y </span><span style="color: #A626A4">}</span><span> </span><span style="color: #A626A4">:</span><span> Point</span><span style="color: #A626A4">)</span>
+<span>             </span><span style="color: #A626A4">(</span><span>field </span><span style="color: #50A14F">&quot;x&quot;</span><span> int</span><span style="color: #A626A4">)</span>
+<span>             </span><span style="color: #A626A4">(</span><span>field </span><span style="color: #50A14F">&quot;y&quot;</span><span> int</span><span style="color: #A626A4">)</span>
+
+<span style="color: #A626A4">&gt;</span><span> decodeString Point.Decoder </span><span style="color: #50A14F">&quot;&quot;&quot;{&quot;x&quot;: 10, &quot;y&quot;: 21}&quot;&quot;&quot;</span>
+<span style="color: #A626A4">val</span><span> </span><span style="color: #E45649">it</span><span style="color: #383A42"> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Result</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">Point</span><span style="color: #A626A4">,</span><span> </span><span style="color: #C18401">string</span><span style="color: #A626A4">&gt;</span><span style="color: #383A42"> </span><span style="color: #A626A4">=</span><span style="color: #383A42"> Ok </span><span style="color: #A626A4">{</span><span> X </span><span style="color: #A626A4">=</span><span style="color: #383A42"> 10</span><span style="color: #A626A4">;</span><span> Y </span><span style="color: #A626A4">=</span><span style="color: #383A42"> 21 </span><span style="color: #A626A4">}</span></code></pre>
+<h3><a href="#pipeline-decode-style" aria-hidden="true" style="visibility:visible"><span class="anchor" id="pipeline-decode-style"></span>#</a> Pipeline decode style</h3>
+<p>When working with a larger object or if you prefer to use the <code>(|&gt;)</code> operator, you can use the pipeline helpers.</p>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">open</span><span> </span><span style="color: #4078F2">Thoth.Json.Decode</span>
+
+<span style="color: #A626A4">type</span><span> </span><span style="color: #C18401">Point</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">{</span><span> X </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">int</span>
+<span>      Y </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">int </span><span style="color: #A626A4">}</span>
+
+<span>    </span><span style="color: #A626A4">static member</span><span> </span><span style="color: #E45649">Decoder</span><span> </span><span style="color: #A626A4">=</span>
+<span>        decode</span>
+<span>            </span><span style="color: #A626A4">(fun</span><span style="color: #383A42"> x y </span><span style="color: #A626A4">-&gt;</span>
+<span>                </span><span style="color: #A626A4">{</span><span> X </span><span style="color: #A626A4">=</span><span> x</span>
+<span>                  Y </span><span style="color: #A626A4">=</span><span> y </span><span style="color: #A626A4">}</span><span> </span><span style="color: #A626A4">:</span><span> Point</span><span style="color: #A626A4">)</span>
+<span>            </span><span style="color: #A626A4">|&gt;</span><span> required </span><span style="color: #50A14F">&quot;x&quot;</span><span> int</span>
+<span>            </span><span style="color: #A626A4">|&gt;</span><span> required </span><span style="color: #50A14F">&quot;y&quot;</span><span> int</span>
+
+<span style="color: #A626A4">&gt;</span><span> decodeString Point.Decoder </span><span style="color: #50A14F">&quot;&quot;&quot;{&quot;x&quot;: 10, &quot;y&quot;: 21}&quot;&quot;&quot;</span>
+<span style="color: #A626A4">val</span><span> </span><span style="color: #E45649">it</span><span style="color: #383A42"> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Result</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">Point</span><span style="color: #A626A4">,</span><span> </span><span style="color: #C18401">string</span><span style="color: #A626A4">&gt;</span><span style="color: #383A42"> </span><span style="color: #A626A4">=</span><span style="color: #383A42"> Ok </span><span style="color: #A626A4">{</span><span> X </span><span style="color: #A626A4">=</span><span style="color: #383A42"> 10</span><span style="color: #A626A4">;</span><span> Y </span><span style="color: #A626A4">=</span><span style="color: #383A42"> 21 </span><span style="color: #A626A4">}</span></code></pre>
+<h1><a href="#encoder" aria-hidden="true" style="visibility:hidden"><span class="anchor" id="encoder"></span></a> Encoder</h1>
+<p>Module for turning F# values into JSON values.</p>
+<p><em>This module is inspired by <a href="http://package.elm-lang.org/packages/elm-lang/core/latest/Json-Encode">Json.Encode from Elm</a>.</em></p>
+<h2><a href="#how-to-use-it" aria-hidden="true" style="visibility:visible"><span class="anchor" id="how-to-use-it"></span>#</a> How to use it ?</h2>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span>    </span><span style="color: #A626A4">open</span><span> </span><span style="color: #4078F2">Thoth.Json.Encode</span>
+
+<span>    </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">person</span><span> </span><span style="color: #A626A4">=</span>
+<span>        object</span>
+<span>            </span><span style="color: #A626A4">[</span><span> </span><span style="color: #50A14F">&quot;firstname&quot;</span><span style="color: #A626A4">,</span><span> string </span><span style="color: #50A14F">&quot;maxime&quot;</span>
+<span>              </span><span style="color: #50A14F">&quot;surname&quot;</span><span style="color: #A626A4">,</span><span> string </span><span style="color: #50A14F">&quot;mangel&quot;</span>
+<span>              </span><span style="color: #50A14F">&quot;age&quot;</span><span style="color: #A626A4">,</span><span> int </span><span style="color: #986801">25</span>
+<span>              </span><span style="color: #50A14F">&quot;address&quot;</span><span style="color: #A626A4">,</span><span> object</span>
+<span>                            </span><span style="color: #A626A4">[</span><span> </span><span style="color: #50A14F">&quot;street&quot;</span><span style="color: #A626A4">,</span><span> string </span><span style="color: #50A14F">&quot;main street&quot;</span>
+<span>                              </span><span style="color: #50A14F">&quot;city&quot;</span><span style="color: #A626A4">,</span><span> string </span><span style="color: #50A14F">&quot;Bordeaux&quot;</span><span> </span><span style="color: #A626A4">]</span>
+<span>            </span><span style="color: #A626A4">]</span>
+
+<span>    </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">compact</span><span> </span><span style="color: #A626A4">=</span><span> encode </span><span style="color: #986801">0</span><span> person</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">// {&quot;firstname&quot;:&quot;maxime&quot;,&quot;surname&quot;:&quot;mangel&quot;,&quot;age&quot;:25,&quot;address&quot;:{&quot;street&quot;:&quot;main street&quot;,&quot;city&quot;:&quot;Bordeaux&quot;}}</span>
+
+<span>    </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">readable</span><span> </span><span style="color: #A626A4">=</span><span> encode </span><span style="color: #986801">4</span><span> person</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">// {</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">//     &quot;firstname&quot;: &quot;maxime&quot;,</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">//     &quot;surname&quot;: &quot;mangel&quot;,</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">//     &quot;age&quot;: 25,</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">//     &quot;address&quot;: {</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">//         &quot;street&quot;: &quot;main street&quot;,</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">//         &quot;city&quot;: &quot;Bordeaux&quot;</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">//     }</span>
+<span>    </span><span style="color: #A0A1A7;font-style: italic">// }</span></code></pre>
+<h1><a href="#net-netcore-support" aria-hidden="true" style="visibility:hidden"><span class="anchor" id="net-netcore-support"></span></a> .Net &amp; NetCore support</h1>
+<p>You can share your decoders and encoders <strong>between your client and server</strong>.</p>
+<p>In order to use Thoth.Json API on .Net or NetCore you need to use the <code>Thoth.Json.Net</code> package.</p>
+<h2><a href="#code-sample" aria-hidden="true" style="visibility:visible"><span class="anchor" id="code-sample"></span>#</a> Code sample</h2>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A0A1A7;font-style: italic">// By adding this condition, you can share your code between your client and server</span>
+<span>#if FABLE</span><span style="color: #A626A4">_</span><span>COMPILER</span>
+<span style="color: #A626A4">open</span><span> </span><span style="color: #4078F2">Thoth.Json</span>
+<span>#else</span>
+<span style="color: #A626A4">open</span><span> </span><span style="color: #4078F2">Thoth.Json.Net</span>
+<span>#endif</span>
+
+<span style="color: #A626A4">type</span><span> </span><span style="color: #C18401">User</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">{</span><span> Id </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">int</span>
+<span>      Name </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string</span>
+<span>      Email </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string</span>
+<span>      Followers </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">int </span><span style="color: #A626A4">}</span>
+
+<span>    </span><span style="color: #A626A4">static member</span><span> </span><span style="color: #E45649">Decoder</span><span> </span><span style="color: #A626A4">=</span>
+<span>        Decode.decode</span>
+<span>            </span><span style="color: #A626A4">(fun</span><span style="color: #383A42"> id email name followers </span><span style="color: #A626A4">-&gt;</span>
+<span>                </span><span style="color: #A626A4">{</span><span> Id </span><span style="color: #A626A4">=</span><span> id</span>
+<span>                  Name </span><span style="color: #A626A4">=</span><span> name</span>
+<span>                  Email </span><span style="color: #A626A4">=</span><span> email</span>
+<span>                  Followers </span><span style="color: #A626A4">=</span><span> followers </span><span style="color: #A626A4">})</span>
+<span>            </span><span style="color: #A626A4">|&gt;</span><span> Decode.required </span><span style="color: #50A14F">&quot;id&quot;</span><span> Decode.int</span>
+<span>            </span><span style="color: #A626A4">|&gt;</span><span> Decode.required </span><span style="color: #50A14F">&quot;email&quot;</span><span> Decode.string</span>
+<span>            </span><span style="color: #A626A4">|&gt;</span><span> Decode.optional </span><span style="color: #50A14F">&quot;name&quot;</span><span> Decode.string </span><span style="color: #50A14F">&quot;&quot;</span>
+<span>            </span><span style="color: #A626A4">|&gt;</span><span> Decode.hardcoded </span><span style="color: #986801">0</span>
+
+<span>    </span><span style="color: #A626A4">static member</span><span> </span><span style="color: #E45649">Encoder</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">user </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">User</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>        Encode.object</span>
+<span>            </span><span style="color: #A626A4">[</span><span> </span><span style="color: #50A14F">&quot;id&quot;</span><span style="color: #A626A4">,</span><span> Encode.int user.Id</span>
+<span>              </span><span style="color: #50A14F">&quot;name&quot;</span><span style="color: #A626A4">,</span><span> Encode.string user.Name</span>
+<span>              </span><span style="color: #50A14F">&quot;email&quot;</span><span style="color: #A626A4">,</span><span> Encode.string user.Email</span>
+<span>              </span><span style="color: #50A14F">&quot;followers&quot;</span><span style="color: #A626A4">,</span><span> Encode.int user.Followers</span>
+<span>            </span><span style="color: #A626A4">]</span></code></pre>
+
+                    </div>
+                </div>
+                <div class="column is-3 is-hidden-touch">
+                        <nav class="toc"><div class="toc-label"><a href="#decoder"> Decoder</a></div><ul class="toc-headings"><li><a href="#what-is-a-decoder"> What is a Decoder ?</a></li></ul><ul class="toc-headings"><li><a href="#primitives-decoders"> Primitives decoders</a></li></ul><ul class="toc-headings"><li><a href="#collections"> Collections</a></li></ul><ul class="toc-headings"><li><a href="#decoding-objects"> Decoding Objects</a><ul class="toc-sub-headings"><li><a href="#map-functions"> Map functions</a></li><li><a href="#pipeline-decode-style"> Pipeline decode style</a></li></ul></li></ul><div class="toc-label"><a href="#encoder"> Encoder</a></div><ul class="toc-headings"><li><a href="#how-to-use-it"> How to use it ?</a></li></ul><div class="toc-label"><a href="#net-netcore-support"> .Net &amp; NetCore support</a></div><ul class="toc-headings"><li><a href="#code-sample"> Code sample</a></li></ul></nav>
+                </div>
+            </div>
+        </section>
+    </div>
+    <div><br/><div class="footer has-text-centered"><div class="container"><div class="content"><p><strong>Thoth</strong> by <a href="https://twitter.com/MangelMaxime">Maxime Mangel</a></p>
+<p>Powered by <a href="https://mangelmaxime.github.io/Fulma/">Fulma</a>, <a href="https://github.com/fable-compiler/static-web-generator">Fable static-web-generator</a> and <a href="https://github.com/MangelMaxime/Code-Lightner">Code-Lightner</a>.</p>
+</div></div></div></div>
+    <script type="text/javascript">
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Get all "navbar-burger" elements
+            var $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+
+            // Check if there are any navbar burgers
+            if ($navbarBurgers.length > 0) {
+
+                // Add a click event on each of them
+                $navbarBurgers.forEach(function ($el) {
+                    $el.addEventListener('click', function () {
+
+                        var $target = document.getElementById("navMenu");
+
+                        // Toggle the class on both the "navbar-burger" and the "navbar-menu"
+                        $el.classList.toggle('is-active');
+                        $target.classList.toggle('is-active');
+
+                    });
+                });
+            }
+
+        });
+
+    </script>
+</body>
+
+</html>
