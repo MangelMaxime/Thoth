@@ -73,33 +73,16 @@ module Components.Navbar
 
     let private navbarJson pageUrl =
         Navbar.Dropdown.div [ ]
-            [ Navbar.Item.div [ ]
-                [ strong [ ]
-                    [ str "Version 2" ] ]
-              Navbar.divider [ ] [ ]
-              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v2.Decode)
-                              Navbar.Item.Props [ Href Route.Json.v2.Decode ] ]
-                [ str "Decode" ]
-              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v2.Encode )
-                              Navbar.Item.Props [ Href Route.Json.v2.Encode ] ]
-                [ str "Encode" ]
-              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v2.Net )
-                              Navbar.Item.Props [ Href Route.Json.v2.Net ] ]
-                [ str ".Net & NetCore" ]
-              Navbar.divider [ ] [ ]
-              Navbar.Item.div [ ]
-                [ strong [ ]
-                    [ str "Version 1" ] ]
-              Navbar.divider [ ] [ ]
-              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v1.Decode)
-                              Navbar.Item.Props [ Href Route.Json.v1.Decode ] ]
-                [ str "Decode" ]
-              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v1.Encode )
-                              Navbar.Item.Props [ Href Route.Json.v1.Encode ] ]
-                [ str "Encode" ]
-              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v1.Net )
-                              Navbar.Item.Props [ Href Route.Json.v1.Net ] ]
-                [ str ".Net & NetCore" ] ]
+            [ Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v1)
+                              Navbar.Item.Props [ Href Route.Json.v1 ] ]
+                [ div [ ]
+                    [ str "Version 1 - Obsolete" ] ]
+              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v2)
+                              Navbar.Item.Props [ Href Route.Json.v2 ] ]
+                [ str "Version 2 - Stable " ]
+              Navbar.Item.a [ Navbar.Item.IsActive (pageUrl = Route.Json.v3)
+                              Navbar.Item.Props [ Href Route.Json.v3 ] ]
+                [ str "Version 3 - Beta" ] ]
 
     let private navbarElmish pageUrl =
         Navbar.Dropdown.div [ ]

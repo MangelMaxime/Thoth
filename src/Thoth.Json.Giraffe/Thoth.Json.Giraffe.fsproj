@@ -7,7 +7,7 @@
         <RepositoryUrl>https://github.com/MangelMaxime/Thoth</RepositoryUrl>
         <PackageTags>fsharp;json;Giraffe;ASP.NET;Core</PackageTags>
         <Authors>Maxime Mangel</Authors>
-        <Version>1.1.0</Version>
+        <Version>2.0.0-beta-001</Version>
     </PropertyGroup>
     <PropertyGroup>
         <TargetFrameworks>netstandard2.0</TargetFrameworks>
