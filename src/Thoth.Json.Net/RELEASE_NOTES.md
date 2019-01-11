@@ -1,11 +1,15 @@
+#### 3.0.0-beta-002
+
+* Adding `TimeSpan` support (by @rfrerebe)
+
 #### 3.0.0-beta-001
 
-* Add `Set` support in auto coders
-* Use reflection for auto encoders just as auto decoders. This will help keep the JSON representatin in synx between manual and auto coders
-* `Decode.datetime` always outputs universal time
-* Add `extra` support to auto coders. So people can now override/extends auto coders capabilities
-* If a coder is missing, auto coders will fail on generation phase instead of coder evaluation phase
-* By default `int64` - `uint64` - `bigint` - `decimal` support is being disabled from auto coders to reduce bundle size
+* Add `Set` support in auto coders (by @alfonsogarciacaro)
+* Use reflection for auto encoders just as auto decoders. This will help keep the JSON representatin in synx between manual and auto coders (by @alfonsogarciacaro)
+* `Decode.datetime` always outputs universal time (by @alfonsogarciacaro)
+* Add `extra` support to auto coders. So people can now override/extends auto coders capabilities (by @alfonsogarciacaro)
+* If a coder is missing, auto coders will fail on generation phase instead of coder evaluation phase (by @alfonsogarciacaro)
+* By default `int64` - `uint64` - `bigint` - `decimal` support is being disabled from auto coders to reduce bundle size (by @alfonsogarciacaro)
 * Mark `Decode.unwrap` as private. It's now only used internally for object builder. This will encourage people to use `Decode.fromValue`.
 
 #### 2.5.0

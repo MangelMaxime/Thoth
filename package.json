@@ -18,7 +18,7 @@
         "bulma-tooltip": "^2.0.2",
         "code-lightner": "^0.2.1",
         "fable-compiler": "^2.1.10",
-        "fable-splitter": "^2.1.0",
+        "fable-splitter": "^2.1.2",
         "fable-utils": "^1.2.0",
         "handlebars": "^4.0.12",
         "http-server": "^0.11.1",

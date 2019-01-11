@@ -1,3 +1,7 @@
+### 2.0.0-beta-002
+
+* Don't inject variables in production mode - reduce bundle size (by @alfonsogarciacaro)
+
 ### 2.0.0-beta-001
 
 * Elmish 3.0 compat
