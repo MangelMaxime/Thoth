@@ -1,3 +1,11 @@
+### 1.1.0
+
+* Don't inject variables in production mode - reduce bundle size (by @alfonsogarciacaro)
+
+### 1.0.0
+
+* Release stable
+
 ### 1.0.0-beta-005
 
 * Fix HMR support
