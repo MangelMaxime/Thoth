@@ -6,6 +6,10 @@
 
 * Elmish 3.0 compat
 
+### 1.1.0
+
+* Don't inject variables in production mode - reduce bundle size (by @alfonsogarciacaro)
+
 ### 1.0.0
 
 * Release stable
