@@ -491,6 +491,28 @@ Expecting a datetimeoffset but instead got: "NOT A DATETIMEOFFSET"
                     Decode.fromString Decode.datetimeOffset json
 
                 equal expected actual
+
+            testCase "a timespan works" <| fun _ ->
+                let expected =
+                    TimeSpan(23, 45, 0)
+                    |> Ok
+                let json = "\"23:45:00\""
+                let actual =
+                    Decode.fromString Decode.timespan json
+                equal expected actual
+
+            testCase "a timespan returns Error if invalid format" <| fun _ ->
+                let expected =
+                    Error(
+                        """
+Error at: `$`
+Expecting a timespan but instead got: "NOT A TimeSpan"
+                        """.Trim())
+                let json = "\"NOT A TimeSpan\""
+                let actual =
+                    Decode.fromString Decode.timespan json
+
+                equal expected actual
         ]
 
         testList "Tuples" [
@@ -2075,6 +2097,17 @@ Expecting an object with a field named `radius` but instead got:
                 equal value.Hour res.Hour
                 equal value.Minute res.Minute
                 equal value.Second res.Second
+
+            testCase "Auto decoders works for TimeSpan" <| fun _ ->
+                let value = TimeSpan(1,2,3,4,5)
+                let json = Encode.Auto.toString(4, value)
+                let res = Decode.Auto.unsafeFromString<TimeSpan>(json)
+                // printfn "SOURCE %A JSON %s OUTPUT %A" value json res
+                equal value.Days res.Days
+                equal value.Hours res.Hours
+                equal value.Minutes res.Minutes
+                equal value.Seconds res.Seconds
+                equal value.Milliseconds res.Milliseconds
 
             testCase "Auto decoders works for list" <| fun _ ->
                 let value = [1; 2; 3; 4]

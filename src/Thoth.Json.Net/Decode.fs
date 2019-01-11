@@ -257,6 +257,15 @@ module Decode =
             else
                 (path, BadPrimitive("a datetimeoffset", token)) |> Error
 
+    let timespan : Decoder<System.TimeSpan> =
+        fun path token ->
+            if token.Type = JTokenType.TimeSpan || token.Type = JTokenType.String then
+                match System.TimeSpan.TryParse (Helpers.asString token, CultureInfo.InvariantCulture) with
+                | true, x -> Ok x
+                | _ -> (path, BadPrimitive("a timespan", token)) |> Error
+            else
+                (path, BadPrimitive("a timespan", token)) |> Error
+
     /////////////////////////
     // Object primitives ///
     ///////////////////////
@@ -1010,6 +1019,8 @@ module Decode =
                 boxDecoder datetime
             elif fullname = typeof<System.DateTimeOffset>.FullName then
                 boxDecoder datetimeOffset
+            elif fullname = typeof<System.TimeSpan>.FullName then
+                boxDecoder timespan
             elif fullname = typeof<System.Guid>.FullName then
                 boxDecoder guid
             elif fullname = typeof<obj>.FullName then
