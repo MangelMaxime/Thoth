@@ -16,6 +16,9 @@ type Form<'AppMsg> private (onFormMsg : Msg -> 'AppMsg, fieldBuilders : Types.Fi
     member __.AddField(fieldBuilder : FieldBuilder) =
         Form (onFormMsg, fieldBuilders @ [ fieldBuilder ] )
 
+    member __.AddFields(newFieldBuilders : FieldBuilder list) =
+        Form (onFormMsg, fieldBuilders @ newFieldBuilders)
+
     member __.Build() =
         let duplicatesName =
             fieldBuilders
