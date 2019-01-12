@@ -15,6 +15,7 @@
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="../../src/Thoth.Elmish/Thoth.Elmish.fsproj" />
+        <ProjectReference Include="../../src/Thoth.Json/Thoth.Json.fsproj" />
     </ItemGroup>
     <ItemGroup>
         <Compile Include="Helpers.fs" />

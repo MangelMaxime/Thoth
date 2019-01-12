@@ -2,7 +2,6 @@ namespace Thoth.Elmish.FormBuilder
 
 open Elmish
 open Types
-open Fable.PowerPack
 open System
 
 [<RequireQualifiedAccess>]
@@ -84,8 +83,6 @@ module FormCmd =
             with x ->
                 x |> (ofError >> (mapMessage fieldName) >> dispatch)
         [ bind ]
-
-    open Fable.PowerPack
 
     /// Command to call `promise` block and map the results
     let ofPromise (task: 'a -> Fable.Import.JS.Promise<_>)

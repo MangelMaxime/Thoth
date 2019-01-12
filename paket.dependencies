@@ -10,7 +10,6 @@ nuget Newtonsoft.Json >= 11.0.2
 nuget Expecto
 nuget Argu 5.1
 nuget Fable.Elmish prerelease
-nuget Fable.PowerPack
 nuget Fable.React
 nuget Fable.Import.HMR
 nuget Giraffe

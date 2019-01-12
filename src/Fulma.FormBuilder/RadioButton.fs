@@ -15,6 +15,7 @@ module RadioButton =
 
     type State =
         { Label : string
+          Name : string
           SelectedKey : Key option
           Values : (Key * string) list
           Group : string
@@ -57,10 +58,10 @@ module RadioButton =
                 [ str state.Label ]
               Control.div [ ]
                 [ state.Values
-                  |> List.map (renderRadio state.Group state.SelectedKey onChange)
+                  |> List.map (renderRadio state.Group state.SelectedKey dispatch)
                   |> ofList ]
               Help.help [ Help.Color IsDanger ]
-                [ str state.ValidationState.ToText ] ]
+                [ str state.ValidationState.Text ] ]
 
     let private validate (state : FieldState) =
         let state : State = state :?> State
@@ -92,10 +93,12 @@ module RadioButton =
           Init = init
           Validate = validate
           IsValid = isValid
-          ToJson = toJson }
+          ToJson = toJson
+          SetError = failwith "not implemented" }
 
     let create (label : string) : State =
         { Label = label
+          Name = ""
           SelectedKey = None
           Values = []
           Group = (Guid.NewGuid()).ToString()
@@ -112,4 +115,4 @@ module RadioButton =
     let withDefaultRenderer (state : State) : Field =
         { Type = "fulma-radio-button"
           State = state
-          Guid = Guid.NewGuid() }
+          Name = state.Name }

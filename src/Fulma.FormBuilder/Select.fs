@@ -4,10 +4,8 @@ open Fulma
 open Fable.Helpers.React
 open Fable.Helpers.React.Props
 open Fable.Import
-open Fable.PowerPack
 open Thoth.Elmish.FormBuilder
 open Thoth.Elmish.FormBuilder.Types
-open System
 open Thoth.Json
 
 module Select =
@@ -16,6 +14,7 @@ module Select =
 
     type State =
         { Label : string
+          Name: string
           Placeholder : (Key * string) option
           SelectedKey : Key option
           Values : (Key * string) list
@@ -30,6 +29,7 @@ module Select =
     type Msg =
         | ChangeValue of string
         | ReceivedValueFromServer of (Key * string) list
+        | ReceivedExceptionFromServer of exn
         interface IFieldMsg
 
     let private renderOption (key,value) =
@@ -55,10 +55,10 @@ module Select =
             let request () =
                 promise {
                     let! keyValues = fetchKeyValues
-                    return ReceivedValueFromServer keyValues
+                    return keyValues
                 }
 
-            box { state with IsLoading = true }, FormCmd.ofPromise request ()
+            box { state with IsLoading = true }, FormCmd.ofPromise request () ReceivedValueFromServer ReceivedExceptionFromServer
 
         | None -> box state, FormCmd.none
 
@@ -74,6 +74,9 @@ module Select =
             box { state with IsLoading = false
                              Values = values }, FormCmd.none
 
+        | ReceivedExceptionFromServer exn ->
+            failwith "not implemented"
+
     let private view (state : FieldState) (dispatch : IFieldMsg -> unit) =
         let state : State = state :?> State
         Field.div [ ]
@@ -84,14 +87,14 @@ module Select =
                                   Select.IsFullWidth ]
                     [ select [ Value (state.SelectedKey |> Option.defaultValue "")
                                OnChange (fun ev ->
-                                    ev.Value |> ChangeValue |> onChange
+                                    ev.Value |> ChangeValue |> dispatch
                                 ) ]
                         [ renderPlaceHolder state.Placeholder
                           state.Values
                           |> List.map renderOption
                           |> ofList ] ] ]
               Help.help [ Help.Color IsDanger ]
-                [ str state.ValidationState.ToText ] ]
+                [ str state.ValidationState.Text ] ]
 
     let private validate (state : FieldState) =
         let state : State = state :?> State
@@ -123,10 +126,12 @@ module Select =
           Init = init
           Validate = validate
           IsValid = isValid
+          SetError = failwith "not implemented"
           ToJson = toJson }
 
     let create (label : string) : State =
         { Label = label
+          Name = ""
           Placeholder = None
           SelectedKey = None
           Values = []
@@ -145,4 +150,4 @@ module Select =
     let withDefaultRenderer (state : State) : Field =
         { Type = "fulma-select"
           State = state
-          Guid = Guid.NewGuid() }
+          Name = state.Name }
