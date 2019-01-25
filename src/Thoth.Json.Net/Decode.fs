@@ -1034,7 +1034,7 @@ module Decode =
         static member generateDecoderCached<'T> (?isCamelCase : bool, ?extra: ExtraCoders): Decoder<'T> =
             let t = typeof<'T>
             let decoderCrate =
-                Cache.Decoders.Value.GetOrAdd(t, fun t ->
+                Util.CachedDecoders.Value.GetOrAdd(t, fun t ->
                     let isCamelCase = defaultArg isCamelCase false
                     let extra = match extra with Some e -> e | None -> Map.empty
                     autoDecoder extra isCamelCase false t)
