@@ -2,12 +2,15 @@ namespace Thoth.Elmish
 
 module Toast =
 
-    open Fable.Import
     open System
-    open Fable.Helpers.React
-    open Fable.Helpers.React.Props
-    open Elmish
+    open Fable.React
+    open Fable.React.Props
     open Fable.Core.JsInterop
+    open Browser
+    open Browser.Types
+    open Elmish
+
+    let [<Fable.Core.Emit("module.hot")>] private hotModule = obj()
 
     importSideEffects "./css/toast-base.css"
     importSideEffects "./css/toast-minimal.css"
@@ -105,7 +108,7 @@ module Toast =
 
     let private triggerEvent (builder : Builder<_, _>) status dispatch =
         let detail =
-            jsOptions<Browser.CustomEventInit>(fun o ->
+            jsOptions<CustomEventInit>(fun o ->
                 o.detail <-
                     Some (box { Guid = Guid.NewGuid()
                                 Inputs =
@@ -123,8 +126,8 @@ module Toast =
                                 WithProgressBar = builder.WithProgressBar
                                 WithCloseButton = builder.WithCloseButton })
             )
-        let event = Browser.CustomEvent.Create(eventIdentifier, detail)
-        Browser.window.dispatchEvent(event)
+        let event = CustomEvent.Create(eventIdentifier, detail)
+        window.dispatchEvent(event)
         |> ignore
 
     /// Send the toast marked with Success status
@@ -153,7 +156,7 @@ module Toast =
         /// **Description**
         /// Render the outer element of the toast
         /// **Parameters**
-        /// * `content` - parameter of type `React.ReactElement list`
+        /// * `content` - parameter of type `ReactElement list`
         ///     > This is the content of the toast.
         ///     > Ex:
         ///     >   - CloseButton
@@ -162,26 +165,26 @@ module Toast =
         /// * `color` - parameter of type `string`
         ///     > Class used to set toast color
         /// **Output Type**
-        ///   * `React.ReactElement`
-        abstract Toast : React.ReactElement list -> string -> React.ReactElement
+        ///   * `ReactElement`
+        abstract Toast : ReactElement list -> string -> ReactElement
 
         /// **Description**
         /// Render the close button of the toast
         /// **Parameters**
-        /// * `onClick` - parameter of type `React.MouseEvent -> unit`
+        /// * `onClick` - parameter of type `MouseEvent -> unit`
         ///     > OnClick event listener to attached
         /// **Output Type**
-        ///   * `React.ReactElement`
-        abstract CloseButton : (React.MouseEvent -> unit) -> React.ReactElement
+        ///   * `ReactElement`
+        abstract CloseButton : (MouseEvent -> unit) -> ReactElement
 
         /// **Description**
         /// Render the outer element of the Input Area
         /// **Parameters**
-        /// * `content` - parameter of type `React.ReactElement list`
+        /// * `content` - parameter of type `ReactElement list`
         ///     > This is the content of the input area.
         /// **Output Type**
-        ///   * `React.ReactElement`
-        abstract InputArea : React.ReactElement list -> React.ReactElement
+        ///   * `ReactElement`
+        abstract InputArea : ReactElement list -> ReactElement
 
         /// **Description**
         /// Render one element of the Input Area
@@ -191,8 +194,8 @@ module Toast =
         /// * `callback` - parameter of type `unit -> unit`
         ///     > Callback to execute when user click on the input
         /// **Output Type**
-        ///   * `React.ReactElement`
-        abstract Input : string -> (unit -> unit) -> React.ReactElement
+        ///   * `ReactElement`
+        abstract Input : string -> (unit -> unit) -> ReactElement
 
         /// **Description**
         /// Render the title of the Toast
@@ -200,8 +203,8 @@ module Toast =
         /// * `text` - parameter of type `string`
         ///     > Text to display
         /// **Output Type**
-        ///   * `React.ReactElement`
-        abstract Title : string -> React.ReactElement
+        ///   * `ReactElement`
+        abstract Title : string -> ReactElement
 
         /// **Description**
         /// Render the message of the Toast
@@ -209,8 +212,8 @@ module Toast =
         /// * `text` - parameter of type `string`
         ///     > Text to display
         /// **Output Type**
-        ///   * `React.ReactElement`
-        abstract Message : string -> React.ReactElement
+        ///   * `ReactElement`
+        abstract Message : string -> ReactElement
 
         /// **Description**
         /// Render the icon part
@@ -218,29 +221,29 @@ module Toast =
         /// * `icon` - parameter of type `'icon`
         ///     > 'icon is generic so you can pass the Value as a String or Typed value like `Fa.I.FontAwesomeIcons` when using Fulma
         /// **Output Type**
-        ///   * `React.ReactElement`
-        abstract Icon : 'icon -> React.ReactElement
+        ///   * `ReactElement`
+        abstract Icon : 'icon -> ReactElement
 
         /// **Description**
         /// Render the simple layout (when no icon has been provided to the Toast)
         /// **Parameters**
-        /// * `title` - parameter of type `React.ReactElement`
-        /// * `message` - parameter of type `React.ReactElement`
+        /// * `title` - parameter of type `ReactElement`
+        /// * `message` - parameter of type `ReactElement`
         /// **Output Type**
-        ///   * `React.ReactElement`
-        abstract SingleLayout : React.ReactElement -> React.ReactElement -> React.ReactElement
+        ///   * `ReactElement`
+        abstract SingleLayout : ReactElement -> ReactElement -> ReactElement
 
 
         /// **Description**
         /// Render the splitted layout (when toast has an Icon and Message)
         /// **Parameters**
-        /// * `icon` - parameter of type `React.ReactElement`
+        /// * `icon` - parameter of type `ReactElement`
         ///     > Icon view
-        /// * `title` - parameter of type `React.ReactElement`
-        /// * `message` - parameter of type `React.ReactElement`
+        /// * `title` - parameter of type `ReactElement`
+        /// * `message` - parameter of type `ReactElement`
         /// **Output Type**
-        ///   * `React.ReactElement`
-        abstract SplittedLayout : React.ReactElement -> React.ReactElement -> React.ReactElement -> React.ReactElement
+        ///   * `ReactElement`
+        abstract SplittedLayout : ReactElement -> ReactElement -> ReactElement -> ReactElement
 
         /// **Description**
         /// Obtain the class associated with the Status
@@ -366,7 +369,7 @@ module Toast =
                     | Add newToast ->
                         let cmd : Cmd<Notifiable<'icon, 'msg>>=
                             match newToast.Delay with
-                            | Some _ -> Cmd.ofPromise delayedCmd newToast Remove OnError
+                            | Some _ -> Cmd.ofPromise delayedCmd newToast Remove !!OnError // TODO: Fix elmish
                             | None -> Cmd.none
 
                         match newToast.Position with
@@ -388,7 +391,7 @@ module Toast =
 
 
                     | OnError error ->
-                        Browser.console.error error.Message
+                        console.error error.Message
                         model, Cmd.none
 
                 newModel, cmd
@@ -408,21 +411,21 @@ module Toast =
                 // - flickering (trigger several react renderer process)
                 // - attaching several event listener to the same event
                 #if DEBUG
-                if not (isNull HMR.``module``.hot) then
-                    if HMR.``module``.hot.status() <> HMR.Idle then
-                        Browser.window.removeEventListener(eventIdentifier, !!Browser.window?(eventIdentifier))
+                if not (isNull hotModule) then
+                    if hotModule?status() <> "idle" then
+                        window.removeEventListener(eventIdentifier, !!window?(eventIdentifier))
 
-                    Browser.window?(eventIdentifier) <- fun (ev : Browser.Event) ->
-                        let ev = ev :?> Browser.CustomEvent
+                    window?(eventIdentifier) <- fun (ev : Event) ->
+                        let ev = ev :?> CustomEvent
                         dispatch (Add (unbox ev.detail))
 
-                    Browser.window.addEventListener(eventIdentifier, !!Browser.window?(eventIdentifier))
+                    window.addEventListener(eventIdentifier, !!window?(eventIdentifier))
                 else
                 #endif
-                    Browser.window.addEventListener(eventIdentifier, !^(fun ev ->
-                        let ev = ev :?> Browser.CustomEvent
+                    window.addEventListener(eventIdentifier, fun ev ->
+                        let ev = ev :?> CustomEvent
                         dispatch (Add (unbox ev.detail))
-                    ))
+                    )
 
             let init =
                 program.init
