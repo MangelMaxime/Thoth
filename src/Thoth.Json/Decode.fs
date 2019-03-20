@@ -951,7 +951,7 @@ module Decode =
             elif fullname = typeof<System.DateTimeOffset>.FullName then
                 boxDecoder datetimeOffset
             elif fullname = typeof<System.TimeSpan>.FullName then
-                boxDecoder timespan                
+                boxDecoder timespan
             elif fullname = typeof<System.Guid>.FullName then
                 boxDecoder guid
             elif fullname = typeof<obj>.FullName then
@@ -961,8 +961,8 @@ module Decode =
     type Auto =
         /// ATTENTION: Use this only when other arguments (isCamelCase, extra) don't change
         static member generateDecoderCached<'T>(?isCamelCase : bool, ?extra: ExtraCoders, [<Inject>] ?resolver: ITypeResolver<'T>): Decoder<'T> =
-            let t = resolver.Value.ResolveType()
-            Cache.Decoders.GetOrAdd(t.FullName, fun _ ->
+            let t = Util.resolveType resolver
+            Util.CachedDecoders.GetOrAdd(t.FullName, fun _ ->
                 let isCamelCase = defaultArg isCamelCase false
                 let extra = match extra with Some e -> e | None -> Map.empty
                 autoDecoder extra isCamelCase false t) |> unboxDecoder
@@ -970,7 +970,7 @@ module Decode =
         static member generateDecoder<'T>(?isCamelCase : bool, ?extra: ExtraCoders, [<Inject>] ?resolver: ITypeResolver<'T>): Decoder<'T> =
             let isCamelCase = defaultArg isCamelCase false
             let extra = match extra with Some e -> e | None -> Map.empty
-            resolver.Value.ResolveType() |> autoDecoder extra isCamelCase false |> unboxDecoder
+            Util.resolveType resolver |> autoDecoder extra isCamelCase false |> unboxDecoder
 
         static member fromString<'T>(json: string, ?isCamelCase : bool, ?extra: ExtraCoders, [<Inject>] ?resolver: ITypeResolver<'T>): Result<'T, string> =
             let decoder = Auto.generateDecoder(?isCamelCase=isCamelCase, ?extra=extra, ?resolver=resolver)

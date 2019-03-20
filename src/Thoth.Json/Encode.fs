@@ -456,8 +456,8 @@ module Encode =
     type Auto =
         /// ATTENTION: Use this only when other arguments (isCamelCase, extra) don't change
         static member generateEncoderCached<'T>(?isCamelCase : bool, ?extra: ExtraCoders, [<Inject>] ?resolver: ITypeResolver<'T>): Encoder<'T> =
-            let t = resolver.Value.ResolveType()
-            Cache.Encoders.GetOrAdd(t.FullName, fun _ ->
+            let t = Util.resolveType resolver
+            Util.CachedEncoders.GetOrAdd(t.FullName, fun _ ->
                 let isCamelCase = defaultArg isCamelCase false
                 let extra = match extra with Some e -> e | None -> Map.empty
                 autoEncoder extra isCamelCase t) |> unboxEncoder
@@ -465,7 +465,7 @@ module Encode =
         static member generateEncoder<'T>(?isCamelCase : bool, ?extra: ExtraCoders, [<Inject>] ?resolver: ITypeResolver<'T>): Encoder<'T> =
             let isCamelCase = defaultArg isCamelCase false
             let extra = match extra with Some e -> e | None -> Map.empty
-            resolver.Value.ResolveType() |> autoEncoder extra isCamelCase |> unboxEncoder
+            Util.resolveType resolver |> autoEncoder extra isCamelCase |> unboxEncoder
 
         static member toString(space : int, value : 'T, ?isCamelCase : bool, ?extra: ExtraCoders, [<Inject>] ?resolver: ITypeResolver<'T>) : string =
             let encoder = Auto.generateEncoder(?isCamelCase=isCamelCase, ?extra=extra, ?resolver=resolver)

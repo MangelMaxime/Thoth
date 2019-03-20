@@ -457,7 +457,7 @@ module Encode =
     type Auto =
         /// ATTENTION: Use this only when other arguments (isCamelCase, extra) don't change
         static member generateEncoderCached(t: System.Type, ?isCamelCase : bool, ?extra: ExtraCoders): Encoder<obj> =
-            Cache.Encoders.Value.GetOrAdd(t, fun t ->
+            Util.CachedEncoders.Value.GetOrAdd(t, fun t ->
                 let isCamelCase = defaultArg isCamelCase false
                 let extra = match extra with Some e -> e | None -> Map.empty
                 autoEncoder extra isCamelCase t).BoxedEncoder
@@ -465,7 +465,7 @@ module Encode =
         static member generateEncoderCached<'T>(?isCamelCase : bool, ?extra: ExtraCoders): Encoder<'T> =
             let t = typeof<'T>
             let encoderCrate =
-                Cache.Encoders.Value.GetOrAdd(t, fun t ->
+                Util.CachedEncoders.Value.GetOrAdd(t, fun t ->
                     let isCamelCase = defaultArg isCamelCase false
                     let extra = match extra with Some e -> e | None -> Map.empty
                     autoEncoder extra isCamelCase t)
