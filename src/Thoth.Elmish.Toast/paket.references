@@ -1,6 +1,7 @@
+group fablecore3
+
 FSharp.Core
 Fable.Core
 Fable.Elmish
 Fable.React
-Fable.Import.HMR
 Fable.Promise

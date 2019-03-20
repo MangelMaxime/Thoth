@@ -16,6 +16,17 @@ nuget Giraffe
 nuget Fulma
 nuget Fable.Promise
 
+group fablecore3
+    source https://www.nuget.org/api/v2
+    framework: netstandard2.0
+    storage: none
+
+    nuget FSharp.Core
+    nuget Fable.Core prerelease
+    nuget Fable.Elmish prerelease
+    nuget Fable.React prerelease
+    nuget Fable.Promise prerelease
+
 # Save Newtonsoft pkg in repo dir so we
 # can access it with F# interactive
 group newtonsoft
