@@ -3,7 +3,6 @@ namespace Thoth.Elmish.FormBuilder.BasicFields
 open Fable.Helpers.React
 open Fable.Helpers.React.Props
 open Fable.Import
-open Fable.PowerPack
 open Thoth.Elmish.FormBuilder
 open Thoth.Elmish.FormBuilder.Types
 open System

@@ -3,7 +3,6 @@ namespace Thoth.Elmish.FormBuilder
 open Thoth.Json
 open Fable.Import
 open Elmish
-open System
 
 module Types =
 
@@ -78,7 +77,7 @@ module Types =
           Init : FieldState -> FieldState * (string -> Cmd<Msg>)
           Validate : FieldState -> FieldState
           IsValid : FieldState -> bool
-          ToJson : FieldState -> string * Encode.Value
+          ToJson : FieldState -> string * JsonValue
           SetError : FieldState -> string -> FieldState }
 
     /// Configuration for the Form

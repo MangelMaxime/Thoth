@@ -4,7 +4,6 @@ open Elmish
 open Fable.Helpers.React
 open Fable.Helpers.React.Props
 open Types
-open System
 open Thoth.Json
 open Fable.Import
 

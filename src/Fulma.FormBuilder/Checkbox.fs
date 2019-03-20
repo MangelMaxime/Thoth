@@ -4,7 +4,6 @@ open Fable.Helpers.React
 open Fable.Helpers.React.Props
 open Thoth.Elmish.FormBuilder
 open Thoth.Elmish.FormBuilder.Types
-open System
 open Thoth.Json
 open Fulma
 
@@ -63,16 +62,17 @@ module Checkbox =
                 [ Checkbox.checkbox [ ]
                     [ Checkbox.input [ Props [ Checked state.IsChecked
                                                OnChange (fun _ ->
-                                                onChange ToggleState
+                                                dispatch ToggleState
                                                ) ] ]
                       str state.Label ] ]
               Help.help [ Help.Color IsDanger ]
-                [ str state.ValidationState.ToText ] ]
+                [ str state.ValidationState.Text ] ]
 
     let config : FieldConfig =
         { View = view
           Update = update
           Init = init
+          SetError = failwith "not implemented"
           Validate = validate
           IsValid = isValid
           ToJson = toJson }
@@ -93,4 +93,4 @@ module Checkbox =
     let withDefaultRenderer (state : State) : Field =
         { Type = "fulma-checkbox"
           State = state
-          Guid = Guid.NewGuid() }
+          Name = state.Name }

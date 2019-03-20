@@ -12,6 +12,7 @@ module Textarea =
 
     type State =
         { Label : string
+          Name: string
           Value : string
           Validators : Validator list
           ValidationState : ValidationState
@@ -42,11 +43,11 @@ module Textarea =
               Control.div [ ]
                 [ Textarea.textarea [ Textarea.Value state.Value
                                       Textarea.OnChange (fun ev ->
-                                        ev.Value |> ChangeValue |> onChange
+                                        ev.Value |> ChangeValue |> dispatch
                                       ) ]
                     [ ] ]
               Help.help [ Help.Color IsDanger ]
-                [ str state.ValidationState.ToText ] ]
+                [ str state.ValidationState.Text ] ]
 
     let private validate (state : FieldState) =
         let state : State = state :?> State
@@ -76,10 +77,12 @@ module Textarea =
           Init = init
           Validate = validate
           IsValid = isValid
+          SetError = failwith "not implemented"
           ToJson = toJson }
 
     let create (label : string) : State =
         { Label = label
+          Name = ""
           Value = ""
           Validators = [ ]
           ValidationState = Valid
@@ -91,4 +94,4 @@ module Textarea =
     let withDefaultRenderer (state : State) : Field =
         { Type = "fulma-textarea"
           State = state
-          Guid = Guid.NewGuid() }
+          Name = state.Name }

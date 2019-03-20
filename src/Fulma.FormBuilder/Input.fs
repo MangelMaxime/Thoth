@@ -10,7 +10,6 @@ open Thoth.Json
 
 [<RequireQualifiedAccess>]
 module Input =
-
     type State =
         { Label : string
           Value : string
@@ -75,16 +74,17 @@ module Input =
                                 Input.Placeholder (state.Placeholder |> Option.defaultValue "")
                                 Input.Type state.Type
                                 Input.OnChange (fun ev ->
-                                    ev.Value |> ChangeValue |> onChange
+                                    ev.Value |> ChangeValue |> dispatch
                                 )
                                 Input.Color color ] ]
               Help.help [ Help.Color IsDanger ]
-                [ str state.ValidationState.ToText ] ]
+                [ str state.ValidationState.Text ] ]
 
     let config : FieldConfig =
         { View = view
           Update = update
           Init = init
+          SetError = failwith "not implemented"
           Validate = validate
           IsValid = isValid
           ToJson = toJson }
@@ -122,4 +122,4 @@ module Input =
     let withFulmaRenderer (state : State) : Field =
         { Type = "fulma-input"
           State = state
-          Guid = Guid.NewGuid() }
+          Name = state.Name }

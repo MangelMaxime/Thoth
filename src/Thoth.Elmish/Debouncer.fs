@@ -4,7 +4,6 @@ namespace Thoth.Elmish
 module Debouncer =
 
     open System
-    open Fable.PowerPack
     open Fable.Import
     open Elmish
 
