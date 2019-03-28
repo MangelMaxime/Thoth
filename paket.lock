@@ -1018,7 +1018,7 @@ NUGET
       FSharp.Core (>= 4.5.2)
     Fable.Core (3.0.0-beta-005)
       FSharp.Core (>= 4.5.2)
-    Fable.Elmish (3.0.0-beta-5)
+    Fable.Elmish (3.0.0-beta-7)
       Fable.Core (>= 3.0.0-beta-004)
       FSharp.Core (>= 4.6.2)
     Fable.Promise (2.0.0-beta-001)

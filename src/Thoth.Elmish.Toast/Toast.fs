@@ -359,17 +359,17 @@ module Toast =
 
         let withToast (renderer : IRenderer<'icon>) (program : Elmish.Program<'arg, 'model, 'msg, 'view >) =
 
-            let update msg model =
+            let mapUpdate update msg model =
                 let newModel,cmd =
                     match msg with
                     | UserMsg msg ->
-                        let newModel, cmd = program.update msg model.UserModel
+                        let newModel, cmd = update msg model.UserModel
                         { model with UserModel = newModel }, Cmd.map UserMsg cmd
 
                     | Add newToast ->
                         let cmd : Cmd<Notifiable<'icon, 'msg>>=
                             match newToast.Delay with
-                            | Some _ -> Cmd.ofPromise delayedCmd newToast Remove !!OnError // TODO: Fix elmish
+                            | Some _ -> Cmd.OfPromise.either delayedCmd newToast Remove !!OnError // TODO: Fix elmish
                             | None -> Cmd.none
 
                         match newToast.Position with
@@ -427,26 +427,23 @@ module Toast =
                         dispatch (Add (unbox ev.detail))
                     )
 
-            let init =
-                program.init
-                    >> (fun (model, cmd) ->
+            let mapInit init =
+                init >> (fun (model, cmd) ->
                             model, cmd |> Cmd.map UserMsg) >> createModel
 
-            let subs model =
+            let mapSubscribe subscribe model =
                 Cmd.batch [ [ notificationEvent ]
-                            program.subscribe model.UserModel |> Cmd.map UserMsg ]
+                            subscribe model.UserModel |> Cmd.map UserMsg ]
 
-            { init = init
-              update = update
-              subscribe = subs
-              onError = program.onError
-              setState = fun model dispatch -> program.setState model.UserModel (UserMsg >> dispatch)
-              view = fun model dispatch ->
+            let mapView view' model dispatch =
                 div [ ]
                     [ view renderer model dispatch
-                      program.view model.UserModel (UserMsg >> dispatch) ]
-              // syncDispatch is only intended for .NET
-              syncDispatch = id }
+                      view' model.UserModel (UserMsg >> dispatch) ]
+
+            let mapSetState setState model dispatch =
+                setState model.UserModel (UserMsg >> dispatch)
+
+            Program.map mapInit mapUpdate mapView mapSetState mapSubscribe program
 
     /// **Description**
     /// Default implementation for the Toast renderer,
