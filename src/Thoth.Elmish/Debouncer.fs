@@ -1,6 +1,7 @@
 namespace Thoth.Elmish
 
 [<RequireQualifiedAccess>]
+[<System.Obsolete("Please use Thoth.Elmish.Debouncer package instead")>]
 module Debouncer =
 
     open System
