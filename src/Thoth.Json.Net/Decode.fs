@@ -1033,6 +1033,9 @@ module Decode =
         /// ATTENTION: Use this only when other arguments (isCamelCase, extra) don't change
         static member generateDecoderCached<'T> (?isCamelCase : bool, ?extra: ExtraCoders): Decoder<'T> =
             let t = typeof<'T>
+            Auto.generateDecoderCachedByType (t, ?isCamelCase=isCamelCase, ?extra=extra )
+                
+        static member generateDecoderCachedByType (t:System.Type, ?isCamelCase : bool, ?extra: ExtraCoders): Decoder<'T> =
             let decoderCrate =
                 Util.CachedDecoders.Value.GetOrAdd(t, fun t ->
                     let isCamelCase = defaultArg isCamelCase false

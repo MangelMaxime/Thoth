@@ -30,6 +30,7 @@ open Util.Testing
 let main args =
     testList "All" [ Tests.Decode.tests
                      Tests.Encode.tests
+                     Tests.Converter.tests
                    ]
     |> runTestsWithArgs defaultConfig args
 
