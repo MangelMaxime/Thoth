@@ -90,3 +90,11 @@ group Demos
     nuget Fable.FontAwesome
     nuget Fable.FontAwesome.Free
     nuget Fable.Import.HMR
+
+group WebApi
+   framework >= net46
+   source https://www.nuget.org/api/v2
+   nuget Microsoft.AspNet.WebApi 5.2.3.0
+   nuget Microsoft.AspNet.WebApi.Core 5.2.3.0
+   nuget Microsoft.AspNet.WebApi.Client 5.2.3.0
+   nuget Newtonsoft.Json >= 11.0.2

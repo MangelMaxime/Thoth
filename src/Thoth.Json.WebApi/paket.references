@@ -1,0 +1,7 @@
+FSharp.Core
+
+group WebApi
+    Microsoft.AspNet.WebApi 
+    Microsoft.AspNet.WebApi.Core 
+    Microsoft.AspNet.WebApi.Client 
+    Newtonsoft.Json

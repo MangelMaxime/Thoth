@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net46</TargetFramework>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+   <ItemGroup>
+        <ProjectReference Include="../Thoth.Json.Net/Thoth.Json.Net.fsproj" />
+    </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Thoth.Json.WebApi.fs" />
+  </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>
