@@ -92,6 +92,7 @@ type Model =
       Status : Toast.Status
       Message : string
       Title : string
+      Group : string
       Icon : string
       Delay : string
       DelayError : string
@@ -112,6 +113,7 @@ type Msg =
     | ChangeStatus of Toast.Status
     | ChangeMessage of string
     | ChangeTitle of string
+    | ChangeGroup of string
     | ChangeIcon of string
     | ChangeDelay of string
     | ToggleDismissOnClick
@@ -133,6 +135,7 @@ let private init _ =
       Status = Toast.Info
       Message = "Hello, I am a toast"
       Title = ""
+      Group = ""
       Icon = ""
       Delay = "3"
       DelayError = ""
@@ -168,6 +171,14 @@ let private buildTitle (step : Step) =
         step
         |> Step.ApplyBuilder (Toast.title step.Model.Title)
         |> Step.AddCode (sprintf "Toast.title \"%s\"" step.Model.Title)
+    else
+        step
+
+let private buildGroup (step : Step) =
+    if step.Model.Group <> "" then
+        step
+        |> Step.ApplyBuilder (Toast.group step.Model.Group)
+        |> Step.AddCode (sprintf "Toast.group \"%s\"" step.Model.Group)
     else
         step
 
@@ -267,6 +278,9 @@ let private update msg model =
 
     | ChangeTitle newTitle ->
         { model with Title = newTitle }, Cmd.ofMsg RefreshCode
+    
+    | ChangeGroup newGroup ->
+        { model with Group = newGroup }, Cmd.ofMsg RefreshCode
 
     | ChangeIcon newIcon ->
         { model with Icon = newIcon }, Cmd.ofMsg RefreshCode
@@ -302,6 +316,7 @@ let private update msg model =
                 model
                 |> buildMessage
                 |> buildTitle
+                |> buildGroup
                 |> buildPosition
                 |> buildIcon
                 |> buildDelay
@@ -321,6 +336,7 @@ let private update msg model =
                 model
                 |> buildMessage
                 |> buildTitle
+                |> buildGroup
                 |> buildPosition
                 |> buildIcon
                 |> buildDelay
@@ -418,6 +434,14 @@ let private viewBuilder (model : Model) dispatch =
                                Input.OnChange (fun ev -> dispatch (ChangeTitle ev.Value)) ] ]
               Help.help [ ]
                 [ str "If empty, no title will be added to the Toast" ] ]
+          Field.div [ ]
+            [ Label.label [ ]
+                [ str "Group" ]
+              Control.div [ ]
+                [ Input.text [ Input.Value model.Group
+                               Input.OnChange (fun ev -> dispatch (ChangeGroup ev.Value)) ] ]
+              Help.help [ ]
+                [ str "If empty, no group will be added to the Toast" ] ]
           Field.div [ ]
             [ Label.label [ ]
                 [ str "Message" ]
