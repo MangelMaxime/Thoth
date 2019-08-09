@@ -398,7 +398,7 @@ module Encode =
                     let target = Array.zeroCreate<JsonValue> (len + 1)
                     target.[0] <- string info.Name
                     for i = 1 to len do
-                        let encoder = encoders.[i] // autoEncoder extra isCamelCase fieldTypes.[i-1].PropertyType
+                        let encoder = encoders.[i-1] // autoEncoder extra isCamelCase fieldTypes.[i-1].PropertyType
                         target.[i] <- encoder.Encode(fields.[i-1])
                     array target)
         else
