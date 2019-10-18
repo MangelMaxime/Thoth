@@ -6,7 +6,7 @@ This library is a <strong>Work In Progress</strong> so changes can still occur.
     </div>
 </article>
 
-This library aims to provide you a nice way to inform the user that something occured. By attaching itself at the top level of your application toasts can be persistant between page navigation.
+This library aims to provide you a nice way to inform the user that something occurred. By attaching itself at the top level of your application toasts can be persistent between page navigation.
 
 It also provides a very basic input system. Do not abuse it, a toast should be about notifying the user, not asking them to perform an action.
 
@@ -96,7 +96,7 @@ type Position =
 | `Toast.icon` | Set the icon |
 | `Toast.timeout` | Set the timeout in seconds |
 | `Toast.noTimeout` | No timeout, make sure to add a close button or dismiss on click |
-| `Toast.dismissOnClick` | Allow user to dismiss the toast by cliking on it |
+| `Toast.dismissOnClick` | Allow user to dismiss the toast by clicking on it |
 | `Toast.withCloseButton` | Add a close button |
 
 ### Trigger

@@ -443,7 +443,7 @@ let private update (msg : FieldMsg) (state : FieldState) =
 
 **Notes**
 
-- You need to call `validate` youself after updating your model. This is required because not every field message needs to trigger a validation.
+- You need to call `validate` yourself after updating your model. This is required because not every field message needs to trigger a validation.
 - Instead of using the `Cmd` module from Elmish, you needs to use `FormCmd`. This module implements the same API as the `Cmd` module.
 
 ---------------
