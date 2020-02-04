@@ -8,6 +8,8 @@ module Encode =
     open Newtonsoft.Json
     open Newtonsoft.Json.Linq
     open System.IO
+    open System.Reflection
+    open System.Reflection.Emit
 
     ///**Description**
     /// Encode a string
@@ -328,6 +330,34 @@ module Encode =
             Some(fun (v: obj) -> (v :?> System.Guid).ToString())
         else None
 
+
+    let private generateGetter<'t> (prop:System.Reflection.PropertyInfo) =
+        let funcType = typeof<System.Func<obj, 't>>
+        let parentType = prop.DeclaringType
+        let getMethod = prop.GetGetMethod()
+    
+        try
+            // https://stackoverflow.com/questions/51028886/create-delegate-of-getter-with-changed-return-type
+            // if we enver need fields: https://stackoverflow.com/a/16222886
+            let dynMethod = new DynamicMethod(System.String.Format("Dynamic_Get_{0}_{1}", parentType.Name, prop.Name), typeof<'t>, [| typeof<obj> |], parentType.Module);
+            let ilGen = dynMethod.GetILGenerator()
+            
+            ilGen.Emit(OpCodes.Ldarg_0) // what if parentType is a Value Type?
+            ilGen.Emit(OpCodes.Callvirt, prop.GetGetMethod())
+            if prop.PropertyType.IsValueType && typeof<'t> <> prop.PropertyType then
+                ilGen.Emit(OpCodes.Box, prop.PropertyType)
+            else
+                ()
+            ilGen.Emit(OpCodes.Ret)   
+            dynMethod.CreateDelegate(funcType) :?> System.Func<obj, 't>
+            //System.Delegate.CreateDelegate(funcType, null, getMethod) :?> System.Func<obj, 't>
+        with e ->
+            let args = System.String.Join(",", getMethod.GetParameters() |> Seq.map (fun p -> sprintf "%s %s" p.ParameterType.FullName p.Name))
+            let signature = sprintf "%s %s.%s(%s)" getMethod.ReturnType.FullName getMethod.DeclaringType.FullName getMethod.Name args
+            printfn "ERROR for generateGetter<%s> on CreateDelegate(%s, null, {%s}): %O" typeof<'t>.FullName funcType.FullName signature e
+            System.Func<obj, 't>(fun (v:obj) ->
+                prop.GetGetMethod().Invoke(v, [||]) :?> 't)
+
     let rec private autoEncodeRecordsAndUnions extra (isCamelCase : bool) (t: System.Type) : BoxedEncoder =
         if FSharpType.IsRecord(t, allowAccessToPrivateRepresentation=true) then
             let setters =
@@ -337,24 +367,38 @@ module Encode =
                         if isCamelCase then fi.Name.[..0].ToLowerInvariant() + fi.Name.[1..]
                         else fi.Name
                     let encoder = autoEncoder extra isCamelCase fi.PropertyType
+                    let getter = generateGetter fi
                     fun (source: obj) (target: JObject) ->
-                        let value = FSharpValue.GetRecordField(source, fi)
+                        let value = getter.Invoke(source)
+                        //let value = FSharpValue.GetRecordField(source, fi)
                         if not(isNull value) then // Discard null fields
                             target.[targetKey] <- encoder.Encode value
                         target)
             boxEncoder(fun (source: obj) ->
                 (JObject(), setters) ||> Seq.fold (fun target set -> set source target) :> JsonValue)
         elif FSharpType.IsUnion(t, allowAccessToPrivateRepresentation=true) then
+            let cases = FSharpType.GetUnionCases(t, allowAccessToPrivateRepresentation=true)
+            let allFieldTypes = cases |> Array.map (fun c -> c.GetFields())
+            let allFieldAccessors = allFieldTypes |> Array.map (fun fields -> fields |> Array.map generateGetter)
+            let allFieldEncoders =
+                allFieldTypes
+                |> Array.map (fun fieldTypes ->
+                    fieldTypes |> Array.map (fun field -> autoEncoder extra isCamelCase field.PropertyType))
+            let getTag = t.GetProperty ("Tag") |> generateGetter<int32>
+            //let info, fields = FSharpValue.GetUnionFields(value, t, allowAccessToPrivateRepresentation=true)
             boxEncoder(fun (value: obj) ->
-                let info, fields = FSharpValue.GetUnionFields(value, t, allowAccessToPrivateRepresentation=true)
-                match fields.Length with
+                let tag = getTag.Invoke(value)
+                let i = cases |> Seq.findIndex (fun c -> c.Tag = tag)
+                let info, fieldTypes, fieldAccessors, encoders = cases.[i], allFieldTypes.[i], allFieldAccessors.[i], allFieldEncoders.[i]
+                match fieldTypes.Length with
                 | 0 -> string info.Name
                 | len ->
-                    let fieldTypes = info.GetFields()
+                    let fields = fieldAccessors |> Array.map(fun acc -> acc.Invoke value)
+                    //let fieldTypes = info.GetFields()
                     let target = Array.zeroCreate<JsonValue> (len + 1)
                     target.[0] <- string info.Name
                     for i = 1 to len do
-                        let encoder = autoEncoder extra isCamelCase fieldTypes.[i-1].PropertyType
+                        let encoder = encoders.[i-1] // autoEncoder extra isCamelCase fieldTypes.[i-1].PropertyType
                         target.[i] <- encoder.Encode(fields.[i-1])
                     array target)
         else
@@ -379,18 +423,29 @@ module Encode =
                 let encoders =
                     FSharpType.GetTupleElements(t)
                     |> Array.map (autoEncoder extra isCamelCase)
+                
                 boxEncoder(fun (value: obj) ->
-                    FSharpValue.GetTupleFields(value)
-                    |> Seq.mapi (fun i x -> encoders.[i].Encode x) |> seq)
+                    let tup = value :?> System.Runtime.CompilerServices.ITuple
+                    if not (isNull tup) then
+                        [0 .. tup.Length - 1]
+                        |> Seq.map (fun i -> encoders.[i].Encode (tup.Item i))
+                        |> seq
+                    else
+                        FSharpValue.GetTupleFields(value)
+                        |> Seq.mapi (fun i x -> encoders.[i].Encode x) |> seq)
             else
                 let fullname = t.GetGenericTypeDefinition().FullName
                 if fullname = typedefof<obj option>.FullName then
                     let encoder = t.GenericTypeArguments.[0] |> autoEncoder extra isCamelCase
+                    let cases = FSharpType.GetUnionCases(t, allowAccessToPrivateRepresentation=true)
+                    let someCase = cases |> Seq.find (fun c -> c.Name = "Some")
+                    let someFields = someCase.GetFields()
+                    let getter = generateGetter someFields.[0]
                     boxEncoder(fun (value: obj) ->
                         if isNull value then nil
                         else
-                            let _, fields = FSharpValue.GetUnionFields(value, t, allowAccessToPrivateRepresentation=true)
-                            encoder.Encode fields.[0])
+                            //let _, fields = FSharpValue.GetUnionFields(value, t, allowAccessToPrivateRepresentation=true)
+                            encoder.Encode (getter.Invoke value))
                 elif fullname = typedefof<obj list>.FullName
                     || fullname = typedefof<Set<string>>.FullName then
                     t.GenericTypeArguments.[0] |> autoEncoder extra isCamelCase |> genericSeq
